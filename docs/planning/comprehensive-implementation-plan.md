@@ -218,53 +218,223 @@ POST   /api/resource/{id}/action  # Custom actions
 
 ---
 
-## 3. Roles, Users & Permissions Model
+## 3. Institutional Account & Role Architecture
 
-### 3.1 Account Hierarchy
+### 3.1 Design Philosophy: Hybrid RBAC Model
+
+TemplumIS uses a **Hybrid Role-Based Access Control (RBAC)** model that shifts from hard-coded account types to a flexible **Unit + Permission** architecture. This approach optimizes for scalability, maintainability, and cross-functional collaboration.
+
+**Key Principles**:
+- **Two Primary Account Categories**: Students (beneficiaries) and Staff (institutional representatives)
+- **Unit-Based Organization**: Staff are assigned to Departments/Offices (Units)
+- **Role-Based Permissions**: Permissions granted via roles, not account types
+- **Cross-Functional Support**: Users can have multiple roles across units
+- **Simplified Logic**: Code checks permissions, not account types
+
+### 3.2 The Two Primary Account Categories
+
+#### A. Student Accounts (The "User" Class)
+
+**Definition**: The primary beneficiary of the system.
+
+**Registration Method**:
+- **Self-registration** via institutional domain validation (e.g., `@university.edu`)
+- **Verification**: Email + Student Registration Number + Password
+- **Data Linkage**: System matches email/registration number with existing student records from SIS import
+
+**Scope**: Personal data only (own academic records, scholarships, support tickets)
+
+**Key Attributes**:
+```json
+{
+  "uid": "user_456",
+  "category": "student",
+  "institutionId": "inst_001",
+  "studentId": "STU2024001",
+  "profile": {
+    "name": "John Smith",
+    "email": "j.smith@university.edu",
+    "registrationNumber": "STU2024001"
+  },
+  "academicData": {
+    "programId": "prog_123",
+    "cohortId": "cohort_456",
+    "gpa": 3.5,
+    "creditsCompleted": 60,
+    "compliance": "green"
+  }
+}
+```
+
+**Registration Workflow**:
+```mermaid
+flowchart TD
+    A([Student visits /signup]) --> B[Enter email @university.edu]
+    B --> C[System validates domain<br/>against institution_domains]
+    C --> D{Domain<br/>valid?}
+    D -- No --> E[Error: Use institutional email]
+    D -- Yes --> F[Enter student registration number]
+    F --> G[Enter password]
+    G --> H[Submit registration]
+    H --> I[System queries students table<br/>Match by email OR registration_number]
+    I --> J{Student<br/>record exists?}
+    J -- No --> K[Error: No student record found<br/>Contact registrar]
+    J -- Yes --> L[Create user account<br/>Link to student record]
+    L --> M[Send verification email]
+    M --> N[Student verifies email]
+    N --> O([Account Active<br/>Redirect to /dashboard])
+    
+    style D fill:#e67e22,color:#fff
+    style J fill:#e67e22,color:#fff
+    style O fill:#2ecc71,color:#fff
+```
+
+#### B. Institutional Accounts (The "Staff" Class)
+
+**Definition**: Any user representing an administrative or academic unit.
+
+**Registration Method**:
+- **Created by Institution Admin** via Member Management console
+- **Invitation-based**: Admin sends email invite with temporary password
+- **Unit Assignment**: Assigned to specific Department/Office during creation
+
+**Scope**: Institution-wide data (filtered by permissions)
+
+**Key Attributes**:
+```json
+{
+  "uid": "user_123",
+  "category": "staff",
+  "institutionId": "inst_001",
+  "unit": "scholarship_office",
+  "roles": ["award_manager", "compliance_reviewer"],
+  "profile": {
+    "name": "Jane Doe",
+    "email": "j.doe@university.edu",
+    "title": "Scholarship Coordinator"
+  },
+  "permissions": [
+    "can_create_scholarships",
+    "can_review_applications",
+    "can_approve_awards",
+    "can_view_analytics"
+  ]
+}
+```
+
+### 3.3 Account Hierarchy
 
 ```mermaid
 flowchart TD
     GLOBAL[Global Admin<br/>Platform-Level<br/>CLI Created Only] --> INST[Institution<br/>Multi-tenant Entity]
     INST --> INST_ADMIN[Institution Admin<br/>Tenant-Level]
-    INST_ADMIN --> USERS[Institution Users<br/>Role-Based]
+    INST_ADMIN --> STAFF[Staff Accounts<br/>Unit + Role Based]
+    INST_ADMIN --> STUDENTS[Student Accounts<br/>Self-Registration]
     
-    USERS --> VC[Vice Chancellor<br/>Read-Only Dashboard]
-    USERS --> REG[Registrar<br/>Enrollment Management]
-    USERS --> SCHOL[Scholarship Office<br/>Award Management]
-    USERS --> STUDENT[Student<br/>Self-Service Portal]
-    USERS --> SUPPORT[Student Services<br/>Support Tickets]
-    USERS --> RESEARCH[Research Office<br/>Grant Management]
+    STAFF --> EXEC[Executive Unit<br/>Vice Chancellor, Deans]
+    STAFF --> REG[Registrar Unit<br/>Enrollment Officers]
+    STAFF --> SCHOL[Scholarship Office Unit<br/>Award Coordinators]
+    STAFF --> SUPPORT[Student Services Unit<br/>Support Agents]
+    STAFF --> RESEARCH[Research Office Unit<br/>Grant Managers]
+    
+    STUDENTS --> ACTIVE[Active Students<br/>Personal Dashboards]
     
     style GLOBAL fill:#e74c3c,color:#fff
     style INST_ADMIN fill:#e67e22,color:#fff
-    style USERS fill:#3498db,color:#fff
+    style STAFF fill:#3498db,color:#fff
+    style STUDENTS fill:#2ecc71,color:#fff
 ```
 
-### 3.2 Complete Role Matrix
+### 3.4 Unit & Role Mapping
 
-| Role | Scope | Creation Method | Primary Responsibilities |
-|------|-------|----------------|-------------------------|
-| **Global Admin** | All Institutions | CLI only (`python manage.py create-global-admin`) | Provision institutions, create institution admins, platform configuration, cross-tenant analytics |
-| **Institution Admin** | Single Institution | Created by Global Admin | Domain configuration, user management, module settings, audit logs, institution profile |
-| **Vice Chancellor** | Single Institution | Created by Institution Admin | Strategic dashboard, institutional rankings, read-only analytics across all modules |
-| **Registrar** | Single Institution | Created by Institution Admin | Student enrollment, program/cohort management, TTD monitoring, graduation tracking |
-| **Scholarship Office** | Single Institution | Created by Institution Admin | Scholarship creation, application review, award disbursement, compliance monitoring, donor reporting |
-| **Student** | Single Institution | Self-registration (domain validated) | Personal dashboard, milestone tracking, scholarship applications, support ticket creation |
-| **Student Services** | Single Institution | Created by Institution Admin | Support ticket management, student intervention, response time tracking |
-| **Research Office** | Single Institution | Created by Institution Admin | Grant management, PI support, burn rate monitoring, IRB tracking, publication mapping |
+**The Hierarchy**: Institution → Unit/Department → Role → Permissions
 
-### 3.3 Permission Matrix by Module
+| Original Account Type | New Architecture | Unit Assignment | Primary Roles | Key Permissions |
+|----------------------|------------------|----------------|---------------|-----------------|
+| **Global Admin** | Platform Admin | N/A (cross-tenant) | `platform_admin` | All institutions, platform config |
+| **Institution Admin** | Staff | Administration | `institution_admin` | Domain config, user management, audit logs |
+| **Vice Chancellor** | Staff | Executive Office | `executive_viewer` | Global read-only, strategy dashboard |
+| **Registrar** | Staff | Registrar's Office | `enrollment_manager` | Program/cohort write, TTD monitoring |
+| **Scholarship Office** | Staff | Scholarship Office | `award_manager`, `compliance_reviewer` | Fund disbursement, application review |
+| **Student Services** | Staff | Student Support | `support_agent` | Ticket resolution, student intervention |
+| **Research Office** | Staff | Research Office | `grant_manager`, `irb_coordinator` | Grant tracking, burn rates, IRB alerts |
+| **Student** | Student | N/A (self-service) | `student` | Personal data, applications, tickets |
 
-| Module | Global Admin | Inst Admin | Vice Chancellor | Registrar | Scholarship Office | Student | Student Services | Research Office |
-|--------|-------------|------------|----------------|-----------|-------------------|---------|-----------------|----------------|
-| **Platform Admin** | Full | None | None | None | None | None | None | None |
-| **Institution Admin** | Read All | Full (Own) | None | None | None | None | None | None |
-| **Enrollment** | Read All | Read (Own) | Read (Own) | Full (Own) | Read (Own) | Read (Self) | Read (Own) | Read (Own) |
-| **Scholarships** | Read All | Read (Own) | Read (Own) | None | Full (Own) | Read/Apply (Self) | None | None |
-| **Support Tickets** | Read All | Read (Own) | Read (Own) | None | Read (Own) | Create/Read (Self) | Full (Own) | Read (Own) |
-| **Grants** | Read All | Read (Own) | Read (Own) | None | None | None | None | Full (Own) |
-| **Analytics** | Full | Full (Own) | Read (Own) | Read (Own) | Read (Own) | Read (Self) | Read (Own) | Read (Own) |
-| **Audit Logs** | Full | Read (Own) | None | None | None | None | None | None |
+### 3.5 Permission-Based Access Control
+
+**Why This Is Better**:
+
+1. **Cross-Functional Support**: A user in "Student Services" can be granted "Registrar" view access without creating a second account. Just add a secondary role.
+
+2. **Audit Trails**: Track exactly which Staff Member (Identity) in the Scholarship Office (Unit) approved an award.
+
+3. **Simplified Logic**: 
+   ```python
+   # Old approach (hard-coded)
+   if user.account_type == 'ViceChancellor' or user.account_type == 'Registrar':
+       show_analytics()
+   
+   # New approach (permission-based)
+   if user.has_permission('can_view_analytics'):
+       show_analytics()
+   ```
+
+4. **Flexible Assignments**: Easily handle edge cases like:
+   - A Registrar who also manages scholarships
+   - A Research Office staff who needs to view enrollment data
+   - Temporary elevated permissions for audits
+
+### 3.6 Complete Permission Matrix
+
+| Permission | Global Admin | Inst Admin | Executive | Enrollment Manager | Award Manager | Support Agent | Grant Manager | Student |
+|-----------|-------------|------------|-----------|-------------------|---------------|---------------|---------------|---------|
+| **Platform Configuration** | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| **Institution Management** | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| **User Management** | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| **View All Analytics** | ✓ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| **Manage Students** | ✓ | Read | Read | ✓ | Read | Read | Read | Self |
+| **Manage Programs/Cohorts** | ✓ | Read | Read | ✓ | ✗ | ✗ | ✗ | ✗ |
+| **View TTD Analytics** | ✓ | ✓ | ✓ | ✓ | Read | Read | Read | Self |
+| **Manage Scholarships** | ✓ | Read | Read | ✗ | ✓ | ✗ | ✗ | ✗ |
+| **Review Applications** | ✓ | Read | Read | ✗ | ✓ | ✗ | ✗ | ✗ |
+| **Approve Awards** | ✓ | ✗ | ✗ | ✗ | ✓ | ✗ | ✗ | ✗ |
+| **Apply for Scholarships** | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ |
+| **Manage Support Tickets** | ✓ | Read | Read | ✗ | Read | ✓ | Read | Self |
+| **Create Support Tickets** | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ |
+| **Manage Grants** | ✓ | Read | Read | ✗ | ✗ | ✗ | ✓ | ✗ |
+| **Track Burn Rates** | ✓ | Read | Read | ✗ | ✗ | ✗ | ✓ | ✗ |
+| **IRB Monitoring** | ✓ | Read | Read | ✗ | ✗ | ✗ | ✓ | ✗ |
+| **View Audit Logs** | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
+
+### 3.7 Management Workflow
+
+#### Enrollment & Provisioning
+
+**For Students**:
+- **Automated Validation**: Self-registration with institutional domain validation
+- **Verification**: Email + Student Registration Number (must match existing SIS data)
+- **Account Linking**: System automatically links user account to student record
+
+**For Staff**:
+- **Admin Dashboard**: Institution Admin uses "Member Management" console
+- **Invitation Flow**:
+  1. Admin enters staff email, name, unit, and roles
+  2. System sends invitation email with temporary password
+  3. Staff clicks link, sets permanent password
+  4. Staff account activated with assigned permissions
+
+#### Dashboard Customization
+
+**Widget-Based Dashboards**: When a user logs in, the system checks their Unit/Role and loads only relevant widgets:
+
+| User Type | Dashboard Widgets |
+|-----------|------------------|
+| **Executive** | Institutional Ranking, Enrollment Trends, Financial Overview, Research Output |
+| **Enrollment Manager** | TTD Heatmap, At-Risk Students, Program Analytics, Cohort Performance |
+| **Award Manager** | Scholarship Applications, Disbursement Status, Compliance Alerts, Donor Reports |
+| **Support Agent** | My Ticket Queue, SLA Metrics, Student Context Panel, Workload Distribution |
+| **Grant Manager** | Active Grants, Burn Rate Alerts, IRB Expiry Warnings, Publication Tracker |
+| **Student** | Milestone Tracker, Compliance Badge, Scholarship Opportunities, My Tickets |
 
 ### 3.4 Authentication Flow
 
