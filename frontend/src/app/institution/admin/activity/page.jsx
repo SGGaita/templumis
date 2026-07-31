@@ -31,6 +31,7 @@ import BusinessIcon from "@mui/icons-material/Business";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 import InstitutionAdminLayout from "@/components/InstitutionAdminLayout";
+import { ST } from "@/lib/staffTheme";
 
 const ACTION_ICONS = {
   create_user: <PersonAddIcon fontSize="small" />,
@@ -56,6 +57,18 @@ const ACTION_COLORS = {
   update_institution_profile: "info",
 };
 
+const ACTION_CHIP_COLORS = {
+  create_user:  { bg: ST.colors.successLight, color: ST.colors.success },
+  update_user:  { bg: ST.colors.infoLight,    color: ST.colors.info },
+  delete_user:  { bg: ST.colors.errorLight,   color: ST.colors.error },
+  activate_user:   { bg: ST.colors.successLight, color: ST.colors.success },
+  deactivate_user: { bg: ST.colors.warningLight, color: ST.colors.warning },
+  add_domain:      { bg: ST.colors.successLight, color: ST.colors.success },
+  update_domain:   { bg: ST.colors.infoLight,    color: ST.colors.info },
+  remove_domain:   { bg: ST.colors.errorLight,   color: ST.colors.error },
+  update_institution_profile: { bg: ST.colors.primaryLight, color: ST.colors.primary },
+};
+
 function ActivityRow({ activity }) {
   const [open, setOpen] = useState(false);
 
@@ -78,76 +91,56 @@ function ActivityRow({ activity }) {
     return action.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
   };
 
+  const cc = ACTION_CHIP_COLORS[activity.action] || { bg: ST.colors.bg, color: ST.colors.textSecondary };
+
   return (
     <>
-      <TableRow hover>
-        <TableCell>
-          <IconButton size="small" onClick={() => setOpen(!open)}>
-            {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+      <TableRow hover sx={{ "&:hover": { bgcolor: "#F8FAFF" } }}>
+        <TableCell sx={{ width: 44 }}>
+          <IconButton size="small" onClick={() => setOpen(!open)} sx={{ color: ST.colors.textSecondary }}>
+            {open ? <KeyboardArrowUpIcon sx={{ fontSize: 18 }} /> : <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />}
           </IconButton>
         </TableCell>
         <TableCell>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            {ACTION_ICONS[activity.action] || <EditIcon fontSize="small" />}
-            <Chip
-              label={getActionLabel(activity.action)}
-              size="small"
-              color={ACTION_COLORS[activity.action] || "default"}
-              variant="outlined"
-            />
+            <Box sx={{ color: cc.color }}>{ACTION_ICONS[activity.action] || <EditIcon fontSize="small" />}</Box>
+            <Chip label={getActionLabel(activity.action)} size="small" sx={{ fontSize: 11, fontWeight: 600, height: 22, bgcolor: cc.bg, color: cc.color }} />
           </Box>
         </TableCell>
         <TableCell>
-          <Typography variant="body2" fontWeight={500}>
-            {activity.user?.full_name || "Unknown"}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {activity.user?.email || "—"}
-          </Typography>
+          <Typography variant="body2" fontWeight={600} sx={{ fontSize: 13, color: ST.colors.textPrimary }}>{activity.user?.full_name || "Unknown"}</Typography>
+          <Typography variant="caption" sx={{ color: ST.colors.textSecondary }}>{activity.user?.email || "—"}</Typography>
         </TableCell>
         <TableCell>
-          <Chip
-            label={activity.entity_type.replace(/_/g, " ")}
-            size="small"
-            variant="outlined"
-          />
+          <Chip label={activity.entity_type.replace(/_/g, " ")} size="small"
+            sx={{ fontSize: 11, height: 22, bgcolor: ST.colors.bg, color: ST.colors.textSecondary, border: `1px solid ${ST.colors.border}` }} />
         </TableCell>
-        <TableCell>
-          <Typography variant="body2" color="text.secondary">
-            {formatTimestamp(activity.created_at)}
-          </Typography>
-        </TableCell>
+        <TableCell sx={{ fontSize: 13, color: ST.colors.textSecondary }}>{formatTimestamp(activity.created_at)}</TableCell>
       </TableRow>
       <TableRow>
-        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={5}>
+        <TableCell colSpan={5} sx={{ p: 0, border: 0 }}>
           <Collapse in={open} timeout="auto" unmountOnExit>
-            <Box sx={{ py: 2, px: 2, bgcolor: "grey.50" }}>
-              <Typography variant="body2" fontWeight={600} gutterBottom>
-                Activity Details
-              </Typography>
-              <Box sx={{ display: "flex", gap: 3, mb: 1 }}>
+            <Box sx={{ py: 2, px: 3, bgcolor: ST.colors.bg, borderBottom: `1px solid ${ST.colors.border}` }}>
+              <Typography variant="body2" fontWeight={700} sx={{ mb: 1.5, color: ST.colors.textPrimary }}>Activity Details</Typography>
+              <Box sx={{ display: "flex", gap: 4, mb: 1 }}>
                 <Box>
-                  <Typography variant="caption" color="text.secondary">Entity ID</Typography>
-                  <Typography variant="body2">{activity.entity_id}</Typography>
+                  <Typography variant="caption" sx={{ color: ST.colors.textSecondary }}>Entity ID</Typography>
+                  <Typography variant="body2" fontWeight={500} sx={{ color: ST.colors.textPrimary }}>{activity.entity_id}</Typography>
                 </Box>
                 <Box>
-                  <Typography variant="caption" color="text.secondary">Timestamp</Typography>
-                  <Typography variant="body2">
-                    {new Date(activity.created_at).toLocaleString()}
-                  </Typography>
+                  <Typography variant="caption" sx={{ color: ST.colors.textSecondary }}>Full Timestamp</Typography>
+                  <Typography variant="body2" fontWeight={500} sx={{ color: ST.colors.textPrimary }}>{new Date(activity.created_at).toLocaleString()}</Typography>
                 </Box>
               </Box>
               {activity.details && Object.keys(activity.details).length > 0 && (
-                <>
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1, mb: 0.5 }}>
-                    Additional Information
-                  </Typography>
-                  <Paper sx={{ p: 1.5, bgcolor: "background.paper" }}>
-                    <pre style={{ margin: 0, fontSize: "0.75rem", overflow: "auto" }}>
+                <Box sx={{ mt: 1.5 }}>
+                  <Typography variant="caption" sx={{ color: ST.colors.textSecondary, display: "block", mb: 0.5 }}>Details</Typography>
+                  <Box sx={{ p: 1.5, bgcolor: "white", borderRadius: 1.5, border: `1px solid ${ST.colors.border}` }}>
+                    <pre style={{ margin: 0, fontSize: "0.75rem", overflow: "auto", color: ST.colors.textPrimary }}>
                       {JSON.stringify(activity.details, null, 2)}
                     </pre>
-                  </Paper>
-                </>
+                  </Box>
+                </Box>
               )}
             </Box>
           </Collapse>
@@ -203,94 +196,64 @@ export default function ActivityLogPage() {
   if (authLoading) {
     return (
       <InstitutionAdminLayout>
-        <LinearProgress />
+        <LinearProgress sx={{ borderRadius: 1 }} />
       </InstitutionAdminLayout>
     );
   }
 
+  const headSx = { fontWeight: 600, fontSize: 12, color: ST.colors.textSecondary, bgcolor: ST.colors.bg, borderBottom: `1px solid ${ST.colors.border}`, py: 1.5 };
+
   return (
     <InstitutionAdminLayout>
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" fontWeight={700} sx={{ mb: 0.5 }}>
-          Activity Log
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Audit trail of all actions performed in your institution
-        </Typography>
+        <Typography variant="h5" fontWeight={700} sx={{ color: ST.colors.textPrimary }}>Activity Log</Typography>
+        <Typography variant="body2" sx={{ color: ST.colors.textSecondary, mt: 0.5 }}>Audit trail of all admin actions performed in your institution</Typography>
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
-          {error}
-        </Alert>
-      )}
+      {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 1.5 }} onClose={() => setError("")}>{error}</Alert>}
 
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Box sx={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
-          <TextField
-            select
-            label="Filter by Action"
-            value={filterAction}
-            onChange={(e) => {
-              setFilterAction(e.target.value);
-              setPage(0);
-            }}
-            size="small"
-            sx={{ minWidth: 200 }}
-          >
+      <Paper elevation={0} sx={{ border: `1px solid ${ST.colors.border}`, borderRadius: 2, overflow: "hidden" }}>
+        <Box sx={{ px: 2.5, py: 1.5, borderBottom: `1px solid ${ST.colors.border}`, display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
+          <TextField select label="Filter by Action" value={filterAction}
+            onChange={(e) => { setFilterAction(e.target.value); setPage(0); }} size="small"
+            sx={{ minWidth: 220, "& .MuiOutlinedInput-root": { borderRadius: 1.5, fontSize: 13 } }}>
             <MenuItem value="all">All Actions</MenuItem>
             {uniqueActions.map((action) => (
-              <MenuItem key={action} value={action}>
-                {action.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
-              </MenuItem>
+              <MenuItem key={action} value={action}>{action.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}</MenuItem>
             ))}
           </TextField>
-          <Typography variant="body2" color="text.secondary">
-            Total: {total} activities
-          </Typography>
+          <Typography variant="body2" sx={{ color: ST.colors.textSecondary }}>{total} total activities</Typography>
         </Box>
-      </Paper>
 
-      <TableContainer component={Paper}>
-        {loading && <LinearProgress />}
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell width={50} />
-              <TableCell>Action</TableCell>
-              <TableCell>Performed By</TableCell>
-              <TableCell>Entity Type</TableCell>
-              <TableCell>Time</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {activities.map((activity) => (
-              <ActivityRow key={activity.id} activity={activity} />
-            ))}
-            {activities.length === 0 && !loading && (
+        {loading && <LinearProgress sx={{ borderRadius: 0 }} />}
+
+        <TableContainer>
+          <Table>
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    No activities found
-                  </Typography>
-                </TableCell>
+                <TableCell sx={{ ...headSx, width: 44 }} />
+                <TableCell sx={headSx}>Action</TableCell>
+                <TableCell sx={headSx}>Performed By</TableCell>
+                <TableCell sx={headSx}>Entity</TableCell>
+                <TableCell sx={headSx}>Time</TableCell>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
-        <TablePagination
-          component="div"
-          count={total}
-          page={page}
-          onPageChange={(e, newPage) => setPage(newPage)}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={(e) => {
-            setRowsPerPage(parseInt(e.target.value, 10));
-            setPage(0);
-          }}
-          rowsPerPageOptions={[10, 25, 50, 100]}
-        />
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {activities.map((activity) => (
+                <ActivityRow key={activity.id} activity={activity} />
+              ))}
+              {activities.length === 0 && !loading && (
+                <TableRow>
+                  <TableCell colSpan={5} align="center" sx={{ py: 6, color: ST.colors.textSecondary }}>No activities found</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <TablePagination component="div" count={total} page={page} onPageChange={(e, p) => setPage(p)}
+          rowsPerPage={rowsPerPage} onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+          rowsPerPageOptions={[10, 25, 50, 100]} sx={{ borderTop: `1px solid ${ST.colors.border}` }} />
+      </Paper>
     </InstitutionAdminLayout>
   );
 }

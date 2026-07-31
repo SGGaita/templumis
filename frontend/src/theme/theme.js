@@ -1,54 +1,56 @@
 "use client";
 
 import { createTheme } from "@mui/material/styles";
+import { BRAND, FONT_FAMILY } from "@/lib/brand";
 
-const theme = createTheme({
+export const createAppTheme = (direction = "ltr") => createTheme({
+  direction,
   palette: {
     primary: {
-      main: "#2563eb",
-      light: "#60a5fa",
-      dark: "#1e40af",
+      main: BRAND.navy,
+      light: "#3D5A8C",
+      dark: "#0F1F3D",
+      contrastText: BRAND.white,
     },
     secondary: {
-      main: "#0891b2",
-      light: "#06b6d4",
-      dark: "#0e7490",
+      main: BRAND.teal,
+      light: "#33B8C1",
+      dark: "#00838C",
+      contrastText: BRAND.white,
     },
     success: {
-      main: "#10b981",
+      main: "#059669",
       light: "#34d399",
-      dark: "#059669",
+      dark: "#047857",
     },
     warning: {
-      main: "#f59e0b",
+      main: "#D97706",
       light: "#fbbf24",
-      dark: "#d97706",
+      dark: "#b45309",
     },
     error: {
-      main: "#ef4444",
+      main: "#DC2626",
       light: "#f87171",
-      dark: "#dc2626",
+      dark: "#b91c1c",
     },
     background: {
-      default: "#f8fafc",
-      paper: "#ffffff",
+      default: BRAND.pageBg,
+      paper: BRAND.white,
     },
     text: {
-      primary: "#1e293b",
-      secondary: "#64748b",
+      primary: BRAND.navy,
+      secondary: BRAND.slate,
     },
+    divider: BRAND.border,
   },
   typography: {
-    fontFamily: [
-      "Inter",
-      "-apple-system",
-      "BlinkMacSystemFont",
-      '"Segoe UI"',
-      "Roboto",
-      "Arial",
-      "sans-serif",
-    ].join(","),
+    fontFamily: FONT_FAMILY,
     fontSize: 13,
+    h3: {
+      fontWeight: 800,
+      fontSize: "2rem",
+      lineHeight: 1.25,
+    },
     h4: {
       fontWeight: 700,
       fontSize: "1.75rem",
@@ -64,29 +66,56 @@ const theme = createTheme({
       fontSize: "1rem",
       lineHeight: 1.5,
     },
+    subtitle1: {
+      fontWeight: 600,
+    },
+    subtitle2: {
+      fontWeight: 600,
+    },
     body1: {
       fontSize: "0.875rem",
       lineHeight: 1.5,
+      textTransform: "none",
     },
     body2: {
       fontSize: "0.8125rem",
       lineHeight: 1.5,
+      textTransform: "none",
+    },
+    caption: {
+      fontSize: "0.75rem",
+      lineHeight: 1.4,
+      textTransform: "none",
+    },
+    button: {
+      fontWeight: 600,
+      textTransform: "none",
     },
   },
   shape: {
     borderRadius: 6,
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          textTransform: "none",
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
           textTransform: "none",
-          fontWeight: 500,
+          fontWeight: 600,
           fontSize: "0.875rem",
           boxShadow: "none",
           "&:hover": {
             boxShadow: "none",
           },
+        },
+        containedSecondary: {
+          color: BRAND.white,
         },
         sizeSmall: {
           fontSize: "0.8125rem",
@@ -97,15 +126,15 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
-          border: "1px solid #e2e8f0",
+          boxShadow: "0 1px 3px 0 rgb(25 47 90 / 0.08)",
+          border: `1px solid ${BRAND.border}`,
         },
       },
     },
     MuiPaper: {
       styleOverrides: {
         root: {
-          boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+          boxShadow: "0 1px 3px 0 rgb(25 47 90 / 0.08)",
         },
       },
     },
@@ -117,8 +146,8 @@ const theme = createTheme({
         },
         head: {
           fontWeight: 600,
-          backgroundColor: "#f8fafc",
-          color: "#475569",
+          backgroundColor: BRAND.pageBg,
+          color: BRAND.slate,
         },
       },
     },
@@ -130,7 +159,17 @@ const theme = createTheme({
         },
       },
     },
+    MuiAppBar: {
+      styleOverrides: {
+        colorDefault: {
+          backgroundColor: BRAND.white,
+          color: BRAND.navy,
+        },
+      },
+    },
   },
 });
+
+const theme = createAppTheme();
 
 export default theme;

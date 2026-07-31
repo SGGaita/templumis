@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -12,13 +12,16 @@ import Switch from "@mui/material/Switch";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Divider from "@mui/material/Divider";
 import LinearProgress from "@mui/material/LinearProgress";
+import Alert from "@mui/material/Alert";
+import Snackbar from "@mui/material/Snackbar";
 import SaveIcon from "@mui/icons-material/Save";
 import { useAuth } from "@/lib/auth-context";
+import { apiFetch } from "@/lib/api";
 import GlobalAdminLayout from "@/components/GlobalAdminLayout";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, token, loading: authLoading } = useAuth();
   const [settings, setSettings] = useState({
     platformName: "TemplumIS",
     supportEmail: "support@templumis.com",
@@ -26,19 +29,62 @@ export default function SettingsPage() {
     requireEmailVerification: true,
     maintenanceMode: false,
   });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  const fetchSettings = useCallback(async () => {
+    if (!token) return;
+    try {
+      const data = await apiFetch("/global-admin/settings", { token });
+      setSettings({
+        platformName: data.platform_name,
+        supportEmail: data.support_email,
+        allowRegistration: data.allow_registration,
+        requireEmailVerification: data.require_email_verification,
+        maintenanceMode: data.maintenance_mode,
+      });
+    } catch (err) {
+      setError("Failed to load settings");
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
 
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.role !== "global_admin") {
       router.push("/global-admin/login");
+      return;
     }
-  }, [user, authLoading, router]);
+    fetchSettings();
+  }, [user, authLoading, router, fetchSettings]);
 
-  const handleSave = () => {
-    console.log("Saving settings:", settings);
+  const handleSave = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      await apiFetch("/global-admin/settings", {
+        method: "PUT",
+        body: {
+          platform_name: settings.platformName,
+          support_email: settings.supportEmail,
+          allow_registration: settings.allowRegistration,
+          require_email_verification: settings.requireEmailVerification,
+          maintenance_mode: settings.maintenanceMode,
+        },
+        token,
+      });
+      setSuccess(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save settings");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  if (authLoading) {
+  if (authLoading || loading) {
     return (
       <GlobalAdminLayout>
         <LinearProgress />
@@ -56,6 +102,23 @@ export default function SettingsPage() {
           Configure platform settings
         </Typography>
       </Box>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError("")}>
+          {error}
+        </Alert>
+      )}
+
+      <Snackbar
+        open={success}
+        autoHideDuration={3000}
+        onClose={() => setSuccess(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert severity="success" onClose={() => setSuccess(false)}>
+          Settings saved successfully!
+        </Alert>
+      </Snackbar>
 
       <Grid container spacing={2}>
         <Grid item xs={12} md={8}>
@@ -132,8 +195,9 @@ export default function SettingsPage() {
               startIcon={<SaveIcon />}
               onClick={handleSave}
               size="large"
+              disabled={saving}
             >
-              Save Settings
+              {saving ? "Saving..." : "Save Settings"}
             </Button>
           </Paper>
         </Grid>

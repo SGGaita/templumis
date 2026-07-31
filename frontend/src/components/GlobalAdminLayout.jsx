@@ -27,22 +27,28 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import HistoryIcon from "@mui/icons-material/History";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useAuth } from "@/lib/auth-context";
+import BrandLogo from "@/components/BrandLogo";
+import LanguageToggle from "@/components/LanguageToggle";
+import { useLanguage } from "@/lib/language-context";
+import { ST } from "@/lib/staffTheme";
 
 const drawerWidth = 260;
-
-const menuItems = [
-  { text: "Dashboard", icon: <DashboardIcon />, path: "/global-admin" },
-  { text: "Institutions", icon: <BusinessIcon />, path: "/global-admin/institutions" },
-  { text: "Users", icon: <PeopleIcon />, path: "/global-admin/users" },
-  { text: "Analytics", icon: <BarChartIcon />, path: "/global-admin/analytics" },
-  { text: "Activity Log", icon: <HistoryIcon />, path: "/global-admin/activity" },
-  { text: "Settings", icon: <SettingsIcon />, path: "/global-admin/settings" },
-];
 
 export default function GlobalAdminLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
+  const GA = t.globalAdmin;
+
+  const menuItems = [
+    { text: GA.nav.dashboard, icon: <DashboardIcon />, path: "/global-admin" },
+    { text: GA.nav.institutions, icon: <BusinessIcon />, path: "/global-admin/institutions" },
+    { text: GA.nav.users, icon: <PeopleIcon />, path: "/global-admin/users" },
+    { text: GA.nav.analytics, icon: <BarChartIcon />, path: "/global-admin/analytics" },
+    { text: GA.nav.activity, icon: <HistoryIcon />, path: "/global-admin/activity" },
+    { text: GA.nav.settings, icon: <SettingsIcon />, path: "/global-admin/settings" },
+  ];
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -64,14 +70,12 @@ export default function GlobalAdminLayout({ children }) {
   };
 
   const drawer = (
-    <Box>
-      <Toolbar sx={{ bgcolor: "primary.dark", color: "white" }}>
-        <Typography variant="h6" noWrap component="div" fontWeight={700}>
-          TemplumIS
-        </Typography>
-      </Toolbar>
-      <Divider />
-      <List sx={{ px: 1, py: 2 }}>
+    <Box sx={{ height: "100%", display: "flex", flexDirection: "column", bgcolor: ST.sidebar.bg }}>
+      <Box sx={{ px: 2, py: 2.5 }}>
+        <BrandLogo height={44} format="png" subtitle={GA.portal} subtitleTone="dark" />
+      </Box>
+      <Divider sx={{ borderColor: ST.sidebar.divider }} />
+      <List sx={{ px: 1.5, py: 2, flex: 1 }}>
         {menuItems.map((item) => {
           const isActive = pathname === item.path;
           return (
@@ -79,18 +83,25 @@ export default function GlobalAdminLayout({ children }) {
               <ListItemButton
                 onClick={() => router.push(item.path)}
                 sx={{
-                  borderRadius: 1,
-                  bgcolor: isActive ? "primary.main" : "transparent",
-                  color: isActive ? "white" : "text.primary",
+                  borderRadius: 1.5,
+                  bgcolor: isActive ? ST.sidebar.activeItem : "transparent",
+                  color: isActive ? "white" : ST.sidebar.text,
                   "&:hover": {
-                    bgcolor: isActive ? "primary.dark" : "action.hover",
+                    bgcolor: isActive ? ST.sidebar.activeItem : ST.sidebar.hoverItem,
                   },
                 }}
               >
-                <ListItemIcon sx={{ color: isActive ? "white" : "text.secondary", minWidth: 40 }}>
+                <ListItemIcon sx={{ color: isActive ? "white" : ST.sidebar.text, minWidth: 40 }}>
                   {item.icon}
                 </ListItemIcon>
-                <ListItemText primary={item.text} />
+                <ListItemText
+                  primary={item.text}
+                  primaryTypographyProps={{
+                    fontSize: 14,
+                    fontWeight: isActive ? 600 : 400,
+                    color: isActive ? "white" : ST.sidebar.text,
+                  }}
+                />
               </ListItemButton>
             </ListItem>
           );
@@ -121,9 +132,10 @@ export default function GlobalAdminLayout({ children }) {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 600 }}>
-            Global Admin Portal
+            {GA.portal}
           </Typography>
-          <Tooltip title="Account">
+          <LanguageToggle iconOnly />
+          <Tooltip title={t.common.account}>
             <IconButton onClick={handleMenuOpen} sx={{ p: 0 }}>
               <Avatar sx={{ bgcolor: "primary.main" }}>
                 {user?.full_name?.charAt(0) || "A"}
@@ -147,7 +159,7 @@ export default function GlobalAdminLayout({ children }) {
               <ListItemIcon>
                 <LogoutIcon fontSize="small" />
               </ListItemIcon>
-              Logout
+              {t.common.logout}
             </MenuItem>
           </Menu>
         </Toolbar>

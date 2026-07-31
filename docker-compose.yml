@@ -6,14 +6,14 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-templumis}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_secure_password}
-      POSTGRES_DB: ${POSTGRES_DB:-templumis_db}
+      POSTGRES_DB: ${POSTGRES_DB:-templumis}
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-templumis} -d ${POSTGRES_DB:-templumis_db}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-templumis} -d ${POSTGRES_DB:-templumis}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,10 +26,18 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      FROM_EMAIL: ${FROM_EMAIL:-TemplumIS <no-reply@templumis.org>}
     ports:
-      - "8000:8000"
+      # Host 8001: dacoris_backend already binds 8000 on this machine
+      - "8001:8000"
     volumes:
       - ./backend:/app
+      - ./data:/data
     depends_on:
       db:
         condition: service_healthy
@@ -38,16 +46,19 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api}
+        BACKEND_INTERNAL_URL: http://backend:8000
     container_name: templumis-frontend
     restart: unless-stopped
-    environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   nginx:
     image: nginx:alpine

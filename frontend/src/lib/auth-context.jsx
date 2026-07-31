@@ -45,6 +45,7 @@ export function AuthProvider({ children }) {
     setToken(res.access_token);
     const u = await apiGetMe(res.access_token);
     setUser(u);
+    return u;
   };
 
   return (

@@ -12,13 +12,19 @@ import Alert from "@mui/material/Alert";
 import Link from "@mui/material/Link";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
-import SchoolIcon from "@mui/icons-material/School";
+import BrandLogo from "@/components/BrandLogo";
+import LanguageToggle from "@/components/LanguageToggle";
 import LoginIcon from "@mui/icons-material/Login";
 import { useAuth } from "@/lib/auth-context";
+import { getPostLoginPath } from "@/lib/auth-routing";
+import { useLanguage } from "@/lib/language-context";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
+  const { t } = useLanguage();
+  const L = t.auth.login;
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -30,10 +36,16 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password);
-      router.push("/dashboard");
+      const userData = await login(email, password);
+      const destination = getPostLoginPath(userData);
+      if (!destination) {
+        setError(L.accountNotConfigured);
+        setLoading(false);
+        return;
+      }
+      router.replace(destination);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invalid credentials");
+      setError(err instanceof Error ? err.message : L.invalidCredentials);
     } finally {
       setLoading(false);
     }
@@ -41,137 +53,57 @@ export default function LoginPage() {
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", display: "flex", flexDirection: "column" }}>
-      {/* Navbar */}
       <AppBar position="static" color="default" elevation={1}>
-        <Toolbar>
-          <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1, cursor: "pointer" }} onClick={() => router.push("/")}>
-            <SchoolIcon sx={{ fontSize: 32, color: "primary.main", mr: 1 }} />
-            <Typography variant="h6" fontWeight={700} color="primary.main">
-              TemplumIS
-            </Typography>
-          </Box>
+        <Toolbar sx={{ minHeight: 88, py: 1.5, px: { xs: 2, sm: 3 }, justifyContent: "space-between" }}>
+          <BrandLogo height={64} format="png" onClick={() => router.push("/")} />
+          <LanguageToggle />
         </Toolbar>
       </AppBar>
 
-      {/* Login Form */}
       <Container maxWidth="sm" sx={{ flex: 1, display: "flex", alignItems: "center", py: 4 }}>
         <Paper sx={{ p: 4, width: "100%", boxShadow: 3 }}>
           <Box sx={{ textAlign: "center", mb: 3 }}>
-            <Box
-              sx={{
-                width: 60,
-                height: 60,
-                borderRadius: "50%",
-                bgcolor: "primary.main",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                mx: "auto",
-                mb: 2,
-              }}
-            >
+            <Box sx={{ width: 60, height: 60, borderRadius: "50%", bgcolor: "primary.main", display: "flex", alignItems: "center", justifyContent: "center", mx: "auto", mb: 2 }}>
               <LoginIcon sx={{ fontSize: 30, color: "white" }} />
             </Box>
-            <Typography variant="h5" fontWeight={700} gutterBottom>
-              Welcome Back
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Sign in to your account to continue
-            </Typography>
+            <Typography variant="h5" fontWeight={700} gutterBottom>{L.title}</Typography>
+            <Typography variant="body2" color="text.secondary">{L.subtitle}</Typography>
           </Box>
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
           <form onSubmit={handleSubmit}>
-            <TextField
-              fullWidth
-              label="Email Address"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              sx={{ mb: 3 }}
-            />
-            <Button
-              fullWidth
-              variant="contained"
-              type="submit"
-              size="large"
-              disabled={loading}
-              sx={{ mb: 2 }}
-            >
-              {loading ? "Signing in..." : "Sign In"}
+            <TextField fullWidth label={L.emailLabel} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required sx={{ mb: 2 }} />
+            <TextField fullWidth label={L.passwordLabel} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required sx={{ mb: 3 }} />
+            <Button fullWidth variant="contained" type="submit" size="large" disabled={loading} sx={{ mb: 2 }}>
+              {loading ? L.signingIn : L.signInBtn}
             </Button>
           </form>
 
           <Box sx={{ textAlign: "center", mt: 2 }}>
             <Typography variant="body2" color="text.secondary">
-              Don't have an account?{" "}
-              <Link
-                component="button"
-                variant="body2"
-                onClick={() => router.push("/signup")}
-                sx={{ fontWeight: 600, cursor: "pointer" }}
-              >
-                Sign up
+              {L.noAccount}{" "}
+              <Link component="button" variant="body2" onClick={() => router.push("/signup")} sx={{ fontWeight: 600, cursor: "pointer" }}>
+                {L.signUpLink}
               </Link>
             </Typography>
           </Box>
 
           <Box sx={{ textAlign: "center", mt: 2, pt: 2, borderTop: "1px solid", borderColor: "grey.200" }}>
-            <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-              Administrator Access
-            </Typography>
+            <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>{L.adminAccess}</Typography>
             <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
-              <Link
-                component="button"
-                variant="caption"
-                onClick={() => router.push("/global-admin/login")}
-                sx={{ cursor: "pointer" }}
-              >
-                Global Admin
-              </Link>
+              <Link component="button" variant="caption" onClick={() => router.push("/global-admin/login")} sx={{ cursor: "pointer" }}>{L.globalAdmin}</Link>
               <Typography variant="caption" color="text.secondary">•</Typography>
-              <Link
-                component="button"
-                variant="caption"
-                onClick={() => router.push("/institution/login")}
-                sx={{ cursor: "pointer" }}
-              >
-                Institution Admin
-              </Link>
+              <Link component="button" variant="caption" onClick={() => router.push("/institution/login")} sx={{ cursor: "pointer" }}>{L.institutionAdmin}</Link>
             </Box>
           </Box>
         </Paper>
       </Container>
 
-      {/* Footer */}
-      <Box
-        component="footer"
-        sx={{
-          py: 3,
-          px: 2,
-          bgcolor: "grey.100",
-          borderTop: "1px solid",
-          borderColor: "grey.300",
-        }}
-      >
+      <Box component="footer" sx={{ py: 3, px: 2, bgcolor: "grey.100", borderTop: "1px solid", borderColor: "grey.300" }}>
         <Container maxWidth="lg">
           <Typography variant="body2" color="text.secondary" textAlign="center">
-            © {new Date().getFullYear()} TemplumIS. All rights reserved.
+            © {new Date().getFullYear()} {t.common.copyright}
           </Typography>
         </Container>
       </Box>

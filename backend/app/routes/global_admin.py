@@ -3,11 +3,12 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.auth import hash_password, require_role
-from app.models import User, UserRole, Institution, InstitutionDomain, AuditLog
+from app.models import User, UserRole, Institution, InstitutionDomain, AuditLog, PlatformSetting
 from app.schemas import (
     InstitutionCreate, InstitutionOut, InstitutionUpdate,
     DomainCreate, DomainOut,
     InstitutionAdminCreate, UserOut,
+    PlatformSettingsOut, PlatformSettingsUpdate,
 )
 
 router = APIRouter(
@@ -387,3 +388,84 @@ async def platform_stats(db: Session = Depends(get_db)):
             for role in UserRole
         },
     }
+
+
+# ── Platform Settings ────────────────────────────────────
+
+def _get_setting_value(db: Session, key: str, default: str = "") -> str:
+    """Helper to get a setting value from database"""
+    setting = db.query(PlatformSetting).filter(PlatformSetting.setting_key == key).first()
+    return setting.setting_value if setting else default
+
+
+def _set_setting_value(db: Session, key: str, value: str, user_id: int):
+    """Helper to set a setting value in database"""
+    setting = db.query(PlatformSetting).filter(PlatformSetting.setting_key == key).first()
+    if setting:
+        setting.setting_value = value
+        setting.updated_by = user_id
+    else:
+        setting = PlatformSetting(setting_key=key, setting_value=value, updated_by=user_id)
+        db.add(setting)
+
+
+@router.get("/settings", response_model=PlatformSettingsOut)
+async def get_settings(db: Session = Depends(get_db)):
+    """Get platform settings"""
+    return PlatformSettingsOut(
+        platform_name=_get_setting_value(db, "platform_name", "TemplumIS"),
+        support_email=_get_setting_value(db, "support_email", "support@templumis.com"),
+        allow_registration=_get_setting_value(db, "allow_registration", "true") == "true",
+        require_email_verification=_get_setting_value(db, "require_email_verification", "true") == "true",
+        maintenance_mode=_get_setting_value(db, "maintenance_mode", "false") == "true",
+    )
+
+
+@router.put("/settings", response_model=PlatformSettingsOut)
+async def update_settings(
+    data: PlatformSettingsUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.GLOBAL_ADMIN)),
+):
+    """Update platform settings"""
+    changes = {}
+    
+    if data.platform_name is not None:
+        _set_setting_value(db, "platform_name", data.platform_name, current_user.id)
+        changes["platform_name"] = data.platform_name
+    
+    if data.support_email is not None:
+        _set_setting_value(db, "support_email", data.support_email, current_user.id)
+        changes["support_email"] = data.support_email
+    
+    if data.allow_registration is not None:
+        _set_setting_value(db, "allow_registration", str(data.allow_registration).lower(), current_user.id)
+        changes["allow_registration"] = data.allow_registration
+    
+    if data.require_email_verification is not None:
+        _set_setting_value(db, "require_email_verification", str(data.require_email_verification).lower(), current_user.id)
+        changes["require_email_verification"] = data.require_email_verification
+    
+    if data.maintenance_mode is not None:
+        _set_setting_value(db, "maintenance_mode", str(data.maintenance_mode).lower(), current_user.id)
+        changes["maintenance_mode"] = data.maintenance_mode
+    
+    # Log the settings change
+    if changes:
+        db.add(AuditLog(
+            user_id=current_user.id,
+            action="update_platform_settings",
+            entity_type="platform_settings",
+            details=changes,
+        ))
+    
+    db.commit()
+    
+    # Return updated settings
+    return PlatformSettingsOut(
+        platform_name=_get_setting_value(db, "platform_name", "TemplumIS"),
+        support_email=_get_setting_value(db, "support_email", "support@templumis.com"),
+        allow_registration=_get_setting_value(db, "allow_registration", "true") == "true",
+        require_email_verification=_get_setting_value(db, "require_email_verification", "true") == "true",
+        maintenance_mode=_get_setting_value(db, "maintenance_mode", "false") == "true",
+    )

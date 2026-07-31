@@ -11,10 +11,16 @@ import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useAuth } from "@/lib/auth-context";
+import BrandLogo from "@/components/BrandLogo";
+import LanguageToggle from "@/components/LanguageToggle";
+import { useLanguage } from "@/lib/language-context";
 
 export default function InstitutionLoginPage() {
   const router = useRouter();
   const { login } = useAuth();
+  const { t } = useLanguage();
+  const L = t.institutionAdmin.login;
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -28,69 +34,31 @@ export default function InstitutionLoginPage() {
       await login(email, password);
       router.push("/institution/admin");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : t.common.error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        bgcolor: "background.default",
-      }}
-    >
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", bgcolor: "background.default", p: 2 }}>
+      <Box sx={{ position: "absolute", top: 16, right: 16 }}>
+        <LanguageToggle />
+      </Box>
       <Card sx={{ width: 400, p: 2 }}>
         <CardContent>
-          <Typography variant="h5" textAlign="center" gutterBottom>
-            TemplumIS
-          </Typography>
-          <Typography
-            variant="body2"
-            textAlign="center"
-            color="text.secondary"
-            sx={{ mb: 3 }}
-          >
-            Institution Admin Login
-          </Typography>
+          <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+            <BrandLogo height={72} format="png" />
+          </Box>
+          <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ mb: 3 }}>{L.subtitle}</Typography>
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
           <Box component="form" onSubmit={handleSubmit}>
-            <TextField
-              fullWidth
-              label="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              sx={{ mb: 3 }}
-            />
-            <Button
-              fullWidth
-              type="submit"
-              variant="contained"
-              size="large"
-              disabled={loading}
-            >
-              {loading ? <CircularProgress size={24} /> : "Sign In"}
+            <TextField fullWidth label={t.common.email} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required sx={{ mb: 2 }} />
+            <TextField fullWidth label={t.auth.login.passwordLabel} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required sx={{ mb: 3 }} />
+            <Button fullWidth type="submit" variant="contained" size="large" disabled={loading}>
+              {loading ? <CircularProgress size={24} /> : L.signInBtn}
             </Button>
           </Box>
         </CardContent>

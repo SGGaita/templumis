@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 841.89 595.28">
+  <!-- Generator: Adobe Illustrator 30.3.0, SVG Export Plug-In . SVG Version: 2.1.3 Build 182)  -->
+  <defs>
+    <style>
+      .st0 {
+        font-size: 55.69px;
+      }
+
+      .st1, .st2 {
+        fill: #192f5a;
+      }
+
+      .st3 {
+        font-family: Montserrat-Bold, Montserrat;
+        font-weight: 700;
+      }
+
+      .st3, .st4 {
+        fill: #00a4af;
+      }
+
+      .st5 {
+        fill: #494e52;
+        font-size: 10.72px;
+      }
+
+      .st5, .st2 {
+        font-family: Montserrat-SemiBold, Montserrat;
+        font-weight: 600;
+      }
+    </style>
+  </defs>
+  <polygon class="st1" points="252.96 352.15 218.61 317.79 170.13 339.82 168.79 336.88 219.31 313.93 253.43 348.05 319.51 306.76 286.73 288.22 288.32 285.41 325.82 306.62 252.96 352.15"/>
+  <circle class="st1" cx="167.95" cy="338.35" r="9.54"/>
+  <circle class="st1" cx="218.96" cy="315.86" r="9.54"/>
+  <circle class="st1" cx="254.1" cy="348.99" r="9.54"/>
+  <circle class="st4" cx="288.83" cy="330.32" r="9.54"/>
+  <circle class="st4" cx="288.83" cy="286.81" r="9.54"/>
+  <circle class="st4" cx="321.36" cy="306.69" r="9.54"/>
+  <path class="st1" d="M211.43,277.28h15.46v27.04s-8.03-5.42-15.46,0v-27.04Z"/>
+  <path class="st1" d="M211.43,328.81v40.56h15.46v-40.56s-8.03,4.62-15.46,0Z"/>
+  <path class="st1" d="M246.06,277.28h16.16v58.77s-5.22-4.02-16.16,0v-58.77Z"/>
+  <path class="st4" d="M281.5,299.7s6.77,3.76,14.46,0v19.48s-6.83-3.82-14.46,0v-19.48Z"/>
+  <rect class="st4" x="281.5" y="330.32" width="14.46" height="39.05"/>
+  <path class="st1" d="M246.06,360.34s6.63,5.72,15.56,0v9.04h-15.56v-9.04Z"/>
+  <rect class="st1" x="197.87" y="260.64" width="112.35" height="9.64" rx="1.1" ry="1.1"/>
+  <path class="st1" d="M198.77,252.48l54.61-26.4c.48-.23,1.05-.23,1.53,0l54.43,26.4c1.68.82,1.1,3.35-.77,3.35h-109.04c-1.87,0-2.45-2.53-.77-3.35Z"/>
+  <text class="st0" transform="translate(355.08 320.78)"><tspan class="st2" x="0" y="0">Templum</tspan><tspan class="st3" x="277.67" y="0">IS</tspan></text>
+  <text class="st5" transform="translate(355.3 342.93)"><tspan x="0" y="0" xml:space="preserve">P O W E R I N G  S M A R T E R  H I G H E R  E D U C A T I O N</tspan></text>
+</svg>

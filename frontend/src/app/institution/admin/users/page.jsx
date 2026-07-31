@@ -32,14 +32,18 @@ import EditIcon from "@mui/icons-material/Edit";
 import BlockIcon from "@mui/icons-material/Block";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DeleteIcon from "@mui/icons-material/Delete";
+import Avatar from "@mui/material/Avatar";
+import Divider from "@mui/material/Divider";
+import Tooltip from "@mui/material/Tooltip";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 import InstitutionAdminLayout from "@/components/InstitutionAdminLayout";
+import { ST } from "@/lib/staffTheme";
 
 const INSTITUTION_ROLES = [
   { value: "vice_chancellor", label: "Vice Chancellor" },
   { value: "registrar", label: "Registrar" },
-  { value: "scholarship_office", label: "Scholarship Office" },
+  { value: "scholarship_office", label: "Financial Aid Officer" },
   { value: "student", label: "Student" },
   { value: "student_services", label: "Student Services" },
   { value: "research_office", label: "Research Office" },
@@ -163,10 +167,19 @@ export default function UsersPage() {
   if (authLoading || loading) {
     return (
       <InstitutionAdminLayout>
-        <LinearProgress />
+        <LinearProgress sx={{ borderRadius: 1 }} />
       </InstitutionAdminLayout>
     );
   }
+
+  const roleColors = {
+    vice_chancellor: { bg: "#EDE9FE", color: "#7C3AED" },
+    registrar: { bg: ST.colors.primaryLight, color: ST.colors.primary },
+    scholarship_office: { bg: "#FEF3C7", color: "#D97706" },
+    student: { bg: ST.colors.successLight, color: ST.colors.success },
+    student_services: { bg: "#E0F2FE", color: "#0284C7" },
+    research_office: { bg: "#CCFBF1", color: "#0F766E" },
+  };
 
   const filteredUsers = users.filter((u) => {
     const matchesSearch = u.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -175,307 +188,149 @@ export default function UsersPage() {
     return matchesSearch && matchesRole;
   });
 
-  const paginatedUsers = filteredUsers.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
+  const paginatedUsers = filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+  const headSx = { fontWeight: 600, fontSize: 12, color: ST.colors.textSecondary, bgcolor: ST.colors.bg, borderBottom: `1px solid ${ST.colors.border}`, py: 1.5 };
 
   return (
     <InstitutionAdminLayout>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" fontWeight={700} sx={{ mb: 0.5 }}>
-          Users & Roles
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Manage institution users and their roles
-        </Typography>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 3 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={700} sx={{ color: ST.colors.textPrimary }}>Users & Roles</Typography>
+          <Typography variant="body2" sx={{ color: ST.colors.textSecondary, mt: 0.5 }}>Manage institution users and their access roles · {users.length} total</Typography>
+        </Box>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateDialogOpen(true)} disableElevation
+          sx={{ textTransform: "none", fontWeight: 600, borderRadius: 1.5, bgcolor: ST.colors.primary, "&:hover": { bgcolor: "#1e3a8a" } }}>
+          Add User
+        </Button>
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
-          {error}
-        </Alert>
-      )}
+      {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 1.5 }} onClose={() => setError("")}>{error}</Alert>}
 
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", alignItems: "center" }}>
-          <TextField
-            placeholder="Search users..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            size="small"
-            sx={{ minWidth: 250 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <TextField
-            select
-            label="Filter by Role"
-            value={filterRole}
-            onChange={(e) => setFilterRole(e.target.value)}
-            size="small"
-            sx={{ minWidth: 200 }}
-          >
+      <Paper elevation={0} sx={{ border: `1px solid ${ST.colors.border}`, borderRadius: 2, overflow: "hidden" }}>
+        <Box sx={{ px: 2.5, py: 1.5, borderBottom: `1px solid ${ST.colors.border}`, display: "flex", gap: 1.5, flexWrap: "wrap", alignItems: "center" }}>
+          <TextField placeholder="Search users..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} size="small"
+            sx={{ width: 260, "& .MuiOutlinedInput-root": { borderRadius: 1.5, fontSize: 13 } }}
+            InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 18, color: ST.colors.textSecondary }} /></InputAdornment> }} />
+          <TextField select label="Role" value={filterRole} onChange={(e) => { setFilterRole(e.target.value); setPage(0); }} size="small"
+            sx={{ minWidth: 180, "& .MuiOutlinedInput-root": { borderRadius: 1.5, fontSize: 13 } }}>
             <MenuItem value="all">All Roles</MenuItem>
-            {INSTITUTION_ROLES.map((r) => (
-              <MenuItem key={r.value} value={r.value}>
-                {r.label}
-              </MenuItem>
-            ))}
+            {INSTITUTION_ROLES.map((r) => <MenuItem key={r.value} value={r.value}>{r.label}</MenuItem>)}
           </TextField>
-          <Box sx={{ flexGrow: 1 }} />
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateDialogOpen(true)}>
-            Add User
-          </Button>
         </Box>
+
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={headSx}>User</TableCell>
+                <TableCell sx={headSx}>Email</TableCell>
+                <TableCell sx={headSx}>Role</TableCell>
+                <TableCell sx={headSx}>Status</TableCell>
+                <TableCell sx={{ ...headSx, width: 60 }} />
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {paginatedUsers.map((u) => {
+                const rc = roleColors[u.role] || { bg: ST.colors.bg, color: ST.colors.textSecondary };
+                return (
+                  <TableRow key={u.id} hover sx={{ "&:last-child td": { border: 0 }, "&:hover": { bgcolor: "#F8FAFF" } }}>
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                        <Avatar sx={{ width: 32, height: 32, fontSize: 13, bgcolor: rc.color }}>{u.full_name?.charAt(0)}</Avatar>
+                        <Typography variant="body2" fontWeight={600} sx={{ fontSize: 13, color: ST.colors.textPrimary }}>{u.full_name}</Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell sx={{ fontSize: 13, color: ST.colors.textSecondary }}>{u.email}</TableCell>
+                    <TableCell>
+                      <Chip label={u.role.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())} size="small"
+                        sx={{ fontSize: 11, fontWeight: 600, height: 22, bgcolor: rc.bg, color: rc.color }} />
+                    </TableCell>
+                    <TableCell>
+                      <Chip label={u.is_active ? "Active" : "Inactive"} size="small"
+                        sx={{ fontSize: 11, fontWeight: 600, height: 22, bgcolor: u.is_active ? ST.colors.successLight : ST.colors.bg, color: u.is_active ? ST.colors.success : ST.colors.textSecondary }} />
+                    </TableCell>
+                    <TableCell align="right">
+                      <Tooltip title="More">
+                        <IconButton size="small" onClick={(e) => handleMenuOpen(e, u)}>
+                          <MoreVertIcon sx={{ fontSize: 18, color: ST.colors.textSecondary }} />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              {paginatedUsers.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} align="center" sx={{ py: 6, color: ST.colors.textSecondary }}>
+                    {users.length === 0 ? "No users yet. Click 'Add User' to get started." : "No users match your filters."}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <TablePagination component="div" count={filteredUsers.length} page={page} onPageChange={(e, p) => setPage(p)}
+          rowsPerPage={rowsPerPage} onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+          rowsPerPageOptions={[5, 10, 25, 50]} sx={{ borderTop: `1px solid ${ST.colors.border}` }} />
       </Paper>
 
-      <TableContainer component={Paper}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Role</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {paginatedUsers.map((u) => (
-              <TableRow key={u.id} hover>
-                <TableCell>
-                  <Typography variant="body2" fontWeight={500}>{u.full_name}</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" color="text.secondary">{u.email}</Typography>
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={u.role.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={u.is_active ? "Active" : "Inactive"}
-                    color={u.is_active ? "success" : "default"}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell align="right">
-                  <IconButton
-                    size="small"
-                    onClick={(e) => handleMenuOpen(e, u)}
-                    title="More Actions"
-                  >
-                    <MoreVertIcon fontSize="small" />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-            {paginatedUsers.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    {users.length === 0 ? "No users yet. Click 'Add User' to get started." : "No users match your filters."}
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-        <TablePagination
-          component="div"
-          count={filteredUsers.length}
-          page={page}
-          onPageChange={(e, newPage) => setPage(newPage)}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={(e) => {
-            setRowsPerPage(parseInt(e.target.value, 10));
-            setPage(0);
-          }}
-          rowsPerPageOptions={[5, 10, 25, 50]}
-        />
-      </TableContainer>
-
-      {/* Actions Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem
-          onClick={() => {
-            handleMenuClose();
-            setSelectedUser(menuUser);
-            setEditForm({
-              full_name: menuUser.full_name,
-              role: menuUser.role,
-            });
-            setEditDialogOpen(true);
-          }}
-        >
-          <EditIcon fontSize="small" sx={{ mr: 1 }} />
-          Edit
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}
+        PaperProps={{ elevation: 2, sx: { borderRadius: 2, border: `1px solid ${ST.colors.border}`, minWidth: 180 } }}>
+        <MenuItem sx={{ gap: 1.5, fontSize: 14 }} onClick={() => { handleMenuClose(); setSelectedUser(menuUser); setEditForm({ full_name: menuUser.full_name, role: menuUser.role }); setEditDialogOpen(true); }}>
+          <EditIcon fontSize="small" sx={{ color: ST.colors.textSecondary }} /> Edit User
         </MenuItem>
-        <MenuItem
-          onClick={() => {
-            handleMenuClose();
-            handleToggleActive(menuUser);
-          }}
-        >
-          {menuUser?.is_active ? (
-            <>
-              <BlockIcon fontSize="small" sx={{ mr: 1 }} />
-              Deactivate
-            </>
-          ) : (
-            <>
-              <CheckCircleIcon fontSize="small" sx={{ mr: 1 }} />
-              Activate
-            </>
-          )}
+        <MenuItem sx={{ gap: 1.5, fontSize: 14 }} onClick={() => { handleMenuClose(); handleToggleActive(menuUser); }}>
+          {menuUser?.is_active
+            ? <><BlockIcon fontSize="small" sx={{ color: ST.colors.warning }} /> Deactivate</>
+            : <><CheckCircleIcon fontSize="small" sx={{ color: ST.colors.success }} /> Activate</>}
         </MenuItem>
-        <MenuItem
-          onClick={() => {
-            handleMenuClose();
-            setConfirmDialog({ open: true, user: menuUser });
-          }}
-          sx={{ color: "error.main" }}
-        >
-          <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
-          Delete
+        <Divider />
+        <MenuItem sx={{ gap: 1.5, fontSize: 14, color: ST.colors.error }} onClick={() => { handleMenuClose(); setConfirmDialog({ open: true, user: menuUser }); }}>
+          <DeleteIcon fontSize="small" /> Delete
         </MenuItem>
       </Menu>
 
-      {/* Confirmation Dialog */}
-      <Dialog
-        open={confirmDialog.open}
-        onClose={() => setConfirmDialog({ open: false, user: null })}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>Delete User?</DialogTitle>
+      <Dialog open={confirmDialog.open} onClose={() => setConfirmDialog({ open: false, user: null })} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+        <DialogTitle sx={{ fontWeight: 700 }}>Delete User?</DialogTitle>
         <DialogContent>
-          <Typography variant="body2">
-            Are you sure you want to delete <strong>{confirmDialog.user?.full_name}</strong>? This action cannot be undone.
-          </Typography>
+          <Typography variant="body2">Are you sure you want to delete <strong>{confirmDialog.user?.full_name}</strong>? This action cannot be undone.</Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmDialog({ open: false, user: null })}>
-            Cancel
-          </Button>
-          <Button variant="contained" color="error" onClick={handleDelete}>
-            Delete
-          </Button>
+        <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
+          <Button onClick={() => setConfirmDialog({ open: false, user: null })} sx={{ textTransform: "none", color: ST.colors.textSecondary }}>Cancel</Button>
+          <Button variant="contained" color="error" onClick={handleDelete} disableElevation sx={{ textTransform: "none", borderRadius: 1.5 }}>Delete</Button>
         </DialogActions>
       </Dialog>
 
-      {/* Create User Dialog */}
-      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Add User</DialogTitle>
+      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+        <DialogTitle sx={{ fontWeight: 700 }}>Add New User</DialogTitle>
         <DialogContent>
-          <TextField
-            fullWidth
-            label="Full Name"
-            value={createForm.full_name}
-            onChange={(e) => setCreateForm({ ...createForm, full_name: e.target.value })}
-            sx={{ mt: 1, mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label="Email"
-            type="email"
-            value={createForm.email}
-            onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
-            helperText={domains.length > 0 ? `Must match: ${domains.map((d) => `@${d.domain}`).join(", ")}` : ""}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label="Password"
-            type="password"
-            value={createForm.password}
-            onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            select
-            label="Role"
-            value={createForm.role}
-            onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
-          >
-            {INSTITUTION_ROLES.map((r) => (
-              <MenuItem key={r.value} value={r.value}>
-                {r.label}
-              </MenuItem>
-            ))}
+          <TextField fullWidth label="Full Name" value={createForm.full_name} onChange={(e) => setCreateForm({ ...createForm, full_name: e.target.value })} sx={{ mt: 1, mb: 2 }} />
+          <TextField fullWidth label="Email" type="email" value={createForm.email} onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+            helperText={domains.length > 0 ? `Must match: ${domains.map((d) => `@${d.domain}`).join(", ")}` : ""} sx={{ mb: 2 }} />
+          <TextField fullWidth label="Password" type="password" value={createForm.password} onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })} sx={{ mb: 2 }} />
+          <TextField fullWidth select label="Role" value={createForm.role} onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}>
+            {INSTITUTION_ROLES.map((r) => <MenuItem key={r.value} value={r.value}>{r.label}</MenuItem>)}
           </TextField>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleCreateUser}>
-            Create User
-          </Button>
+        <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
+          <Button onClick={() => setCreateDialogOpen(false)} sx={{ textTransform: "none", color: ST.colors.textSecondary }}>Cancel</Button>
+          <Button variant="contained" onClick={handleCreateUser} disableElevation sx={{ textTransform: "none", bgcolor: ST.colors.primary, borderRadius: 1.5 }}>Create User</Button>
         </DialogActions>
       </Dialog>
 
-      {/* Edit User Dialog */}
-      <Dialog
-        open={editDialogOpen}
-        onClose={() => {
-          setEditDialogOpen(false);
-          setEditForm({ full_name: "", role: "" });
-          setSelectedUser(null);
-        }}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Edit User</DialogTitle>
+      <Dialog open={editDialogOpen} onClose={() => { setEditDialogOpen(false); setEditForm({ full_name: "", role: "" }); setSelectedUser(null); }}
+        maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+        <DialogTitle sx={{ fontWeight: 700 }}>Edit User</DialogTitle>
         <DialogContent>
-          <TextField
-            fullWidth
-            label="Full Name"
-            value={editForm.full_name}
-            onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-            sx={{ mt: 1, mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            select
-            label="Role"
-            value={editForm.role}
-            onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-          >
-            {INSTITUTION_ROLES.map((r) => (
-              <MenuItem key={r.value} value={r.value}>
-                {r.label}
-              </MenuItem>
-            ))}
+          <TextField fullWidth label="Full Name" value={editForm.full_name} onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })} sx={{ mt: 1, mb: 2 }} />
+          <TextField fullWidth select label="Role" value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}>
+            {INSTITUTION_ROLES.map((r) => <MenuItem key={r.value} value={r.value}>{r.label}</MenuItem>)}
           </TextField>
         </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setEditDialogOpen(false);
-              setEditForm({ full_name: "", role: "" });
-              setSelectedUser(null);
-            }}
-          >
-            Cancel
-          </Button>
-          <Button variant="contained" onClick={handleUpdateUser}>
-            Update
-          </Button>
+        <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
+          <Button onClick={() => { setEditDialogOpen(false); setEditForm({ full_name: "", role: "" }); setSelectedUser(null); }} sx={{ textTransform: "none", color: ST.colors.textSecondary }}>Cancel</Button>
+          <Button variant="contained" onClick={handleUpdateUser} disableElevation sx={{ textTransform: "none", bgcolor: ST.colors.primary, borderRadius: 1.5 }}>Update</Button>
         </DialogActions>
       </Dialog>
     </InstitutionAdminLayout>

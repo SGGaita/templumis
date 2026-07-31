@@ -12,6 +12,7 @@ CREATE TYPE user_role AS ENUM (
     'vice_chancellor',
     'registrar',
     'scholarship_office',
+    'scholarship_reviewer',
     'student',
     'student_services',
     'research_office'
@@ -237,6 +238,27 @@ CREATE TABLE support_tickets (
     resolved_at TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ============================================
+-- PLATFORM SETTINGS
+-- ============================================
+
+CREATE TABLE platform_settings (
+    id SERIAL PRIMARY KEY,
+    setting_key VARCHAR(100) UNIQUE NOT NULL,
+    setting_value TEXT NOT NULL,
+    description TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_by INT REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- Insert default settings
+INSERT INTO platform_settings (setting_key, setting_value, description) VALUES
+    ('platform_name', 'TemplumIS', 'Name of the platform'),
+    ('support_email', 'support@templumis.com', 'Support contact email'),
+    ('allow_registration', 'true', 'Allow new institution registration'),
+    ('require_email_verification', 'true', 'Require email verification for new users'),
+    ('maintenance_mode', 'false', 'Enable maintenance mode');
 
 -- ============================================
 -- AUDIT LOG

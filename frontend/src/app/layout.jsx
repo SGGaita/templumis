@@ -1,15 +1,20 @@
 import Providers from "./providers";
+import { montserrat } from "@/lib/fonts";
 
 export const metadata = {
-  title: "TemplumIS — Institutional Intelligence Dashboard",
+  title: "TemplumIS - Powering Smarter Higher Education",
   description:
-    "Open Infrastructure enrollment, grants, and scholarship dashboard for universities and research hospitals.",
+    "Institutional intelligence for enrollment, student success, financial aid, grants, and rankings.",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" className={montserrat.variable}>
+      <body className={montserrat.className}>
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -31,7 +31,7 @@
 
 ### 1.1 Mission Statement
 
-TemplumIS is an **Open Infrastructure** enrollment, grants, and scholarship dashboard designed for **Tier 2–3 universities and research hospitals**. It transforms siloed institutional data into a unified intelligence layer to drive rankings, student retention, and research ROI.
+TemplumIS is an **Open Infrastructure** enrollment, grants, and scholarship dashboard designed for **Tier 2–3 universities**. It transforms siloed institutional data into a unified intelligence layer to drive rankings, student retention, and research ROI.
 
 ### 1.2 Current Implementation Status
 

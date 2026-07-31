@@ -41,6 +41,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import BlockIcon from "@mui/icons-material/Block";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import HistoryIcon from "@mui/icons-material/History";
+import Autocomplete from "@mui/material/Autocomplete";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 import GlobalAdminLayout from "@/components/GlobalAdminLayout";
@@ -593,7 +594,16 @@ export default function InstitutionsPage() {
             fullWidth
             label="Institution Name"
             value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            onChange={(e) => {
+              const name = e.target.value;
+              const slug = name
+                .toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .trim();
+              setFormData({ ...formData, name, slug });
+            }}
             sx={{ mt: 2, mb: 2 }}
           />
           <TextField
@@ -606,7 +616,7 @@ export default function InstitutionsPage() {
                 slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
               })
             }
-            helperText="Lowercase letters, numbers, and hyphens only"
+            helperText="Auto-generated from name, or customize manually"
             sx={{ mb: 2 }}
           />
           <TextField
@@ -636,13 +646,32 @@ export default function InstitutionsPage() {
             onChange={(e) => setAdminForm({ ...adminForm, full_name: e.target.value })}
             sx={{ mt: 2, mb: 2 }}
           />
-          <TextField
-            fullWidth
-            label="Email"
-            type="email"
+          <Autocomplete
+            freeSolo
+            options={
+              selectedInst?.domains?.map((d) => {
+                const emailPrefix = adminForm.email.includes('@') 
+                  ? adminForm.email.split('@')[0] 
+                  : adminForm.email;
+                return emailPrefix ? `${emailPrefix}@${d.domain}` : `@${d.domain}`;
+              }) || []
+            }
             value={adminForm.email}
-            onChange={(e) => setAdminForm({ ...adminForm, email: e.target.value })}
-            sx={{ mb: 2 }}
+            onInputChange={(event, newValue) => {
+              setAdminForm({ ...adminForm, email: newValue });
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                fullWidth
+                label="Email"
+                type="email"
+                helperText={selectedInst?.domains?.length > 0 
+                  ? `Available domains: ${selectedInst.domains.map(d => d.domain).join(', ')}` 
+                  : 'No domains configured for this institution'}
+                sx={{ mb: 2 }}
+              />
+            )}
           />
           <TextField
             fullWidth

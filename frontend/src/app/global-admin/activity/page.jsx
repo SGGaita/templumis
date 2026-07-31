@@ -43,7 +43,8 @@ function ActivityRow({ activity }) {
   const actionConfig = actionIcons[activity.action] || actionIcons.default;
   
   const formatTimestamp = (isoString) => {
-    const date = new Date(isoString);
+    // Parse the ISO string and ensure it's treated as UTC
+    const date = new Date(isoString + (isoString.includes('Z') ? '' : 'Z'));
     const now = new Date();
     const diffMs = now - date;
     const diffMins = Math.floor(diffMs / 60000);
@@ -54,7 +55,11 @@ function ActivityRow({ activity }) {
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
+    return date.toLocaleDateString(undefined, { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
   };
 
   return (
@@ -101,7 +106,14 @@ function ActivityRow({ activity }) {
                   <strong>Entity ID:</strong> {activity.entity_id}
                 </Typography>
                 <Typography variant="caption" color="text.secondary" component="div">
-                  <strong>Timestamp:</strong> {new Date(activity.created_at).toLocaleString()}
+                  <strong>Timestamp:</strong> {new Date(activity.created_at + (activity.created_at.includes('Z') ? '' : 'Z')).toLocaleString(undefined, {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                  })}
                 </Typography>
                 {activity.details && Object.keys(activity.details).length > 0 && (
                   <Box sx={{ mt: 1 }}>

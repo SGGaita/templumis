@@ -1,0 +1,53 @@
+/* Executive analytics — print layouts */
+@media print {
+  .analytics-no-print {
+    display: none !important;
+  }
+
+  .MuiDrawer-root,
+  .MuiAppBar-root,
+  nav {
+    display: none !important;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 12px !important;
+    width: 100% !important;
+  }
+
+  #executive-analytics-report {
+    max-width: 100% !important;
+  }
+
+  body.print-analytics-summary .analytics-tab-panel {
+    display: none !important;
+  }
+
+  body.print-analytics-summary .analytics-tab-panel {
+    display: none !important;
+  }
+
+  body.print-analytics-summary .analytics-no-print {
+    display: none !important;
+  }
+
+  body.print-analytics-tab .analytics-tab-panel {
+    display: none !important;
+  }
+
+  body.print-analytics-tab .analytics-tab-panel.is-active-tab {
+    display: block !important;
+    page-break-before: auto;
+  }
+
+  body.print-analytics-full .analytics-tab-panel {
+    display: block !important;
+    page-break-after: always;
+    break-inside: avoid-page;
+  }
+
+  .analytics-print-break {
+    break-inside: avoid;
+  }
+}

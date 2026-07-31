@@ -89,6 +89,10 @@ npm run dev
 - API Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 - Via Nginx: [http://localhost](http://localhost)
 
+### 5. Deploying to a Server
+
+For deploying TemplumIS to a Linux server with Docker, see [DEPLOYMENT.md](./DEPLOYMENT.md). For day-to-day Docker commands (logs, restarts, backups, resets), see [DOCKER_COMMANDS.md](./DOCKER_COMMANDS.md).
+
 ## Modules
 
 1. **Enrollment & Student Success** — TTD analytics, cohort tracking, early-warning dashboards

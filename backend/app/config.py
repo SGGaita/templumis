@@ -12,6 +12,34 @@ class Settings(BaseSettings):
     backend_debug: bool = True
 
     cors_origins_str: str = "http://localhost:3000,http://localhost"
+    app_base_url: str = "http://localhost:3000"
+    
+    # Email settings
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    from_email: str = "TemplumIS <no-reply@templumis.org>"
+    
+    @property
+    def SMTP_HOST(self) -> str:
+        return self.smtp_host
+    
+    @property
+    def SMTP_PORT(self) -> int:
+        return self.smtp_port
+    
+    @property
+    def SMTP_USER(self) -> str:
+        return self.smtp_user
+    
+    @property
+    def SMTP_PASSWORD(self) -> str:
+        return self.smtp_password
+    
+    @property
+    def FROM_EMAIL(self) -> str:
+        return self.from_email
 
     @property
     def cors_origins(self) -> list[str]:

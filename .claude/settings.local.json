@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Remove-Item \"C:\\\\projects\\\\templumIS\\\\frontend\\\\src\\\\lib\\\\translations.js\" -ErrorAction SilentlyContinue)",
+      "Bash(Write-Host \"done\")",
+      "Bash(npx next *)"
+    ]
+  }
+}
