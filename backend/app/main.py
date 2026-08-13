@@ -120,8 +120,17 @@ def ensure_scholarship_tables():
             conn.execute(
                 text(f"ALTER TABLE scholarship_review_assignments ADD COLUMN IF NOT EXISTS {col} {typ}")
             )
-        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS invite_token VARCHAR(64)"))
-        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS invite_token_expires TIMESTAMP"))
+        user_columns = [
+            ("account_category", "VARCHAR(50)"),
+            ("student_registration_number", "VARCHAR(100)"),
+            ("email_verified", "BOOLEAN DEFAULT FALSE"),
+            ("verification_code", "VARCHAR(10)"),
+            ("verification_code_expires", "TIMESTAMP"),
+            ("invite_token", "VARCHAR(64)"),
+            ("invite_token_expires", "TIMESTAMP"),
+        ]
+        for col, typ in user_columns:
+            conn.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {typ}"))
         try:
             conn.execute(text("ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'scholarship_reviewer'"))
         except Exception:

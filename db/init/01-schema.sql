@@ -92,6 +92,13 @@ CREATE TABLE users (
     full_name VARCHAR(255) NOT NULL,
     role user_role NOT NULL,
     institution_id INT REFERENCES institutions(id) ON DELETE SET NULL,
+    account_category VARCHAR(50),
+    student_registration_number VARCHAR(100),
+    email_verified BOOLEAN DEFAULT FALSE,
+    verification_code VARCHAR(10),
+    verification_code_expires TIMESTAMP,
+    invite_token VARCHAR(64),
+    invite_token_expires TIMESTAMP,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
