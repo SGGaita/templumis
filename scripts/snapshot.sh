@@ -13,15 +13,23 @@ mkdir -p "$SNAPSHOT_DIR"
 echo "Snapshotting running images..."
 : > "$SNAPSHOT_DIR/images.txt"
 for service in backend frontend; do
+  dest="${PROJECT}-${service}:previous"
   cid="$(docker compose ps -q "$service" 2>/dev/null || true)"
   if [[ -z "$cid" ]]; then
     echo "No running ${service} container; skip image snapshot"
     continue
   fi
-  img="$(docker inspect --format '{{.Image}}' "$cid")"
-  docker tag "$img" "${PROJECT}-${service}:previous"
-  echo "${service} ${PROJECT}-${service}:previous" >> "$SNAPSHOT_DIR/images.txt"
-  echo "Tagged ${PROJECT}-${service}:previous"
+
+  if docker image inspect "${PROJECT}-${service}:latest" >/dev/null 2>&1; then
+    docker tag "${PROJECT}-${service}:latest" "$dest"
+  elif docker commit "$cid" "$dest" >/dev/null; then
+    echo "Committed running ${service} container (original image was missing)"
+  else
+    echo "WARNING: could not snapshot ${service}; rollback may skip it"
+    continue
+  fi
+  echo "${service} ${dest}" >> "$SNAPSHOT_DIR/images.txt"
+  echo "Tagged ${dest}"
 done
 
 echo "Dumping database..."
