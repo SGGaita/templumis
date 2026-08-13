@@ -253,7 +253,7 @@ SELECT
     s.full_name,
     s.email,
     s.status,
-    s.compliance_status,
+    s.compliance as compliance_status,
     s.gpa,
     p.name as program_name,
     c.name as cohort_name,
@@ -265,9 +265,9 @@ LEFT JOIN programs p ON s.program_id = p.id
 LEFT JOIN cohorts c ON s.cohort_id = c.id
 LEFT JOIN early_warning_alerts ewa ON s.id = ewa.student_id AND ewa.is_resolved = FALSE
 WHERE s.status = 'active'
-GROUP BY s.id, s.student_number, s.full_name, s.email, s.status, s.compliance_status, s.gpa, p.name, c.name
+GROUP BY s.id, s.student_number, s.full_name, s.email, s.status, s.compliance, s.gpa, p.name, c.name
 HAVING COUNT(ewa.id) > 0
-ORDER BY COUNT(ewa.id) DESC, s.compliance_status DESC;
+ORDER BY COUNT(ewa.id) DESC, s.compliance DESC;
 
 -- Graduation rates by program
 CREATE OR REPLACE VIEW v_graduation_rates_by_program AS
