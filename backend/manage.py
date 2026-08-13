@@ -117,12 +117,21 @@ def main():
     )
     staff_parser.add_argument("--institution-id", type=int, default=None)
 
+    subparsers.add_parser(
+        "migrate",
+        help="Stamp existing DBs if needed, then alembic upgrade head",
+    )
+
     args = parser.parse_args()
 
     if args.command == "create-global-admin":
         create_global_admin(args.email, args.name, args.password)
     elif args.command == "create-staff-user":
         create_staff_user(args.email, args.name, args.password, args.role, args.institution_id)
+    elif args.command == "migrate":
+        from migrate import run_pending
+
+        run_pending()
     else:
         parser.print_help()
         sys.exit(1)

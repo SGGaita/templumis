@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # Rebuild TemplumIS on the server using the docker-compose.yml that already
 # lives here. Never replace that file (or .env) from git.
-# Do not recreate nginx: releasing :80 lets another process steal the port.
+# On failure, restore the snapshot from scripts/snapshot.sh (images, DB, code).
 set -euo pipefail
 
 APP_DIR="${APP_DIR:-/opt/templumis}"
+SNAPSHOT_DIR="${SNAPSHOT_DIR:-/var/backups/templumis/last}"
+PROJECT="$(basename "$APP_DIR")"
 cd "$APP_DIR"
 
 if [[ ! -f docker-compose.yml ]]; then
@@ -58,13 +60,83 @@ nginx_running() {
   [[ -n "$id" ]] && [[ "$(docker inspect -f '{{.State.Running}}' "$id" 2>/dev/null || true)" == "true" ]]
 }
 
-echo "Building backend and frontend (nginx is left running so port 80 stays bound)..."
-if docker compose up --help 2>/dev/null | grep -q -- '--wait'; then
-  docker compose up --build -d --wait --wait-timeout 180 --no-deps backend frontend
-else
-  docker compose up --build -d --no-deps backend frontend
-fi
+wait_for_health() {
+  local i
+  for i in $(seq 1 30); do
+    if docker compose exec -T backend python -c \
+      "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=2)" \
+      >/dev/null 2>&1; then
+      echo "Health check OK"
+      return 0
+    fi
+    sleep 2
+  done
+  echo "ERROR: backend /api/health did not become ready"
+  return 1
+}
+
+rolled_back=0
+rollback() {
+  trap - ERR
+  if [[ "$rolled_back" -eq 1 ]]; then
+    return
+  fi
+  rolled_back=1
+  echo "DEPLOY FAILED — rolling back to the pre-deploy snapshot..."
+
+  docker compose stop backend frontend >/dev/null 2>&1 || true
+
+  if [[ -f "$SNAPSHOT_DIR/db.sql" ]]; then
+    echo "Restoring database dump..."
+    docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+      < "$SNAPSHOT_DIR/db.sql" || echo "WARNING: database restore failed"
+  fi
+
+  if [[ -f "$SNAPSHOT_DIR/code.tar.gz" ]]; then
+    tar -C "$APP_DIR" -xzf "$SNAPSHOT_DIR/code.tar.gz"
+    echo "Restored previous code"
+  fi
+
+  if docker image inspect "${PROJECT}-backend:previous" >/dev/null 2>&1; then
+    docker tag "${PROJECT}-backend:previous" "${PROJECT}-backend:latest"
+  fi
+  if docker image inspect "${PROJECT}-frontend:previous" >/dev/null 2>&1; then
+    docker tag "${PROJECT}-frontend:previous" "${PROJECT}-frontend:latest"
+  fi
+  docker compose up -d --no-deps --no-build backend frontend || true
+
+  echo "Rollback finished. Previous release should be running."
+}
+
+trap 'rollback; exit 1' ERR
+
+echo "Building backend and frontend images..."
+docker compose build backend frontend
 docker compose up -d db
+echo "Waiting for database..."
+for i in $(seq 1 30); do
+  if docker compose exec -T db sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"' >/dev/null 2>&1; then
+    break
+  fi
+  if [[ "$i" -eq 30 ]]; then
+    echo "ERROR: database did not become ready"
+    exit 1
+  fi
+  sleep 2
+done
+
+echo "Running Alembic migrations..."
+docker compose run --no-deps --rm --no-build backend python manage.py migrate
+
+echo "Starting backend and frontend (nginx is left running so port 80 stays bound)..."
+if docker compose up --help 2>/dev/null | grep -q -- '--wait'; then
+  docker compose up -d --no-deps --no-build --wait --wait-timeout 180 backend frontend
+else
+  docker compose up -d --no-deps --no-build backend frontend
+fi
+
+wait_for_health
+trap - ERR
 
 if nginx_running; then
   if docker compose exec -T nginx nginx -s reload >/dev/null 2>&1; then
@@ -86,11 +158,5 @@ fi
 echo
 docker compose ps
 echo
-if curl -fsS http://127.0.0.1/api/health >/dev/null 2>&1; then
-  echo "Health check OK: http://127.0.0.1/api/health"
-else
-  echo "WARNING: http://127.0.0.1/api/health did not respond yet. Check: docker compose logs --tail 80"
-fi
-
 docker image prune -f >/dev/null 2>&1 || true
 echo "Deploy finished."

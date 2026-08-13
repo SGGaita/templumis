@@ -24,7 +24,7 @@ jobs:
           python-version: "3.12"
 
       - name: Compile backend
-        run: python -m compileall -q backend/app
+        run: python -m compileall -q backend/app backend/migrate.py backend/alembic
 
       - name: Set up Node
         uses: actions/setup-node@v5
@@ -48,7 +48,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
     runs-on: ubuntu-latest
     environment: production
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v5
 
@@ -78,6 +78,16 @@ jobs:
           chmod 700 ~/.ssh
           ssh-keyscan -4 -p "$DEPLOY_PORT" "$DEPLOY_HOST" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
+
+      - name: Snapshot current release
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/opt/templumis' }}
+        run: |
+          ssh -p "$DEPLOY_PORT" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "APP_DIR='${DEPLOY_PATH}' bash -s" < scripts/snapshot.sh
 
       - name: Sync code (keep server docker-compose.yml and .env)
         env:
