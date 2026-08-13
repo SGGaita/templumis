@@ -117,13 +117,16 @@ sudo systemctl enable docker
 
 ## 8. Updating a Deployment
 
+Day-to-day updates are done by pushing to `main`. GitHub Actions snapshots the live release, syncs code, runs Alembic, and rebuilds backend/frontend **without overwriting** the server `docker-compose.yml` or `.env`. See [docs/CI_CD.md](./docs/CI_CD.md).
+
+Manual update on the server (keeps Compose):
+
 ```bash
-cd templumIS
-git pull
-docker compose up --build -d
+cd /opt/templumis
+bash scripts/deploy.sh
 ```
 
-This rebuilds only the images whose source changed and recreates those containers; `db` keeps its volume (`pgdata`) untouched. There's a brief moment of downtime while `frontend`/`backend` restart — for a low-traffic internal tool this is usually acceptable. If a change touches `db/init/*.sql`, note that those scripts only run against a **fresh, empty** database volume; existing databases need a manual migration (see `backend/migrations/` and `alembic` in `requirements.txt`) or, for non-production data, `docker compose down -v` to wipe and reinitialize.
+`db/init/*.sql` only runs against a **fresh, empty** database volume. Existing databases are migrated with Alembic (`python manage.py migrate` / `alembic upgrade head`). Do not use `docker compose down -v` on production — that deletes `pgdata`.
 
 ## 9. Backups
 
