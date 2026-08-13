@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
+import logging
 import random
 import string
 
@@ -13,20 +14,37 @@ from app.email import send_verification_email
 from app.routes.sis_lms import load_excel_data, sheet_to_dict_list
 from app.account_category import sync_account_category
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+
+
+def _role_value(user: User) -> str:
+    role = user.role
+    return role.value if hasattr(role, "value") else str(role)
 
 
 @router.post("/login", response_model=Token)
 async def login(form: LoginRequest, db: Session = Depends(get_db)):
-    user = authenticate_user(db, form.email, form.password)
-    if not user:
+    try:
+        user = authenticate_user(db, form.email, form.password)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
+            )
+        sync_account_category(user, db)
+        token = create_access_token(data={"sub": str(user.id), "role": _role_value(user)})
+        return Token(access_token=token)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Login failed for %s", form.email)
+        db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
-        )
-    sync_account_category(user, db)
-    token = create_access_token(data={"sub": str(user.id), "role": user.role.value})
-    return Token(access_token=token)
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Login failed: {exc}",
+        ) from exc
 
 
 @router.get("/me", response_model=UserOut)
@@ -229,7 +247,7 @@ async def accept_reviewer_invite(body: dict, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
 
-    access_token = create_access_token(data={"sub": str(user.id), "role": user.role.value})
+    access_token = create_access_token(data={"sub": str(user.id), "role": _role_value(user)})
     return Token(access_token=access_token)
 
 

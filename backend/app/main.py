@@ -131,15 +131,18 @@ def ensure_scholarship_tables():
         ]
         for col, typ in user_columns:
             conn.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {typ}"))
-        try:
+    try:
+        with engine.begin() as conn:
             conn.execute(text("ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'scholarship_reviewer'"))
-        except Exception:
-            pass
+    except Exception:
+        pass
     from app.database import SessionLocal
 
     db = SessionLocal()
     try:
         scholarship_catalog.seed_programs_if_empty(db)
+    except Exception:
+        db.rollback()
     finally:
         db.close()
 
