@@ -2,7 +2,7 @@ import Providers from "./providers";
 import { montserrat } from "@/lib/fonts";
 
 export const metadata = {
-  title: "TemplumIS - Powering Smarter Higher Education",
+  title: "TemplumIS - Powering Smarter Higher Educations",
   description:
     "Institutional intelligence for enrollment, student success, financial aid, grants, and rankings.",
   icons: {

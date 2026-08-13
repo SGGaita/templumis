@@ -70,7 +70,7 @@ const en = {
       signupBtn: "Sign up",
     },
     hero: {
-      tagline: "Powering smarter higher education",
+      tagline: "Powering smarter higher educations",
       subtitle: "Institutional intelligence for enrollment, student success, and research",
       description:
         "Transforming siloed institutional data into a unified intelligence layer for enrollment, grants, scholarships, and student success.",
