@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Rebuild TemplumIS on the server using the docker-compose.yml that already
 # lives here. Never replace that file (or .env) from git.
+# Do not recreate nginx: releasing :80 lets another process steal the port.
 set -euo pipefail
 
 APP_DIR="${APP_DIR:-/opt/templumis}"
@@ -45,15 +46,41 @@ if [[ "${1:-}" == "--pull" ]]; then
   trap - EXIT
 fi
 
-echo "Building and restarting containers with the server docker-compose.yml..."
-if docker compose up --help 2>/dev/null | grep -q -- '--wait'; then
-  docker compose up --build -d --wait --wait-timeout 180
-else
-  docker compose up --build -d
-fi
+show_port_80() {
+  echo "What is bound to port 80:"
+  ss -tlnp 2>/dev/null | grep -E ':80\s' || true
+  docker ps --filter publish=80 --format 'table {{.Names}}\t{{.Ports}}\t{{.Status}}' || true
+}
 
-if docker compose exec -T nginx nginx -s reload >/dev/null 2>&1; then
-  echo "Reloaded nginx"
+nginx_running() {
+  local id
+  id="$(docker compose ps -q nginx 2>/dev/null || true)"
+  [[ -n "$id" ]] && [[ "$(docker inspect -f '{{.State.Running}}' "$id" 2>/dev/null || true)" == "true" ]]
+}
+
+echo "Building backend and frontend (nginx is left running so port 80 stays bound)..."
+if docker compose up --help 2>/dev/null | grep -q -- '--wait'; then
+  docker compose up --build -d --wait --wait-timeout 180 --no-deps backend frontend
+else
+  docker compose up --build -d --no-deps backend frontend
+fi
+docker compose up -d db
+
+if nginx_running; then
+  if docker compose exec -T nginx nginx -s reload >/dev/null 2>&1; then
+    echo "Reloaded nginx"
+  else
+    echo "WARNING: nginx reload failed; container is still running"
+  fi
+else
+  echo "nginx is not running; starting it..."
+  if ! docker compose up -d nginx; then
+    echo "ERROR: nginx could not start. Port 80 is probably already in use."
+    show_port_80
+    echo "If a host nginx/apache/caddy should own port 80, leave it and map templumis-nginx to another port in the SERVER docker-compose.yml."
+    echo "If templumis-nginx should own port 80, stop the other process, then: docker compose up -d nginx"
+    exit 1
+  fi
 fi
 
 echo
