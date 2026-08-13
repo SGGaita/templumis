@@ -76,6 +76,20 @@ wait_for_health() {
 }
 
 rolled_back=0
+db_touched=0
+
+compose_up_services() {
+  local extra=()
+  if docker compose up --help 2>/dev/null | grep -q -- '--no-build'; then
+    extra+=(--no-build)
+  fi
+  if docker compose up --help 2>/dev/null | grep -q -- '--wait' && [[ "${1:-}" == "--wait" ]]; then
+    shift
+    extra+=(--wait --wait-timeout 180)
+  fi
+  docker compose up -d --no-deps "${extra[@]}" "$@"
+}
+
 rollback() {
   trap - ERR
   if [[ "$rolled_back" -eq 1 ]]; then
@@ -86,10 +100,12 @@ rollback() {
 
   docker compose stop backend frontend >/dev/null 2>&1 || true
 
-  if [[ -f "$SNAPSHOT_DIR/db.sql" ]]; then
+  if [[ "$db_touched" -eq 1 && -f "$SNAPSHOT_DIR/db.sql" ]]; then
     echo "Restoring database dump..."
     docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
       < "$SNAPSHOT_DIR/db.sql" || echo "WARNING: database restore failed"
+  else
+    echo "Skipping database restore (migrations did not start)."
   fi
 
   if [[ -f "$SNAPSHOT_DIR/code.tar.gz" ]]; then
@@ -103,7 +119,7 @@ rollback() {
   if docker image inspect "${PROJECT}-frontend:previous" >/dev/null 2>&1; then
     docker tag "${PROJECT}-frontend:previous" "${PROJECT}-frontend:latest"
   fi
-  docker compose up -d --no-deps --no-build backend frontend || true
+  compose_up_services backend frontend || true
 
   echo "Rollback finished. Previous release should be running."
 }
@@ -126,13 +142,14 @@ for i in $(seq 1 30); do
 done
 
 echo "Running Alembic migrations..."
-docker compose run --no-deps --rm --no-build backend python manage.py migrate
+db_touched=1
+docker compose run --no-deps --rm backend python manage.py migrate
 
 echo "Starting backend and frontend (nginx is left running so port 80 stays bound)..."
 if docker compose up --help 2>/dev/null | grep -q -- '--wait'; then
-  docker compose up -d --no-deps --no-build --wait --wait-timeout 180 backend frontend
+  compose_up_services --wait backend frontend
 else
-  docker compose up -d --no-deps --no-build backend frontend
+  compose_up_services backend frontend
 fi
 
 wait_for_health
