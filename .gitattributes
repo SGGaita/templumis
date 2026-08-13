@@ -1,0 +1,2 @@
+*.sh text eol=lf
+scripts/rsync-excludes.txt text eol=lf

@@ -30,6 +30,10 @@ build/
 .DS_Store
 Thumbs.db
 
+# Deploy SSH keys (never commit)
+templumis-deploy
+templumis-deploy.pub
+
 # Docker
 *.log
 
