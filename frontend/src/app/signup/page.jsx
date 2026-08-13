@@ -34,6 +34,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import { apiFetch } from "@/lib/api";
 import { useLanguage } from "@/lib/language-context";
 import LanguageToggle from "@/components/LanguageToggle";
+import SiteFooter from "@/components/SiteFooter";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -653,22 +654,7 @@ export default function SignupPage() {
         </Paper>
       </Container>
 
-      <Box
-        component="footer"
-        sx={{
-          py: 3,
-          px: 2,
-          bgcolor: "grey.100",
-          borderTop: "1px solid",
-          borderColor: "grey.300",
-        }}
-      >
-        <Container maxWidth="lg">
-          <Typography variant="body2" color="text.secondary" textAlign="center">
-            © {new Date().getFullYear()} {t.common.copyright}
-          </Typography>
-        </Container>
-      </Box>
+      <SiteFooter showLegal={false} />
     </Box>
   );
 }

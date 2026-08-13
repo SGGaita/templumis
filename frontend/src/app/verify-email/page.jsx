@@ -13,6 +13,7 @@ import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import CircularProgress from "@mui/material/CircularProgress";
 import BrandLogo from "@/components/BrandLogo";
+import SiteFooter from "@/components/SiteFooter";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import { apiFetch } from "@/lib/api";
 
@@ -198,22 +199,7 @@ function VerifyEmailContent() {
         </Paper>
       </Container>
 
-      <Box
-        component="footer"
-        sx={{
-          py: 3,
-          px: 2,
-          bgcolor: "grey.100",
-          borderTop: "1px solid",
-          borderColor: "grey.300",
-        }}
-      >
-        <Container maxWidth="lg">
-          <Typography variant="body2" color="text.secondary" textAlign="center">
-            © {new Date().getFullYear()} TemplumIS. All rights reserved.
-          </Typography>
-        </Container>
-      </Box>
+      <SiteFooter showLegal={false} />
     </Box>
   );
 }

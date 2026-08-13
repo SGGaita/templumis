@@ -45,6 +45,7 @@ const ms = {
     privacyPolicy: "Dasar Privasi",
     termsOfService: "Terma Perkhidmatan",
     contact: "Hubungi",
+    documentation: "Dokumentasi",
     required: "Diperlukan",
     optional: "Pilihan",
     yes: "Ya",

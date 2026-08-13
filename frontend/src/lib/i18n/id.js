@@ -45,6 +45,7 @@ const id = {
     privacyPolicy: "Kebijakan Privasi",
     termsOfService: "Ketentuan Layanan",
     contact: "Kontak",
+    documentation: "Dokumentasi",
     required: "Wajib",
     optional: "Opsional",
     yes: "Ya",

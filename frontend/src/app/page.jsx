@@ -20,6 +20,7 @@ import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import ScienceIcon from "@mui/icons-material/Science";
 import LoginIcon from "@mui/icons-material/Login";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import SiteFooter from "@/components/SiteFooter";
 
 export default function HomePage() {
   const router = useRouter();
@@ -64,6 +65,9 @@ export default function HomePage() {
           <BrandLogo height={64} format="png" onClick={() => router.push("/")} />
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, ml: "auto", flexShrink: 0 }}>
             <LanguageToggle />
+            <Button variant="text" onClick={() => router.push("/documentation")} sx={{ fontWeight: 600 }}>
+              {t.common.documentation}
+            </Button>
             <Button
               variant="outlined"
               startIcon={<LoginIcon />}
@@ -160,37 +164,7 @@ export default function HomePage() {
         </Grid>
       </Container>
 
-      {/* Footer */}
-      <Box
-        component="footer"
-        sx={{
-          mt: "auto",
-          py: 3,
-          px: 2,
-          bgcolor: "grey.100",
-          borderTop: "1px solid",
-          borderColor: "grey.300",
-        }}
-      >
-        <Container maxWidth="lg">
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              © {new Date().getFullYear()} {t.common.copyright}
-            </Typography>
-            <Box sx={{ display: "flex", gap: 3 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ cursor: "pointer", "&:hover": { color: "primary.main" } }}>
-                {t.common.privacyPolicy}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ cursor: "pointer", "&:hover": { color: "primary.main" } }}>
-                {t.common.termsOfService}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ cursor: "pointer", "&:hover": { color: "primary.main" } }}>
-                {t.common.contact}
-              </Typography>
-            </Box>
-          </Box>
-        </Container>
-      </Box>
+      <SiteFooter />
     </Box>
   );
 }

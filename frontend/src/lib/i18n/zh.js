@@ -45,6 +45,7 @@ const zh = {
     privacyPolicy: "隐私政策",
     termsOfService: "服务条款",
     contact: "联系我们",
+    documentation: "文档",
     required: "必填",
     optional: "可选",
     yes: "是",

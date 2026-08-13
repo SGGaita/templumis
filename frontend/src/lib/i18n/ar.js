@@ -45,6 +45,7 @@ const ar = {
     privacyPolicy: "سياسة الخصوصية",
     termsOfService: "شروط الخدمة",
     contact: "اتصل بنا",
+    documentation: "التوثيق",
     required: "مطلوب",
     optional: "اختياري",
     yes: "نعم",

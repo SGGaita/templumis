@@ -45,6 +45,7 @@ const th = {
     privacyPolicy: "นโยบายความเป็นส่วนตัว",
     termsOfService: "เงื่อนไขการให้บริการ",
     contact: "ติดต่อเรา",
+    documentation: "เอกสาร",
     required: "จำเป็น",
     optional: "ไม่จำเป็น",
     yes: "ใช่",

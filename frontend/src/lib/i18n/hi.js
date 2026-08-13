@@ -45,6 +45,7 @@ const hi = {
     privacyPolicy: "गोपनीयता नीति",
     termsOfService: "सेवा की शर्तें",
     contact: "संपर्क करें",
+    documentation: "दस्तावेज़ीकरण",
     required: "आवश्यक",
     optional: "वैकल्पिक",
     yes: "हां",

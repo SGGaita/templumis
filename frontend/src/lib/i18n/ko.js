@@ -45,6 +45,7 @@ const ko = {
     privacyPolicy: "개인정보 보호정책",
     termsOfService: "서비스 약관",
     contact: "문의",
+    documentation: "문서",
     required: "필수",
     optional: "선택",
     yes: "예",

@@ -45,6 +45,7 @@ const es = {
     privacyPolicy: "Política de privacidad",
     termsOfService: "Términos de servicio",
     contact: "Contacto",
+    documentation: "Documentación",
     required: "Requerido",
     optional: "Opcional",
     yes: "Sí",

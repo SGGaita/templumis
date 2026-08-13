@@ -45,6 +45,7 @@ const pt = {
     privacyPolicy: "Política de privacidade",
     termsOfService: "Termos de serviço",
     contact: "Contato",
+    documentation: "Documentação",
     required: "Obrigatório",
     optional: "Opcional",
     yes: "Sim",

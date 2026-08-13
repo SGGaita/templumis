@@ -45,6 +45,7 @@ const lo = {
     privacyPolicy: "ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ",
     termsOfService: "ເງື່ອນໄຂການໃຫ້ບໍລິການ",
     contact: "ຕິດຕໍ່ພວກເຮົາ",
+    documentation: "ເອກະສານ",
     required: "ຕ້ອງການ",
     optional: "ທາງເລືອກ",
     yes: "ແມ່ນ",

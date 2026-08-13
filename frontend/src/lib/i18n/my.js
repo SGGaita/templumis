@@ -45,6 +45,7 @@ const my = {
     privacyPolicy: "ကိုယ်ရေးကိုယ်တာမူဝါဒ",
     termsOfService: "ဝန်ဆောင်မှုစည်းမျဉ်းများ",
     contact: "ဆက်သွယ်ရန်",
+    documentation: "စာရွက်စာတမ်း",
     required: "လိုအပ်သည်",
     optional: "ရွေးချယ်နိုင်သည်",
     yes: "ဟုတ်ကဲ့",

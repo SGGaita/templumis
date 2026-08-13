@@ -45,6 +45,7 @@ const en = {
     privacyPolicy: "Privacy Policy",
     termsOfService: "Terms of Service",
     contact: "Contact",
+    documentation: "Documentation",
     required: "Required",
     optional: "Optional",
     yes: "Yes",

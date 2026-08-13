@@ -14,6 +14,7 @@ import { useAuth } from "@/lib/auth-context";
 import BrandLogo from "@/components/BrandLogo";
 import LanguageToggle from "@/components/LanguageToggle";
 import { useLanguage } from "@/lib/language-context";
+import SiteFooter from "@/components/SiteFooter";
 
 export default function GlobalAdminLoginPage() {
   const router = useRouter();
@@ -41,10 +42,11 @@ export default function GlobalAdminLoginPage() {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", bgcolor: "background.default", p: 2 }}>
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", bgcolor: "background.default" }}>
       <Box sx={{ position: "absolute", top: 16, right: 16 }}>
         <LanguageToggle />
       </Box>
+      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", p: 2 }}>
       <Card sx={{ width: 400, p: 2 }}>
         <CardContent>
           <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
@@ -63,6 +65,8 @@ export default function GlobalAdminLoginPage() {
           </Box>
         </CardContent>
       </Card>
+      </Box>
+      <SiteFooter showLegal={false} />
     </Box>
   );
 }

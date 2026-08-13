@@ -45,6 +45,7 @@ const vi = {
     privacyPolicy: "Chính sách bảo mật",
     termsOfService: "Điều khoản dịch vụ",
     contact: "Liên hệ",
+    documentation: "Tài liệu",
     required: "Bắt buộc",
     optional: "Tùy chọn",
     yes: "Có",

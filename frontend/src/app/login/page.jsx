@@ -18,6 +18,7 @@ import LoginIcon from "@mui/icons-material/Login";
 import { useAuth } from "@/lib/auth-context";
 import { getPostLoginPath } from "@/lib/auth-routing";
 import { useLanguage } from "@/lib/language-context";
+import SiteFooter from "@/components/SiteFooter";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -100,13 +101,7 @@ export default function LoginPage() {
         </Paper>
       </Container>
 
-      <Box component="footer" sx={{ py: 3, px: 2, bgcolor: "grey.100", borderTop: "1px solid", borderColor: "grey.300" }}>
-        <Container maxWidth="lg">
-          <Typography variant="body2" color="text.secondary" textAlign="center">
-            © {new Date().getFullYear()} {t.common.copyright}
-          </Typography>
-        </Container>
-      </Box>
+      <SiteFooter showLegal={false} />
     </Box>
   );
 }

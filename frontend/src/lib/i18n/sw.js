@@ -45,6 +45,7 @@ const sw = {
     privacyPolicy: "Sera ya Faragha",
     termsOfService: "Masharti ya Huduma",
     contact: "Wasiliana",
+    documentation: "Nyaraka",
     required: "Inahitajika",
     optional: "Si lazima",
     yes: "Ndiyo",

@@ -37,7 +37,10 @@ templumIS/
 │   └── nginx.conf     # Reverse proxy config
 ├── scripts/           # Server snapshot + deploy (used by GitHub Actions)
 ├── docs/
-│   ├── CI_CD.md       # GitHub Actions deploy, secrets, rollback, Alembic
+│   ├── CI_CD.md
+│   ├── USER_GUIDE.md
+│   ├── TECHNICAL.md
+│   ├── API.md
 │   └── planning/      # Implementation plan & documentation
 ├── .github/workflows/
 │   └── ci-cd.yml
@@ -93,8 +96,9 @@ npm run dev
 ### 4. Verify
 
 - Frontend: [http://localhost:3000](http://localhost:3000)
+- Product documentation: [http://localhost:3000/documentation](http://localhost:3000/documentation)
 - API Health: [http://localhost:8001/api/health](http://localhost:8001/api/health) (or [http://localhost/api/health](http://localhost/api/health) via Nginx)
-- API Docs: [http://localhost:8001/docs](http://localhost:8001/docs) (or [http://localhost/docs](http://localhost/docs) via Nginx)
+- API Docs (Swagger): [http://localhost:8001/docs](http://localhost:8001/docs) (or [http://localhost/docs](http://localhost/docs) via Nginx)
 - Via Nginx: [http://localhost](http://localhost)
 
 ### 5. Deploying to a Server
@@ -113,6 +117,18 @@ The server’s `docker-compose.yml` and `.env` stay on the host. A push to `main
 2. **Scholarship & Financial Aid** — Application pipeline, compliance loops, Finance Bridge
 3. **Student Support** — Milestone tracking, nudge notifications, support ticketing
 4. **Grants & Research** — Burn-rate monitoring, publication mapping, IRB alerts
+
+## Documentation
+
+Product documentation is in the web app at **[/documentation](http://localhost:3000/documentation)** (also linked from the site footer):
+
+- [User guide](./docs/USER_GUIDE.md) — portals, scholarships, grants, staff, reviewers, admins
+- [Technical documentation](./docs/TECHNICAL.md) — architecture, metadata schema, JSON contracts
+- [API documentation](./docs/API.md) — REST endpoints and authentication
+
+Interactive OpenAPI (Swagger): [http://localhost:8001/docs](http://localhost:8001/docs) (or [http://localhost/docs](http://localhost/docs) via Nginx).
+
+Index: [docs/README.md](./docs/README.md)
 
 ## License
 
