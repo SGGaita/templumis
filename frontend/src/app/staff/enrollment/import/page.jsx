@@ -114,7 +114,7 @@ export default function ImportStudentsPage() {
     <Box>
       <Button
         startIcon={<ArrowBackIcon />}
-        onClick={() => router.push("/staff/enrollment")}
+        onClick={() => router.push("/staff/students")}
         sx={{ mb: 2 }}
       >
         Back to Students
@@ -297,7 +297,7 @@ export default function ImportStudentsPage() {
               </Button>
               <Button
                 variant="contained"
-                onClick={() => router.push("/staff/enrollment")}
+                onClick={() => router.push("/staff/students")}
               >
                 View Students
               </Button>

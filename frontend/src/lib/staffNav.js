@@ -1,6 +1,5 @@
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import SchoolIcon from "@mui/icons-material/School";
 import ScienceIcon from "@mui/icons-material/Science";
 import PeopleIcon from "@mui/icons-material/People";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
@@ -44,26 +43,14 @@ export const staffNavGroups = [
     ],
   },
   {
-    label: "Student cohorts",
+    label: "Students",
     items: [
       {
-        text: "Undergraduates",
-        icon: <SchoolIcon fontSize="small" />,
-        path: "/staff/enrollment",
-        query: { cohort: "undergraduate" },
+        text: "Students",
+        icon: <PeopleIcon fontSize="small" />,
+        path: "/staff/students",
+        activePrefixes: ["/staff/enrollment"],
       },
-      {
-        text: "Postgraduates",
-        icon: <ScienceIcon fontSize="small" />,
-        path: "/staff/enrollment",
-        query: { cohort: "postgraduate" },
-      },
-    ],
-  },
-  {
-    label: "Enrollment & records",
-    items: [
-      { text: "All Students", icon: <PeopleIcon fontSize="small" />, path: "/staff/enrollment" },
     ],
   },
   {
@@ -125,15 +112,13 @@ export function buildStaffNavHref(item) {
 }
 
 export function isStaffNavItemActive(item, pathname, searchParams) {
-  if (pathname !== item.path && !pathname.startsWith(`${item.path}/`)) {
-    return false;
-  }
-  if (!item.query) {
-    if (item.path === "/staff/enrollment" && searchParams?.get("cohort")) {
-      return false;
-    }
-    return true;
-  }
+  const prefixes = item.activePrefixes || [];
+  const matchesPath =
+    pathname === item.path ||
+    pathname.startsWith(`${item.path}/`) ||
+    prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  if (!matchesPath) return false;
+  if (!item.query) return true;
   return Object.entries(item.query).every(
     ([key, value]) => searchParams?.get(key) === value
   );

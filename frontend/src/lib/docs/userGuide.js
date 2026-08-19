@@ -134,7 +134,7 @@ export const userGuideBlocks = [
     items: [
       "**At-risk students** — filter by finances, attendance, or academic flags and open a student record.",
       "**Student support** — review tickets, resources, and postgraduate support context.",
-      "**Enrollment** — browse all students, or filter undergraduates / postgraduates. Import SIS extracts where enabled.",
+      "**Students** — browse all students and filter undergraduates / postgraduates from one registry. Import SIS extracts where enabled.",
     ],
   },
   { type: "h3", id: "staff-aid", text: "Financial aid officers" },

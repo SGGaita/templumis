@@ -342,32 +342,7 @@ export default function StaffDashboard() {
         )}
       </PurposeSection>
 
-      <PurposeSection title="Student cohorts" subtitle="Browse undergraduates and postgraduates separately">
-        <Grid item xs={12} sm={6}>
-          <QuickLink
-            title="Undergraduates"
-            description="Bachelor and undergraduate programmes"
-            count={stats?.students_by_level?.undergraduate}
-            icon={<SchoolIcon />}
-            color={ST.colors.primary}
-            bg={ST.colors.primaryLight}
-            onClick={() => router.push("/staff/enrollment?cohort=undergraduate")}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <QuickLink
-            title="Postgraduates"
-            description="Masters, PhD, and research students"
-            count={stats?.students_by_level?.postgraduate}
-            icon={<ScienceIcon />}
-            color="#7C3AED"
-            bg="#EDE9FE"
-            onClick={() => router.push("/staff/enrollment?cohort=postgraduate")}
-          />
-        </Grid>
-      </PurposeSection>
-
-      <PurposeSection title="Enrollment & records" subtitle="Full student registry and course data">
+      <PurposeSection title="Students" subtitle="Browse the registry and filter by undergraduate or postgraduate cohort">
         <Grid item xs={12} sm={6} md={4}>
           <QuickLink
             title="All Students"
@@ -376,7 +351,29 @@ export default function StaffDashboard() {
             icon={<PeopleIcon />}
             color={ST.colors.primary}
             bg={ST.colors.primaryLight}
-            onClick={() => router.push("/staff/enrollment")}
+            onClick={() => router.push("/staff/students")}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <QuickLink
+            title="Undergraduates"
+            description="Bachelor and undergraduate programmes"
+            count={stats?.students_by_level?.undergraduate}
+            icon={<SchoolIcon />}
+            color={ST.colors.primary}
+            bg={ST.colors.primaryLight}
+            onClick={() => router.push("/staff/students?cohort=undergraduate")}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <QuickLink
+            title="Postgraduates"
+            description="Masters, PhD, and research students"
+            count={stats?.students_by_level?.postgraduate}
+            icon={<ScienceIcon />}
+            color="#7C3AED"
+            bg="#EDE9FE"
+            onClick={() => router.push("/staff/students?cohort=postgraduate")}
           />
         </Grid>
       </PurposeSection>

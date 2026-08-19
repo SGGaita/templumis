@@ -165,7 +165,7 @@ export default function StudentDetailPage() {
     <Box>
       {/* Breadcrumb / Back */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2.5 }}>
-        <Button onClick={() => router.push("/staff/enrollment")} startIcon={<ArrowBackIcon />} size="small"
+        <Button onClick={() => router.push("/staff/students")} startIcon={<ArrowBackIcon />} size="small"
           sx={{ textTransform: "none", color: ST.colors.textSecondary, fontWeight: 500, "&:hover": { bgcolor: ST.colors.bg } }}>
           Enrollment
         </Button>

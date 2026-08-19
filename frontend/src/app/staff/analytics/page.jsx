@@ -359,7 +359,7 @@ export default function ExecutiveAnalyticsPage() {
   const activeBenchmark = benchmarks[activeBenchmarkIdx] || benchmarks[0];
 
   const fiveKpis = [
-    { label: "Total enrollment", value: kpis.total_students, sub: `${kpis.active_students} active`, icon: <PeopleIcon />, color: ST.colors.primary, bg: ST.colors.primaryLight, onClick: () => router.push("/staff/enrollment") },
+    { label: "Total enrollment", value: kpis.total_students, sub: `${kpis.active_students} active`, icon: <PeopleIcon />, color: ST.colors.primary, bg: ST.colors.primaryLight, onClick: () => router.push("/staff/students") },
     { label: "At-risk students", value: kpis.at_risk, sub: "Click to review list", icon: <WarningAmberIcon />, color: ST.colors.error, bg: ST.colors.errorLight, onClick: () => router.push("/staff/at-risk") },
     { label: "On track", value: `${kpis.on_track_pct}%`, sub: "Attendance compliance", icon: <TrendingUpIcon />, color: ST.colors.success, bg: ST.colors.successLight, onClick: () => setTab(2) },
     { label: "Fee collection", value: `${kpis.collection_rate_pct}%`, sub: "Of billed fees", icon: <AttachMoneyIcon />, color: ST.colors.warning, bg: ST.colors.warningLight, onClick: () => setTab(3) },
@@ -610,7 +610,7 @@ export default function ExecutiveAnalyticsPage() {
                   <Typography variant="body2" sx={{ color: ST.colors.textPrimary }}>
                     {selectedMajor.count} students · {selectedMajor.share_pct}% of total enrollment
                   </Typography>
-                  <Button size="small" sx={{ mt: 1, textTransform: "none" }} onClick={() => router.push("/staff/enrollment")}>
+                  <Button size="small" sx={{ mt: 1, textTransform: "none" }} onClick={() => router.push("/staff/students")}>
                     Open enrollment records
                   </Button>
                 </Box>
@@ -704,7 +704,7 @@ export default function ExecutiveAnalyticsPage() {
                     label={selectedNationality.is_domestic ? "Domestic" : "International"}
                     sx={{ mt: 0.75, fontWeight: 600, bgcolor: selectedNationality.is_domestic ? ST.colors.primaryLight : "#CCFBF1" }}
                   />
-                  <Button size="small" sx={{ mt: 1, textTransform: "none" }} onClick={() => router.push("/staff/enrollment")}>
+                  <Button size="small" sx={{ mt: 1, textTransform: "none" }} onClick={() => router.push("/staff/students")}>
                     Browse student records
                   </Button>
                 </DetailStrip>
@@ -820,7 +820,7 @@ export default function ExecutiveAnalyticsPage() {
                       {data.kpis?.female_pct >= 45 && data.kpis?.female_pct <= 55 ? "Near gender parity (45–55% band)." : data.kpis?.female_pct < 45 ? "Below parity — consider targeted outreach." : "Above 55% female enrollment."}
                     </Typography>
                   )}
-                  <Button size="small" sx={{ mt: 1, textTransform: "none" }} onClick={() => router.push("/staff/enrollment")}>
+                  <Button size="small" sx={{ mt: 1, textTransform: "none" }} onClick={() => router.push("/staff/students")}>
                     View enrollment by gender
                   </Button>
                 </DetailStrip>
@@ -907,7 +907,7 @@ export default function ExecutiveAnalyticsPage() {
                 ].map((row) => (
                   <Box
                     key={row.label}
-                    onClick={() => router.push(row.label === "Undergraduate" ? "/staff/enrollment?cohort=undergraduate" : "/staff/enrollment?cohort=postgraduate")}
+                    onClick={() => router.push(row.label === "Undergraduate" ? "/staff/students?cohort=undergraduate" : "/staff/students?cohort=postgraduate")}
                     sx={{ mb: 2.5, cursor: "pointer", p: 1, borderRadius: 1, "&:hover": { bgcolor: ST.colors.bg } }}
                   >
                     <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
@@ -973,7 +973,7 @@ export default function ExecutiveAnalyticsPage() {
               {selectedMajor && (
                 <DetailStrip title={selectedMajor.name} onClose={() => setSelectedMajor(null)}>
                   <Typography variant="body2">{selectedMajor.count} students · {selectedMajor.share_pct}% of enrollment</Typography>
-                  <Button size="small" sx={{ mt: 0.5, textTransform: "none" }} onClick={() => router.push("/staff/enrollment")}>View enrollment</Button>
+                  <Button size="small" sx={{ mt: 0.5, textTransform: "none" }} onClick={() => router.push("/staff/students")}>View enrollment</Button>
                 </DetailStrip>
               )}
             </Panel>
