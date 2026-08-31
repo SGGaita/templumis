@@ -1,0 +1,13 @@
+---
+description: Require TemplumIS UI copy to be translated in every supported language when creating or editing frontend components.
+alwaysApply: true
+---
+
+# TemplumIS translations
+
+When creating or editing frontend components, pages, or layouts, follow the **templum-i18n** skill (`.cursor/skills/templum-i18n/SKILL.md`) before finishing.
+
+- No user-visible string may be hardcoded. Use `useLanguage()` from `@/lib/language-context` and `t.*` keys.
+- Add every new key to **all 15** files under `frontend/src/lib/i18n/` (`en sw ar fr pt es id ms hi zh th lo my ko vi`).
+- Reuse `t.common.*` when the wording already exists. Write real translations — do not paste English into other locales.
+- Run `node .cursor/skills/templum-i18n/scripts/check-keys.mjs` after adding keys. Do not finish if it fails.
