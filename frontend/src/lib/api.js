@@ -72,6 +72,28 @@ export async function apiGetMe(token) {
   return apiFetch("/auth/me", { token });
 }
 
+/** Upload institution logo (multipart). */
+export async function uploadInstitutionLogo(file, token) {
+  const fd = new FormData();
+  fd.append("file", file);
+  const headers = authHeaders();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${getApiUrl()}/institution/profile/logo`, {
+    method: "POST",
+    headers,
+    body: fd,
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: "Upload failed" }));
+    throw new Error(typeof error.detail === "string" ? error.detail : `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function deleteInstitutionLogo(token) {
+  return apiFetch("/institution/profile/logo", { method: "DELETE", token });
+}
+
 function authHeaders(extra = {}) {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("templumis_token") : null;

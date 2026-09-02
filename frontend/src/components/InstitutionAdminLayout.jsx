@@ -28,6 +28,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useAuth } from "@/lib/auth-context";
 import { ST } from "@/lib/staffTheme";
 import BrandLogo from "@/components/BrandLogo";
+import InstitutionNavbarBrand from "@/components/InstitutionNavbarBrand";
 import LanguageToggle from "@/components/LanguageToggle";
 import { useLanguage } from "@/lib/language-context";
 
@@ -42,14 +43,14 @@ export default function InstitutionAdminLayout({ children }) {
 
   const NAV_SECTIONS = [
     {
-      label: "Overview",
+      label: IA.navSections.overview,
       items: [
         { text: IA.nav.dashboard, icon: <DashboardIcon sx={{ fontSize: 20 }} />, path: "/institution/admin" },
         { text: IA.nav.analytics, icon: <BarChartIcon sx={{ fontSize: 20 }} />, path: "/institution/admin/analytics" },
       ],
     },
     {
-      label: "Management",
+      label: IA.navSections.management,
       items: [
         { text: IA.nav.users, icon: <PeopleIcon sx={{ fontSize: 20 }} />, path: "/institution/admin/users" },
         { text: IA.nav.domains, icon: <DomainIcon sx={{ fontSize: 20 }} />, path: "/institution/admin/domains" },
@@ -58,7 +59,7 @@ export default function InstitutionAdminLayout({ children }) {
       ],
     },
     {
-      label: "System",
+      label: IA.navSections.system,
       items: [
         { text: IA.nav.activity, icon: <HistoryIcon sx={{ fontSize: 20 }} />, path: "/institution/admin/activity" },
       ],
@@ -82,7 +83,7 @@ export default function InstitutionAdminLayout({ children }) {
       <Box sx={{ px: 2, py: 2 }}>
         <BrandLogo height={44} format="png" subtitle={IA.portal} subtitleTone="dark" />
         <Typography sx={{ color: "white", fontWeight: 600, fontSize: 12, mt: 1.25, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {user?.institution_name || "Institution"}
+          {user?.institution_name || IA.profile.fallbackName}
         </Typography>
       </Box>
 
@@ -159,11 +160,15 @@ export default function InstitutionAdminLayout({ children }) {
 
       <AppBar position="fixed" elevation={0}
         sx={{ width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` }, ml: { sm: `${DRAWER_WIDTH}px` }, bgcolor: "white", borderBottom: `1px solid ${ST.colors.border}` }}>
-        <Toolbar sx={{ minHeight: "56px !important" }}>
+        <Toolbar sx={{ minHeight: { xs: "56px !important", sm: "64px !important" } }}>
           <IconButton onClick={() => setMobileOpen(true)} sx={{ mr: 2, display: { sm: "none" }, color: ST.colors.textPrimary }}>
             <MenuIcon />
           </IconButton>
-          <Box sx={{ flex: 1 }} />
+          <InstitutionNavbarBrand
+            name={user?.institution_name}
+            logoUrl={user?.institution_logo_url}
+            fallbackName={IA.profile.fallbackName}
+          />
           <LanguageToggle iconOnly />
           <Tooltip title={t.common.notifications}>
             <IconButton sx={{ color: ST.colors.textSecondary }}>
@@ -178,7 +183,7 @@ export default function InstitutionAdminLayout({ children }) {
       </AppBar>
 
       <Box component="main"
-        sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` }, minHeight: "100vh", mt: "56px" }}>
+        sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` }, minHeight: "100vh", mt: { xs: "56px", sm: "64px" } }}>
         {children}
       </Box>
     </Box>

@@ -20,6 +20,7 @@ class UserOut(BaseModel):
     role: str
     institution_id: int | None
     institution_name: str | None = None
+    institution_logo_url: str | None = None
     account_category: str | None
     student_registration_number: str | None
     email_verified: bool

@@ -9,6 +9,7 @@ const AuthContext = createContext({
   loading: true,
   login: async () => {},
   logout: () => {},
+  refreshUser: async () => {},
 });
 
 export function AuthProvider({ children }) {
@@ -39,6 +40,14 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    const stored = token || localStorage.getItem("templumis_token");
+    if (!stored) return null;
+    const u = await apiGetMe(stored);
+    setUser(u);
+    return u;
+  }, [token]);
+
   const login = async (email, password) => {
     const res = await apiLogin(email, password);
     localStorage.setItem("templumis_token", res.access_token);
@@ -49,7 +58,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

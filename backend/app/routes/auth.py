@@ -58,6 +58,7 @@ async def get_me(current_user: User = Depends(get_current_user), db: Session = D
         "role": current_user.role,
         "institution_id": current_user.institution_id,
         "institution_name": None,
+        "institution_logo_url": None,
         "account_category": category,
         "student_registration_number": current_user.student_registration_number,
         "email_verified": current_user.email_verified,
@@ -67,10 +68,14 @@ async def get_me(current_user: User = Depends(get_current_user), db: Session = D
     
     if current_user.institution_id:
         from app.models import Institution
+        from app.institution_logos import public_logo_url
         institution = db.query(Institution).filter(Institution.id == current_user.institution_id).first()
         if institution:
             user_dict["institution_name"] = institution.name
-    
+            user_dict["institution_logo_url"] = public_logo_url(
+                institution.id, institution.logo_url
+            )
+
     return user_dict
 
 

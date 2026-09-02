@@ -22,6 +22,7 @@ import Badge from "@mui/material/Badge";
 import Chip from "@mui/material/Chip";
 import MenuIcon from "@mui/icons-material/Menu";
 import BrandLogo from "@/components/BrandLogo";
+import InstitutionNavbarBrand from "@/components/InstitutionNavbarBrand";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
@@ -232,14 +233,12 @@ export default function StudentLayout({ children }) {
           <IconButton edge="start" onClick={() => setMobileOpen(!mobileOpen)} sx={{ mr: 2, display: { sm: "none" } }}>
             <MenuIcon />
           </IconButton>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h6" fontWeight={700} sx={{ fontSize: 18 }}>
-              {currentPage?.text || t.student.portal}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {student.student_id} · {student.program}
-            </Typography>
-          </Box>
+          <InstitutionNavbarBrand
+            name={user.institution_name}
+            logoUrl={user.institution_logo_url}
+            subtitle={currentPage?.text || t.student.portal}
+            fallbackName={t.student.portal}
+          />
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <LanguageToggle iconOnly />
             <Tooltip title={t.student.topbar.notifications}>

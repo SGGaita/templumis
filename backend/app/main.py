@@ -35,6 +35,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(global_admin.router)
 app.include_router(institution_admin.router)
+app.include_router(institution_admin.public_router)
 app.include_router(students.router)
 app.include_router(sis_lms.router)
 app.include_router(student_journey.router)

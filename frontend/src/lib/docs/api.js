@@ -49,7 +49,7 @@ Response:
     headers: ["Method", "Path", "Auth", "Description"],
     rows: [
       ["POST", "/api/auth/login", "Public", "Issue JWT."],
-      ["GET", "/api/auth/me", "Bearer", "Current user, including institution_name and resolved account_category."],
+      ["GET", "/api/auth/me", "Bearer", "Current user, including institution_name, institution_logo_url, and resolved account_category."],
       ["POST", "/api/auth/signup", "Public", "Create user on a registered email domain. Body: InstitutionUserCreate."],
       ["POST", "/api/auth/verify-email", "Public", "Confirm signup code. Body: { email, verification_code }."],
       ["POST", "/api/auth/resend-verification", "Public", "Resend verification email."],
@@ -73,6 +73,7 @@ Response:
   "role": "student",
   "institution_id": 3,
   "institution_name": "Example University",
+  "institution_logo_url": "/api/public/institution-logo/3?v=1725280000",
   "account_category": "student",
   "student_registration_number": "STU-10482",
   "email_verified": true,
@@ -113,7 +114,9 @@ Response:
     headers: ["Method", "Path", "Description"],
     rows: [
       ["GET", "/profile", "Own institution."],
-      ["PATCH", "/profile", "Update profile."],
+      ["PATCH", "/profile", "Update name, contact email, address."],
+      ["POST", "/profile/logo", "Upload institution logo (multipart PNG/JPEG/WebP, max 2 MB)."],
+      ["DELETE", "/profile/logo", "Remove institution logo."],
       ["GET", "/domains", "List domains."],
       ["POST", "/domains", "Add domain."],
       ["PATCH", "/domains/{id}", "Update domain / primary flag."],

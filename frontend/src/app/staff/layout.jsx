@@ -23,6 +23,7 @@ import Chip from "@mui/material/Chip";
 import MenuIcon from "@mui/icons-material/Menu";
 import LogoutIcon from "@mui/icons-material/Logout";
 import BrandLogo from "@/components/BrandLogo";
+import InstitutionNavbarBrand from "@/components/InstitutionNavbarBrand";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
@@ -234,14 +235,12 @@ function StaffLayoutInner({ children }) {
           <IconButton edge="start" onClick={() => setMobileOpen(!mobileOpen)} sx={{ mr: 2, display: { sm: "none" } }}>
             <MenuIcon />
           </IconButton>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h6" fontWeight={700} sx={{ fontSize: 18 }}>
-              {currentPage?.text || t.staff.topbar.dashboard}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {user.institution_name || t.staff.portal}
-            </Typography>
-          </Box>
+          <InstitutionNavbarBrand
+            name={user.institution_name}
+            logoUrl={user.institution_logo_url}
+            subtitle={currentPage?.text || t.staff.topbar.dashboard}
+            fallbackName={t.staff.portal}
+          />
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <LanguageToggle iconOnly />
             <Tooltip title={t.staff.topbar.notifications}>

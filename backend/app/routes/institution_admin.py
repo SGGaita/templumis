@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.auth import hash_password, require_role, validate_email_domain, get_current_user
 from app.models import User, UserRole, Institution, InstitutionDomain, AuditLog
+from app import institution_logos
 from app.schemas import (
     DomainCreate, DomainUpdate, DomainOut,
     InstitutionOut, InstitutionUpdate,
@@ -24,6 +26,8 @@ router = APIRouter(
     tags=["Institution Admin"],
     dependencies=[Depends(require_role(UserRole.INSTITUTION_ADMIN))],
 )
+
+public_router = APIRouter(prefix="/api/public", tags=["Public"])
 
 
 def _get_admin_institution(current_user: User, db: Session) -> Institution:
@@ -67,6 +71,80 @@ async def update_institution_profile(
     db.commit()
     db.refresh(inst)
     return inst
+
+
+@router.post("/profile/logo", response_model=InstitutionOut)
+async def upload_institution_logo(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.INSTITUTION_ADMIN)),
+):
+    inst = _get_admin_institution(current_user, db)
+    content = await file.read()
+    mime = file.content_type or ""
+    try:
+        logo_url = institution_logos.save_logo(inst.id, content=content, mime=mime)
+    except ValueError as exc:
+        code = str(exc)
+        if code == "too_large":
+            raise HTTPException(status_code=400, detail="Logo must be 2 MB or smaller") from exc
+        if code == "empty":
+            raise HTTPException(status_code=400, detail="Logo file is empty") from exc
+        raise HTTPException(
+            status_code=400, detail="Logo must be a PNG, JPEG, or WebP image"
+        ) from exc
+
+    inst.logo_url = logo_url
+    db.add(AuditLog(
+        institution_id=inst.id,
+        user_id=current_user.id,
+        action="update_institution_logo",
+        entity_type="institution",
+        entity_id=inst.id,
+        details={"filename": file.filename, "mime": mime},
+    ))
+    db.commit()
+    db.refresh(inst)
+    return inst
+
+
+@router.delete("/profile/logo", response_model=InstitutionOut)
+async def delete_institution_logo(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.INSTITUTION_ADMIN)),
+):
+    inst = _get_admin_institution(current_user, db)
+    institution_logos.delete_logo(inst.id)
+    inst.logo_url = None
+    db.add(AuditLog(
+        institution_id=inst.id,
+        user_id=current_user.id,
+        action="remove_institution_logo",
+        entity_type="institution",
+        entity_id=inst.id,
+        details={},
+    ))
+    db.commit()
+    db.refresh(inst)
+    return inst
+
+
+@public_router.get("/institution-logo/{institution_id}")
+async def public_institution_logo(
+    institution_id: int,
+    db: Session = Depends(get_db),
+):
+    inst = db.query(Institution).filter(Institution.id == institution_id).first()
+    if not inst:
+        raise HTTPException(status_code=404, detail="Institution not found")
+    path = institution_logos.resolve_logo(institution_id)
+    if not path:
+        raise HTTPException(status_code=404, detail="Logo not found")
+    return FileResponse(
+        path,
+        media_type=institution_logos.mime_for(path),
+        headers={"Cache-Control": "public, max-age=300"},
+    )
 
 
 # ── Domain Management ────────────────────────────────────
