@@ -25,6 +25,7 @@ import {
 import { ST } from "@/lib/staffTheme";
 import { apiFetch } from "@/lib/api";
 import { canConfigureScholarships, isFinancialAidOfficerOnly } from "@/lib/staffPermissions";
+import { isModuleEnabled, staffHomePath } from "@/lib/institutionModules";
 
 const enrollmentTrend = [
   { month: "May", students: 1050, graduated: 12 },
@@ -181,7 +182,7 @@ export default function StaffDashboard() {
         const me = await apiFetch("/auth/me");
         setUser(me);
         if (isFinancialAidOfficerOnly(me)) {
-          router.replace("/staff/financial-aid");
+          router.replace(staffHomePath(me));
           return;
         }
         const [data, riskData] = await Promise.all([
@@ -297,6 +298,7 @@ export default function StaffDashboard() {
       </Box>
 
       <PurposeSection title="Student success" subtitle="Identify and support students who need attention">
+        {isModuleEnabled(user?.enabled_modules, "staff", "enrollment") && (
         <Grid item xs={12} sm={6} md={4}>
           <QuickLink
             title="At-Risk Students"
@@ -308,6 +310,8 @@ export default function StaffDashboard() {
             onClick={() => router.push("/staff/at-risk")}
           />
         </Grid>
+        )}
+        {isModuleEnabled(user?.enabled_modules, "staff", "support") && (
         <Grid item xs={12} sm={6} md={4}>
           <QuickLink
             title="Student Support"
@@ -318,6 +322,8 @@ export default function StaffDashboard() {
             onClick={() => router.push("/staff/support")}
           />
         </Grid>
+        )}
+        {isModuleEnabled(user?.enabled_modules, "staff", "scholarships") && (
         <Grid item xs={12} sm={6} md={4}>
           <QuickLink
             title="Scholarships"
@@ -328,7 +334,8 @@ export default function StaffDashboard() {
             onClick={() => router.push("/staff/scholarships")}
           />
         </Grid>
-        {canConfigureScholarships(user) && (
+        )}
+        {canConfigureScholarships(user) && isModuleEnabled(user?.enabled_modules, "staff", "scholarships") && (
           <Grid item xs={12} sm={6} md={4}>
             <QuickLink
               title="Configure scholarships"
@@ -342,6 +349,7 @@ export default function StaffDashboard() {
         )}
       </PurposeSection>
 
+      {isModuleEnabled(user?.enabled_modules, "staff", "enrollment") && (
       <PurposeSection title="Students" subtitle="Browse the registry and filter by undergraduate or postgraduate cohort">
         <Grid item xs={12} sm={6} md={4}>
           <QuickLink
@@ -377,6 +385,7 @@ export default function StaffDashboard() {
           />
         </Grid>
       </PurposeSection>
+      )}
 
       <Typography variant="overline" sx={{ color: ST.colors.textSecondary, fontWeight: 700, letterSpacing: 1, display: "block", mb: 1 }}>
         Key metrics

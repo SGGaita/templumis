@@ -13,6 +13,7 @@ from app.models import User, UserRole, Institution, InstitutionDomain, AuditLog
 from app.email import send_verification_email
 from app.routes.sis_lms import load_excel_data, sheet_to_dict_list
 from app.account_category import sync_account_category
+from app.institution_modules import normalize_enabled_modules
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +60,7 @@ async def get_me(current_user: User = Depends(get_current_user), db: Session = D
         "institution_id": current_user.institution_id,
         "institution_name": None,
         "institution_logo_url": None,
+        "enabled_modules": None,
         "account_category": category,
         "student_registration_number": current_user.student_registration_number,
         "email_verified": current_user.email_verified,
@@ -74,6 +76,9 @@ async def get_me(current_user: User = Depends(get_current_user), db: Session = D
             user_dict["institution_name"] = institution.name
             user_dict["institution_logo_url"] = public_logo_url(
                 institution.id, institution.logo_url
+            )
+            user_dict["enabled_modules"] = normalize_enabled_modules(
+                institution.enabled_modules
             )
 
     return user_dict

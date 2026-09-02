@@ -35,9 +35,9 @@ export function studentNavGroups(level = "undergraduate") {
   const academics = {
     label: "Academics",
     items: [
-      { text: "My Courses", icon: "courses", path: "/student/courses" },
-      { text: "Grades & Results", icon: "grades", path: "/student/grades" },
-      { text: "Attendance", icon: "attendance", path: "/student/attendance" },
+      { text: "My Courses", icon: "courses", path: "/student/courses", module: "enrollment" },
+      { text: "Grades & Results", icon: "grades", path: "/student/grades", module: "enrollment" },
+      { text: "Attendance", icon: "attendance", path: "/student/attendance", module: "enrollment" },
     ],
   };
 
@@ -48,15 +48,15 @@ export function studentNavGroups(level = "undergraduate") {
       {
         label: "Grant information",
         items: [
-          { text: "Financials", icon: "financials", path: "/student/financials" },
-          { text: "My Grants", icon: "grants", path: "/student/grants" },
-          { text: "Funding Opportunities", icon: "funding", path: "/student/grants/opportunities" },
+          { text: "Financials", icon: "financials", path: "/student/financials", modules: ["scholarships", "grants"] },
+          { text: "My Grants", icon: "grants", path: "/student/grants", module: "grants" },
+          { text: "Funding Opportunities", icon: "funding", path: "/student/grants/opportunities", module: "grants" },
         ],
       },
       {
         label: "Research & support",
         items: [
-          { text: "Student Services", icon: "support", path: "/student/support" },
+          { text: "Student Services", icon: "support", path: "/student/support", module: "support" },
         ],
       },
     ];
@@ -68,11 +68,11 @@ export function studentNavGroups(level = "undergraduate") {
     {
       label: "Finance & awards",
       items: [
-        { text: "Financials", icon: "financials", path: "/student/financials" },
-        { text: "My Scholarships", icon: "scholarships", path: "/student/scholarships" },
-        { text: "Available Scholarships", icon: "available", path: "/student/scholarships/available" },
+        { text: "Financials", icon: "financials", path: "/student/financials", modules: ["scholarships", "grants"] },
+        { text: "My Scholarships", icon: "scholarships", path: "/student/scholarships", module: "scholarships" },
+        { text: "Available Scholarships", icon: "available", path: "/student/scholarships/available", module: "scholarships" },
       ],
     },
-    { label: "Support", items: [{ text: "Student Services", icon: "support", path: "/student/support" }] },
+    { label: "Support", items: [{ text: "Student Services", icon: "support", path: "/student/support", module: "support" }] },
   ];
 }

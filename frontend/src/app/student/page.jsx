@@ -40,6 +40,7 @@ import JourneyTimeline from "@/components/student/JourneyTimeline";
 import ApplicationDashboardHub from "@/components/student/scholarships/ApplicationDashboardHub";
 import { transformExcelJourney } from "@/lib/studentJourney";
 import { inferStudentLevel } from "@/lib/studentLevel";
+import { isModuleEnabled } from "@/lib/institutionModules";
 import ScienceIcon from "@mui/icons-material/Science";
 
 const gradeColor = (g) => {
@@ -144,6 +145,8 @@ function StudentDashboardContent() {
   const approvedScholarship = scholarshipApps.find((a) => a.status?.toLowerCase() === "approved");
   const isPostgrad = inferStudentLevel(s) === "postgraduate" || journeyData?.is_postgraduate;
   const pg = journeyData?.pg_research;
+  const showScholarships = isModuleEnabled(user?.enabled_modules, "student", "scholarships");
+  const showGrants = isModuleEnabled(user?.enabled_modules, "student", "grants");
 
   return (
     <Box>
@@ -190,9 +193,9 @@ function StudentDashboardContent() {
         </Box>
       </Paper>
 
-      {!isPostgrad && <ApplicationDashboardHub profile={profile} user={user} />}
+      {!isPostgrad && showScholarships && <ApplicationDashboardHub profile={profile} user={user} />}
 
-      {isPostgrad && pg && (
+      {isPostgrad && pg && showGrants && (
         <Paper elevation={0} sx={{ mb: 3, p: 2.5, border: `1px solid ${ST.colors.border}`, borderRadius: 2 }}>
           <Box sx={{ display: "flex", gap: 2, alignItems: "flex-start" }}>
             <Box sx={{ bgcolor: `${ST.chart.purple}18`, borderRadius: 2, p: 1.2 }}><ScienceIcon sx={{ color: ST.chart.purple }} /></Box>

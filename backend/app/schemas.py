@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from datetime import datetime, date
 from typing import Optional, List, Dict, Any
 
@@ -21,6 +21,7 @@ class UserOut(BaseModel):
     institution_id: int | None
     institution_name: str | None = None
     institution_logo_url: str | None = None
+    enabled_modules: Dict[str, List[str]] | None = None
     account_category: str | None
     student_registration_number: str | None
     email_verified: bool
@@ -45,6 +46,7 @@ class InstitutionOut(BaseModel):
     logo_url: str | None
     contact_email: str | None
     address: str | None
+    enabled_modules: Dict[str, List[str]] | None = None
     is_active: bool
     created_at: datetime
     domains: list["DomainOut"] = []
@@ -52,12 +54,19 @@ class InstitutionOut(BaseModel):
     class Config:
         from_attributes = True
 
+    @field_validator("enabled_modules", mode="before")
+    @classmethod
+    def _normalize_modules(cls, value):
+        from app.institution_modules import normalize_enabled_modules
+        return normalize_enabled_modules(value)
+
 
 class InstitutionUpdate(BaseModel):
     name: str | None = None
     contact_email: str | None = None
     address: str | None = None
     is_active: bool | None = None
+    enabled_modules: Dict[str, List[str]] | None = None
 
 
 class DomainCreate(BaseModel):

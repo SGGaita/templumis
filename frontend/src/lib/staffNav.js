@@ -16,6 +16,7 @@ import HistoryIcon from "@mui/icons-material/History";
 import EmojiEventsOutlinedIcon from "@mui/icons-material/EmojiEventsOutlined";
 import { isFinancialAidOfficerOnly } from "@/lib/staffPermissions";
 import { isSponsorUser } from "@/lib/sponsorPermissions";
+import { filterNavGroupsByModules, normalizeEnabledModules } from "@/lib/institutionModules";
 
 /** Staff sidebar grouped by function / purpose (not product module). */
 export const staffNavGroups = [
@@ -33,12 +34,14 @@ export const staffNavGroups = [
         icon: <WarningAmberIcon fontSize="small" />,
         path: "/staff/at-risk",
         badgeKey: "at_risk",
+        module: "enrollment",
       },
       {
         text: "Student Support",
         icon: <SupportAgentIcon fontSize="small" />,
         path: "/staff/support",
         badge: 5,
+        module: "support",
       },
     ],
   },
@@ -50,43 +53,47 @@ export const staffNavGroups = [
         icon: <PeopleIcon fontSize="small" />,
         path: "/staff/students",
         activePrefixes: ["/staff/enrollment"],
+        module: "enrollment",
       },
     ],
   },
   {
     label: "Financial aid",
     items: [
-      { text: "Scholarships", icon: <AttachMoneyIcon fontSize="small" />, path: "/staff/scholarships" },
+      { text: "Scholarships", icon: <AttachMoneyIcon fontSize="small" />, path: "/staff/scholarships", module: "scholarships" },
       {
         text: "Triage & verification",
         icon: <FactCheckIcon fontSize="small" />,
         path: "/staff/scholarships/triage",
         roles: ["scholarship_office", "global_admin"],
+        module: "scholarships",
       },
       {
         text: "Review Outcome and Awards",
         icon: <EmojiEventsOutlinedIcon fontSize="small" />,
         path: "/staff/scholarships/decisions",
         roles: ["scholarship_office", "institution_admin", "vice_chancellor", "global_admin"],
+        module: "scholarships",
       },
       {
         text: "Configure scholarships",
         icon: <SettingsIcon fontSize="small" />,
         path: "/staff/scholarships/configure",
         roles: ["scholarship_office", "global_admin"],
+        module: "scholarships",
       },
     ],
   },
   {
     label: "Research & grants",
     items: [
-      { text: "Grants & Research", icon: <ScienceIcon fontSize="small" />, path: "/staff/grants" },
+      { text: "Grants & Research", icon: <ScienceIcon fontSize="small" />, path: "/staff/grants", module: "grants" },
     ],
   },
   {
     label: "Institutional insight",
     items: [
-      { text: "University Rankings", icon: <EmojiEventsIcon fontSize="small" />, path: "/staff/rankings" },
+      { text: "University Rankings", icon: <EmojiEventsIcon fontSize="small" />, path: "/staff/rankings", module: "rankings" },
       { text: "Analytics", icon: <BarChartIcon fontSize="small" />, path: "/staff/analytics" },
     ],
   },
@@ -130,6 +137,11 @@ export function canAccessStaffNavItem(item, user) {
   return item.roles.includes(user.role);
 }
 
+function applyInstitutionModules(groups, user) {
+  const enabled = normalizeEnabledModules(user?.enabled_modules).staff;
+  return filterNavGroupsByModules(groups, enabled);
+}
+
 /** Financial Aid Officer: scholarships & grants only. Sponsor: sponsorship only. Other staff: full nav. */
 export function getStaffNavGroups(user) {
   if (isSponsorUser(user)) {
@@ -145,41 +157,47 @@ export function getStaffNavGroups(user) {
   }
 
   if (isFinancialAidOfficerOnly(user)) {
-    return [
-      {
-        label: "Overview",
-        items: [
-          { text: "Dashboard", icon: <DashboardIcon fontSize="small" />, path: "/staff/financial-aid" },
-        ],
-      },
-      {
-        label: "Scholarships",
-        items: [
-          { text: "Applications", icon: <AttachMoneyIcon fontSize="small" />, path: "/staff/scholarships/applications" },
-          { text: "Triage & verification", icon: <FactCheckIcon fontSize="small" />, path: "/staff/scholarships/triage" },
-          { text: "Review Outcome and Awards", icon: <EmojiEventsOutlinedIcon fontSize="small" />, path: "/staff/scholarships/decisions" },
-          { text: "Opportunities", icon: <MenuBookIcon fontSize="small" />, path: "/staff/scholarships/opportunities" },
-          { text: "Configure", icon: <SettingsIcon fontSize="small" />, path: "/staff/scholarships/configure" },
-        ],
-      },
-      {
-        label: "Grants",
-        items: [
-          { text: "Lifecycle pipeline", icon: <ScienceIcon fontSize="small" />, path: "/staff/grants/lifecycle" },
-          { text: "Applications", icon: <ScienceIcon fontSize="small" />, path: "/staff/grants/applications" },
-          { text: "Opportunities", icon: <MenuBookIcon fontSize="small" />, path: "/staff/grants/opportunities" },
-          { text: "Configure", icon: <SettingsIcon fontSize="small" />, path: "/staff/grants/configure" },
-        ],
-      },
-    ];
+    return applyInstitutionModules(
+      [
+        {
+          label: "Overview",
+          items: [
+            { text: "Dashboard", icon: <DashboardIcon fontSize="small" />, path: "/staff/financial-aid", module: "scholarships" },
+          ],
+        },
+        {
+          label: "Scholarships",
+          items: [
+            { text: "Applications", icon: <AttachMoneyIcon fontSize="small" />, path: "/staff/scholarships/applications", module: "scholarships" },
+            { text: "Triage & verification", icon: <FactCheckIcon fontSize="small" />, path: "/staff/scholarships/triage", module: "scholarships" },
+            { text: "Review Outcome and Awards", icon: <EmojiEventsOutlinedIcon fontSize="small" />, path: "/staff/scholarships/decisions", module: "scholarships" },
+            { text: "Opportunities", icon: <MenuBookIcon fontSize="small" />, path: "/staff/scholarships/opportunities", module: "scholarships" },
+            { text: "Configure", icon: <SettingsIcon fontSize="small" />, path: "/staff/scholarships/configure", module: "scholarships" },
+          ],
+        },
+        {
+          label: "Grants",
+          items: [
+            { text: "Lifecycle pipeline", icon: <ScienceIcon fontSize="small" />, path: "/staff/grants/lifecycle", module: "grants" },
+            { text: "Applications", icon: <ScienceIcon fontSize="small" />, path: "/staff/grants/applications", module: "grants" },
+            { text: "Opportunities", icon: <MenuBookIcon fontSize="small" />, path: "/staff/grants/opportunities", module: "grants" },
+            { text: "Configure", icon: <SettingsIcon fontSize="small" />, path: "/staff/grants/configure", module: "grants" },
+          ],
+        },
+      ],
+      user
+    );
   }
 
-  return staffNavGroups
-    .map((group) => ({
-      ...group,
-      items: group.items.filter((item) => canAccessStaffNavItem(item, user)),
-    }))
-    .filter((group) => group.items.length > 0);
+  return applyInstitutionModules(
+    staffNavGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => canAccessStaffNavItem(item, user)),
+      }))
+      .filter((group) => group.items.length > 0),
+    user
+  );
 }
 
 export function findStaffNavPage(pathname, searchParams, user) {

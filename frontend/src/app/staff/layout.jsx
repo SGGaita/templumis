@@ -38,6 +38,7 @@ import {
   getStaffNavGroups,
 } from "@/lib/staffNav";
 import { roleLabel, isFinancialAidOfficerOnly, isPathAllowedForFinancialAid } from "@/lib/staffPermissions";
+import { isStaffPathAllowed, staffHomePath } from "@/lib/institutionModules";
 import LanguageToggle from "@/components/LanguageToggle";
 import { useLanguage } from "@/lib/language-context";
 
@@ -103,7 +104,14 @@ function StaffLayoutInner({ children }) {
   useEffect(() => {
     if (!user || !isFinancialAidOfficerOnly(user)) return;
     if (!isPathAllowedForFinancialAid(pathname)) {
-      router.replace("/staff/financial-aid");
+      router.replace(staffHomePath(user));
+    }
+  }, [user, pathname, router]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (!isStaffPathAllowed(pathname, user.enabled_modules)) {
+      router.replace(staffHomePath(user));
     }
   }, [user, pathname, router]);
 

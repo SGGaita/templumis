@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import hash_password, require_role
 from app.models import User, UserRole, Institution, InstitutionDomain, AuditLog, PlatformSetting
+from app.institution_modules import default_enabled_modules, normalize_enabled_modules
 from app.schemas import (
     InstitutionCreate, InstitutionOut, InstitutionUpdate,
     DomainCreate, DomainOut,
@@ -39,6 +40,7 @@ async def create_institution(
         slug=data.slug,
         contact_email=data.contact_email,
         address=data.address,
+        enabled_modules=default_enabled_modules(),
     )
     db.add(institution)
     db.flush()
@@ -74,7 +76,11 @@ async def update_institution(
     if not inst:
         raise HTTPException(status_code=404, detail="Institution not found")
 
-    for field, value in data.model_dump(exclude_unset=True).items():
+    updates = data.model_dump(exclude_unset=True)
+    if "enabled_modules" in updates:
+        updates["enabled_modules"] = normalize_enabled_modules(updates["enabled_modules"])
+
+    for field, value in updates.items():
         setattr(inst, field, value)
 
     db.add(AuditLog(
@@ -82,7 +88,7 @@ async def update_institution(
         action="update_institution",
         entity_type="institution",
         entity_id=institution_id,
-        details=data.model_dump(exclude_unset=True),
+        details=updates,
     ))
     db.commit()
     db.refresh(inst)

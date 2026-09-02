@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
@@ -31,6 +31,7 @@ import BrandLogo from "@/components/BrandLogo";
 import InstitutionNavbarBrand from "@/components/InstitutionNavbarBrand";
 import LanguageToggle from "@/components/LanguageToggle";
 import { useLanguage } from "@/lib/language-context";
+import { isInstitutionAdminPathAllowed, isModuleEnabled } from "@/lib/institutionModules";
 
 const DRAWER_WIDTH = 260;
 
@@ -55,7 +56,9 @@ export default function InstitutionAdminLayout({ children }) {
         { text: IA.nav.users, icon: <PeopleIcon sx={{ fontSize: 20 }} />, path: "/institution/admin/users" },
         { text: IA.nav.domains, icon: <DomainIcon sx={{ fontSize: 20 }} />, path: "/institution/admin/domains" },
         { text: IA.nav.profile, icon: <BusinessIcon sx={{ fontSize: 20 }} />, path: "/institution/admin/profile" },
-        { text: IA.nav.grants, icon: <ScienceIcon sx={{ fontSize: 20 }} />, path: "/institution/admin/grants" },
+        ...(isModuleEnabled(user?.enabled_modules, "staff", "grants")
+          ? [{ text: IA.nav.grants, icon: <ScienceIcon sx={{ fontSize: 20 }} />, path: "/institution/admin/grants" }]
+          : []),
       ],
     },
     {
@@ -67,6 +70,13 @@ export default function InstitutionAdminLayout({ children }) {
   ];
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileMenuAnchor, setProfileMenuAnchor] = useState(null);
+
+  useEffect(() => {
+    if (!user) return;
+    if (!isInstitutionAdminPathAllowed(pathname, user.enabled_modules)) {
+      router.replace("/institution/admin");
+    }
+  }, [user, pathname, router]);
 
   const handleLogout = () => {
     logout();

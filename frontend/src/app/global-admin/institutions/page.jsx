@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -15,9 +15,6 @@ import TableRow from "@mui/material/TableRow";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import Collapse from "@mui/material/Collapse";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemText from "@mui/material/ListItemText";
 import Menu from "@mui/material/Menu";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -40,14 +37,17 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import DeleteIcon from "@mui/icons-material/Delete";
 import BlockIcon from "@mui/icons-material/Block";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import HistoryIcon from "@mui/icons-material/History";
 import Autocomplete from "@mui/material/Autocomplete";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 import GlobalAdminLayout from "@/components/GlobalAdminLayout";
+import InstitutionModulesPanel from "@/components/InstitutionModulesPanel";
+import { useLanguage } from "@/lib/language-context";
 
 export default function InstitutionsPage() {
   const router = useRouter();
+  const { t } = useLanguage();
+  const L = t.globalAdmin.institutions;
   const { user, token, loading: authLoading } = useAuth();
   const [institutions, setInstitutions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +65,6 @@ export default function InstitutionsPage() {
   const [adminForm, setAdminForm] = useState({ email: "", full_name: "", password: "" });
   const [domainForm, setDomainForm] = useState({ domain: "", is_primary: false });
   const [expandedRow, setExpandedRow] = useState(null);
-  const [activities, setActivities] = useState({});
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuInst, setMenuInst] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState({ open: false, type: null, institution: null });
@@ -76,7 +75,7 @@ export default function InstitutionsPage() {
       const data = await apiFetch("/global-admin/institutions", { token });
       setInstitutions(data);
     } catch (err) {
-      setError("Failed to fetch institutions");
+      setError(L.fetchError);
     } finally {
       setLoading(false);
     }
@@ -102,7 +101,7 @@ export default function InstitutionsPage() {
       setFormData({ name: "", slug: "", contact_email: "" });
       fetchInstitutions();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create institution");
+      setError(err instanceof Error ? err.message : L.createError);
     }
   };
 
@@ -119,7 +118,7 @@ export default function InstitutionsPage() {
       setSelectedInst(null);
       fetchInstitutions();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update institution");
+      setError(err instanceof Error ? err.message : L.updateError);
     }
   };
 
@@ -135,7 +134,7 @@ export default function InstitutionsPage() {
       setAdminForm({ email: "", full_name: "", password: "" });
       setSelectedInst(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create admin");
+      setError(err instanceof Error ? err.message : L.createAdminError);
     }
   };
 
@@ -152,28 +151,12 @@ export default function InstitutionsPage() {
       setSelectedInst(null);
       fetchInstitutions();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add domain");
-    }
-  };
-
-  const fetchInstitutionActivities = async (institutionId) => {
-    try {
-      const data = await apiFetch(`/global-admin/institutions/${institutionId}/activities`, { token });
-      setActivities(prev => ({ ...prev, [institutionId]: data }));
-    } catch (err) {
-      console.error("Failed to fetch activities:", err);
+      setError(err instanceof Error ? err.message : L.addDomainError);
     }
   };
 
   const handleExpandRow = (institutionId) => {
-    if (expandedRow === institutionId) {
-      setExpandedRow(null);
-    } else {
-      setExpandedRow(institutionId);
-      if (!activities[institutionId]) {
-        fetchInstitutionActivities(institutionId);
-      }
-    }
+    setExpandedRow((current) => (current === institutionId ? null : institutionId));
   };
 
   const handleMenuOpen = (event, inst) => {
@@ -196,7 +179,7 @@ export default function InstitutionsPage() {
       setConfirmDialog({ open: false, type: null, institution: null });
       fetchInstitutions();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to deactivate institution");
+      setError(err instanceof Error ? err.message : L.deactivateError);
     }
   };
 
@@ -208,7 +191,7 @@ export default function InstitutionsPage() {
       });
       fetchInstitutions();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to activate institution");
+      setError(err instanceof Error ? err.message : L.activateError);
     }
   };
 
@@ -222,7 +205,7 @@ export default function InstitutionsPage() {
       setConfirmDialog({ open: false, type: null, institution: null });
       fetchInstitutions();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete institution");
+      setError(err instanceof Error ? err.message : L.deleteError);
     }
   };
 
@@ -253,10 +236,10 @@ export default function InstitutionsPage() {
       <Box sx={{ mb: 3, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <Box>
           <Typography variant="h5" fontWeight={700} sx={{ mb: 0.5 }}>
-            Institutions
+            {L.pageTitle}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Manage all institutions
+            {L.subtitle}
           </Typography>
         </Box>
         <Button
@@ -265,14 +248,14 @@ export default function InstitutionsPage() {
           onClick={() => setDialogOpen(true)}
           size="small"
         >
-          Add Institution
+          {L.createBtn}
         </Button>
       </Box>
 
       <Paper sx={{ p: 2, mb: 2 }}>
         <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
           <TextField
-            placeholder="Search institutions..."
+            placeholder={L.searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             size="small"
@@ -287,15 +270,15 @@ export default function InstitutionsPage() {
           />
           <TextField
             select
-            label="Status"
+            label={t.common.status}
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             size="small"
             sx={{ minWidth: 150 }}
           >
-            <MenuItem value="all">All Status</MenuItem>
-            <MenuItem value="active">Active</MenuItem>
-            <MenuItem value="inactive">Inactive</MenuItem>
+            <MenuItem value="all">{L.allStatus}</MenuItem>
+            <MenuItem value="active">{t.common.active}</MenuItem>
+            <MenuItem value="inactive">{t.common.inactive}</MenuItem>
           </TextField>
         </Box>
       </Paper>
@@ -311,18 +294,18 @@ export default function InstitutionsPage() {
           <TableHead>
             <TableRow>
               <TableCell sx={{ width: 50 }} />
-              <TableCell>Name</TableCell>
-              <TableCell>Slug</TableCell>
-              <TableCell>Domains</TableCell>
-              <TableCell>Contact</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell>{L.table.name}</TableCell>
+              <TableCell>{L.table.slug}</TableCell>
+              <TableCell>{L.table.domains}</TableCell>
+              <TableCell>{L.table.contact}</TableCell>
+              <TableCell>{t.common.status}</TableCell>
+              <TableCell align="right">{t.common.actions}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {paginatedInstitutions.map((inst) => (
-              <>
-              <TableRow key={inst.id} hover sx={{ "& > *": { borderBottom: "unset" } }}>
+              <Fragment key={inst.id}>
+              <TableRow hover sx={{ "& > *": { borderBottom: "unset" } }}>
                 <TableCell>
                   <IconButton size="small" onClick={() => handleExpandRow(inst.id)}>
                     {expandedRow === inst.id ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
@@ -351,7 +334,7 @@ export default function InstitutionsPage() {
                 <TableCell>{inst.contact_email || "—"}</TableCell>
                 <TableCell>
                   <Chip
-                    label={inst.is_active ? "Active" : "Inactive"}
+                    label={inst.is_active ? t.common.active : t.common.inactive}
                     color={inst.is_active ? "success" : "default"}
                     size="small"
                   />
@@ -363,7 +346,7 @@ export default function InstitutionsPage() {
                       setSelectedInst(inst);
                       setDomainDialogOpen(true);
                     }}
-                    title="Add Domain"
+                    title={L.actionMenu.addDomain}
                   >
                     <DomainAddIcon fontSize="small" />
                   </IconButton>
@@ -373,14 +356,14 @@ export default function InstitutionsPage() {
                       setSelectedInst(inst);
                       setAdminDialogOpen(true);
                     }}
-                    title="Add Admin"
+                    title={L.actionMenu.addAdmin}
                   >
                     <PersonAddIcon fontSize="small" />
                   </IconButton>
                   <IconButton
                     size="small"
                     onClick={(e) => handleMenuOpen(e, inst)}
-                    title="More Actions"
+                    title={L.actionMenu.more}
                   >
                     <MoreVertIcon fontSize="small" />
                   </IconButton>
@@ -389,45 +372,26 @@ export default function InstitutionsPage() {
               <TableRow>
                 <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
                   <Collapse in={expandedRow === inst.id} timeout="auto" unmountOnExit>
-                    <Box sx={{ py: 2, px: 2, bgcolor: "grey.50", borderRadius: 1, my: 1 }}>
-                      <Typography variant="body2" fontWeight={600} gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <HistoryIcon fontSize="small" /> Recent Activities
-                      </Typography>
-                      {activities[inst.id] && activities[inst.id].length > 0 ? (
-                        <List dense>
-                          {activities[inst.id].map((activity) => (
-                            <ListItem key={activity.id} sx={{ py: 0.5 }}>
-                              <ListItemText
-                                primary={
-                                  <Typography variant="caption" fontWeight={500}>
-                                    {activity.action.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
-                                  </Typography>
-                                }
-                                secondary={
-                                  <Typography variant="caption" color="text.secondary">
-                                    {activity.user?.full_name} • {new Date(activity.created_at).toLocaleString()}
-                                  </Typography>
-                                }
-                              />
-                            </ListItem>
-                          ))}
-                        </List>
-                      ) : (
-                        <Typography variant="caption" color="text.secondary">
-                          No recent activities
-                        </Typography>
-                      )}
-                    </Box>
+                    <InstitutionModulesPanel
+                      institution={inst}
+                      token={token}
+                      onUpdated={(updated) => {
+                        setInstitutions((prev) =>
+                          prev.map((row) => (row.id === updated.id ? { ...row, ...updated } : row))
+                        );
+                      }}
+                      onError={setError}
+                    />
                   </Collapse>
                 </TableCell>
               </TableRow>
-              </>
+              </Fragment>
             ))}
             {paginatedInstitutions.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
                   <Typography variant="body2" color="text.secondary">
-                    {institutions.length === 0 ? "No institutions yet. Click 'Add Institution' to get started." : "No institutions match your filters."}
+                    {institutions.length === 0 ? L.empty : L.noMatch}
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -467,7 +431,7 @@ export default function InstitutionsPage() {
           }}
         >
           <EditIcon fontSize="small" sx={{ mr: 1 }} />
-          Edit
+          {t.common.edit}
         </MenuItem>
         {menuInst?.is_active ? (
           <MenuItem
@@ -477,7 +441,7 @@ export default function InstitutionsPage() {
             }}
           >
             <BlockIcon fontSize="small" sx={{ mr: 1 }} />
-            Deactivate
+            {L.actionMenu.deactivate}
           </MenuItem>
         ) : (
           <MenuItem
@@ -487,7 +451,7 @@ export default function InstitutionsPage() {
             }}
           >
             <CheckCircleIcon fontSize="small" sx={{ mr: 1 }} />
-            Activate
+            {L.actionMenu.activate}
           </MenuItem>
         )}
         <MenuItem
@@ -498,7 +462,7 @@ export default function InstitutionsPage() {
           sx={{ color: "error.main" }}
         >
           <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
-          Delete
+          {t.common.delete}
         </MenuItem>
       </Menu>
 
@@ -510,25 +474,25 @@ export default function InstitutionsPage() {
         fullWidth
       >
         <DialogTitle>
-          {confirmDialog.type === "delete" ? "Delete Institution?" : "Deactivate Institution?"}
+          {confirmDialog.type === "delete" ? L.confirmDeleteTitle : L.confirmDeactivateTitle}
         </DialogTitle>
         <DialogContent>
           <Typography variant="body2">
             {confirmDialog.type === "delete"
-              ? `Are you sure you want to delete "${confirmDialog.institution?.name}"? This action cannot be undone and will fail if the institution has users.`
-              : `Are you sure you want to deactivate "${confirmDialog.institution?.name}"? Users will not be able to access this institution.`}
+              ? L.confirmDelete.replace("{name}", confirmDialog.institution?.name || "")
+              : L.confirmDeactivate.replace("{name}", confirmDialog.institution?.name || "")}
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirmDialog({ open: false, type: null, institution: null })}>
-            Cancel
+            {t.common.cancel}
           </Button>
           <Button
             variant="contained"
             color={confirmDialog.type === "delete" ? "error" : "warning"}
             onClick={confirmDialog.type === "delete" ? handleDelete : handleDeactivate}
           >
-            {confirmDialog.type === "delete" ? "Delete" : "Deactivate"}
+            {confirmDialog.type === "delete" ? t.common.delete : L.actionMenu.deactivate}
           </Button>
         </DialogActions>
       </Dialog>
@@ -544,27 +508,27 @@ export default function InstitutionsPage() {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Edit Institution</DialogTitle>
+        <DialogTitle>{L.editTitle}</DialogTitle>
         <DialogContent>
           <TextField
             fullWidth
-            label="Institution Name"
+            label={L.fields.name}
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             sx={{ mt: 2, mb: 2 }}
           />
           <TextField
             fullWidth
-            label="Slug"
+            label={L.fields.slug}
             value={formData.slug}
             onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-            helperText="URL-friendly identifier (e.g., harvard-university)"
+            helperText={L.fields.slugHelper}
             sx={{ mb: 2 }}
             disabled
           />
           <TextField
             fullWidth
-            label="Contact Email"
+            label={L.fields.contactEmail}
             type="email"
             value={formData.contact_email}
             onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
@@ -578,21 +542,21 @@ export default function InstitutionsPage() {
               setSelectedInst(null);
             }}
           >
-            Cancel
+            {t.common.cancel}
           </Button>
           <Button variant="contained" onClick={handleUpdateInstitution}>
-            Update
+            {t.common.update}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Create Institution Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Create New Institution</DialogTitle>
+        <DialogTitle>{L.createTitle}</DialogTitle>
         <DialogContent>
           <TextField
             fullWidth
-            label="Institution Name"
+            label={L.fields.name}
             value={formData.name}
             onChange={(e) => {
               const name = e.target.value;
@@ -608,7 +572,7 @@ export default function InstitutionsPage() {
           />
           <TextField
             fullWidth
-            label="Slug (URL identifier)"
+            label={L.fields.slugCreateLabel}
             value={formData.slug}
             onChange={(e) =>
               setFormData({
@@ -616,32 +580,32 @@ export default function InstitutionsPage() {
                 slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
               })
             }
-            helperText="Auto-generated from name, or customize manually"
+            helperText={L.fields.slugCreateHelper}
             sx={{ mb: 2 }}
           />
           <TextField
             fullWidth
-            label="Contact Email"
+            label={L.fields.contactEmail}
             type="email"
             value={formData.contact_email}
             onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setDialogOpen(false)}>{t.common.cancel}</Button>
           <Button variant="contained" onClick={handleCreateInstitution}>
-            Create
+            {t.common.create}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Create Admin Dialog */}
       <Dialog open={adminDialogOpen} onClose={() => setAdminDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Create Admin for {selectedInst?.name}</DialogTitle>
+        <DialogTitle>{L.createAdminTitle.replace("{name}", selectedInst?.name || "")}</DialogTitle>
         <DialogContent>
           <TextField
             fullWidth
-            label="Full Name"
+            label={L.fields.fullName}
             value={adminForm.full_name}
             onChange={(e) => setAdminForm({ ...adminForm, full_name: e.target.value })}
             sx={{ mt: 2, mb: 2 }}
@@ -664,49 +628,49 @@ export default function InstitutionsPage() {
               <TextField
                 {...params}
                 fullWidth
-                label="Email"
+                label={t.common.email}
                 type="email"
                 helperText={selectedInst?.domains?.length > 0 
-                  ? `Available domains: ${selectedInst.domains.map(d => d.domain).join(', ')}` 
-                  : 'No domains configured for this institution'}
+                  ? L.availableDomains.replace("{domains}", selectedInst.domains.map(d => d.domain).join(', ')) 
+                  : L.noDomains}
                 sx={{ mb: 2 }}
               />
             )}
           />
           <TextField
             fullWidth
-            label="Password"
+            label={L.fields.password}
             type="password"
             value={adminForm.password}
             onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAdminDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setAdminDialogOpen(false)}>{t.common.cancel}</Button>
           <Button variant="contained" onClick={handleCreateAdmin}>
-            Create Admin
+            {L.createAdminBtn}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Add Domain Dialog */}
       <Dialog open={domainDialogOpen} onClose={() => setDomainDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Add Domain to {selectedInst?.name}</DialogTitle>
+        <DialogTitle>{L.addDomainTitle.replace("{name}", selectedInst?.name || "")}</DialogTitle>
         <DialogContent>
           <TextField
             fullWidth
-            label="Domain"
-            placeholder="university.edu"
+            label={L.fields.domain}
+            placeholder={L.fields.domainPlaceholder}
             value={domainForm.domain}
             onChange={(e) => setDomainForm({ ...domainForm, domain: e.target.value })}
-            helperText="Enter the domain without the @ sign"
+            helperText={L.fields.domainHelper}
             sx={{ mt: 2 }}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDomainDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setDomainDialogOpen(false)}>{t.common.cancel}</Button>
           <Button variant="contained" onClick={handleAddDomain}>
-            Add Domain
+            {L.addDomainBtn}
           </Button>
         </DialogActions>
       </Dialog>

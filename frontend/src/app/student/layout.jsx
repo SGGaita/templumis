@@ -43,6 +43,7 @@ import { apiFetch } from "@/lib/api";
 import { resolveAccountCategory } from "@/lib/auth-routing";
 import { countEligibleScholarships } from "@/lib/scholarships";
 import { inferStudentLevel, studentNavGroups } from "@/lib/studentLevel";
+import { filterNavGroupsByModules, isStudentPathAllowed, normalizeEnabledModules } from "@/lib/institutionModules";
 import { ST } from "@/lib/staffTheme";
 import StudentSidebarSummary from "@/components/student/StudentSidebarSummary";
 import LanguageToggle from "@/components/LanguageToggle";
@@ -121,9 +122,17 @@ export default function StudentLayout({ children }) {
     return () => { cancelled = true; };
   }, [router]);
 
+  useEffect(() => {
+    if (!user) return;
+    if (!isStudentPathAllowed(pathname, user.enabled_modules)) {
+      router.replace("/student");
+    }
+  }, [user, pathname, router]);
+
   const student = profile?.student ?? {};
   const cohortLevel = inferStudentLevel(student);
-  const navGroups = studentNavGroups(cohortLevel).map((group) => ({
+  const studentModules = normalizeEnabledModules(user?.enabled_modules).student;
+  const navGroups = filterNavGroupsByModules(studentNavGroups(cohortLevel), studentModules).map((group) => ({
     ...group,
     items: group.items.map((item) => {
       const Icon = NAV_ICONS[item.icon] || DashboardIcon;

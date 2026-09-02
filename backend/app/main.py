@@ -132,6 +132,9 @@ def ensure_scholarship_tables():
         ]
         for col, typ in user_columns:
             conn.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {typ}"))
+        conn.execute(
+            text("ALTER TABLE institutions ADD COLUMN IF NOT EXISTS enabled_modules JSON")
+        )
     try:
         with engine.begin() as conn:
             conn.execute(text("ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'scholarship_reviewer'"))

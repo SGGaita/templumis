@@ -67,6 +67,7 @@ CREATE TABLE institutions (
     logo_url VARCHAR(500),
     contact_email VARCHAR(255),
     address TEXT,
+    enabled_modules JSON,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
