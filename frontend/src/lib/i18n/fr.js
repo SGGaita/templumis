@@ -46,6 +46,14 @@ const fr = {
     termsOfService: "Conditions d'utilisation",
     contact: "Contact",
     documentation: "Documentation",
+    footer: {
+      usefulLinks: "Liens utiles",
+      home: "Accueil",
+      faqs: "FAQ",
+      addressOrg: "Training Centre in Communication",
+      addressBuilding: "Gecaga Institute Building",
+      addressCity: "Nairobi, Kenya",
+    },
     required: "Requis",
     optional: "Optionnel",
     yes: "Oui",
@@ -78,7 +86,7 @@ const fr = {
     },
     modules: {
       heading: "Modules principaux",
-      subheading: "Quatre modules intégrés couvrant le cycle de vie complet des données institutionnelles.",
+      subheading: "Cinq modules intégrés couvrant le cycle de vie complet des données institutionnelles.",
       enrollment: {
         title: "Inscription et réussite étudiante",
         description:
@@ -98,6 +106,11 @@ const fr = {
         title: "Subventions et recherche",
         description:
           "Suivez l'investissement en recherche, les taux de consommation des subventions, la cartographie des publications et les alertes de conformité éthique/IRB.",
+      },
+      rankings: {
+        title: "Classements universitaires",
+        description:
+          "Suivez les performances institutionnelles dans les principaux classements mondiaux grâce à la préparation des indicateurs, aux objectifs et aux tableaux de bord en direct.",
       },
     },
   },
@@ -519,8 +532,9 @@ const fr = {
         grantApplications: "Demandes de subventions",
         grantConfigure: "Configurer les subventions",
         grantLifecycle: "Cycle de vie des subventions",
-        rankings: "Classements",
+        rankings: "Classements universitaires",
         analytics: "Analyses",
+        executiveBriefing: "Briefing exécutif",
       },
     },
     topbar: {
@@ -545,6 +559,72 @@ const fr = {
         programDistribution: "Répartition des programmes",
         topNationalities: "Principales nationalités",
         complianceStatus: "Statut de conformité",
+      },
+    },
+    vcDashboard: {
+      badge: "Vice-chancelier",
+      title: "Tableau de bord décisionnel",
+      subtitle: "Signaux d'exception, santé du portefeuille et leviers pour la direction — pas des files opérationnelles.",
+      dataAsOf: "Données au {when}",
+      openBriefing: "Ouvrir le briefing exécutif complet",
+      loadError: "Échec du chargement des indicateurs de direction",
+      status: {
+        onTarget: "Sur la cible",
+        watch: "À surveiller",
+        actionNeeded: "Action requise",
+      },
+      attention: {
+        title: "Nécessite une attention",
+      },
+      pulse: {
+        title: "Pouls de l'institution",
+        totalStudents: "Total des étudiants",
+        activeStudents: "{count} actifs",
+        onTrack: "Sur la bonne voie",
+        atRisk: "Étudiants à risque",
+        atRiskShare: "{pct}% des inscriptions",
+        feeCollection: "Recouvrement des frais",
+        avgGpa: "GPA institutionnelle",
+        rankingReadiness: "Préparation au classement",
+        vsTarget: "Cible {target}",
+      },
+      success: {
+        title: "Réussite étudiante",
+        subtitle: "Conformité, facteurs de risque et rétention",
+        cta: "Examiner les étudiants à risque",
+        onTrack: "Sur la bonne voie",
+        atRisk: "À risque",
+        critical: "Critique",
+        finances: "Finances",
+        attendance: "Présence",
+        academic: "Académique",
+        probation: "{count} en probation ou suspendus",
+        retention: "Rétention 1 an {pct}%",
+        graduation: "Diplômation 4 ans {pct}%",
+      },
+      portfolio: {
+        title: "Portefeuille et accès",
+        subtitle: "Concentration des programmes et pipeline d'aide",
+        ugPg: "Licence / cycles supérieurs",
+        international: "Étudiants internationaux",
+        female: "Part des femmes",
+        aidPending: "{count} en attente",
+        aidCommittee: "{count} prêts pour le comité",
+        aidAwarded: "{count} attribués",
+        aidCta: "Décisions d'aide",
+      },
+      trend: {
+        title: "Inscriptions par année d'admission",
+        subtitle: "Tailles de cohorte issues des dossiers SIS",
+        students: "Étudiants",
+      },
+      rankings: {
+        title: "Classements universitaires et préparation",
+        subtitle: "Préparation de l'institution aux systèmes de classement",
+        cta: "Ouvrir les classements",
+        overall: "Préparation globale",
+        unavailable: "Les données de préparation aux classements ne sont pas disponibles. Ouvrez les classements après importation des données.",
+        grantsNote: "Subventions de recherche : {pending} en attente · {approved} approuvées",
       },
     },
     enrollment: {
@@ -674,12 +754,39 @@ const fr = {
       performance: "Performance des étudiants",
       programs: "Analyse des programmes",
       exportReport: "Exporter le rapport",
+      retentionTab: "Rétention",
+      retention: {
+        oneYear: "Rétention à 1 an",
+        fourYear: "Diplômation à 4 ans",
+        cohortsTracked: "{count} cohortes suivies",
+        snapshot: "Instantané {date}",
+        cohortAverage: "Moyenne de cohorte",
+        initialSize: "Taille initiale de cohorte",
+        acrossSnapshots: "Sur les derniers instantanés de cohorte",
+        graduated: "Diplômés",
+        fromTracked: "Des cohortes suivies",
+        byCohort: "Rétention par cohorte",
+        byCohortSub: "Dernier instantané par cohorte d'admission",
+        retentionSeries: "Rétention 1 an %",
+        graduationSeries: "Diplômation 4 ans %",
+        unavailable: "Les indicateurs de rétention par cohorte ne sont pas encore disponibles. Importez ou synchronisez les instantanés pour débloquer cette vue.",
+      },
     },
     rankings: {
       title: "Classements",
       gpaRankings: "Classements MPC",
       coursePerformance: "Performance des cours",
       scholarshipRates: "Taux de réussite des bourses",
+    },
+    universityRankings: {
+      exportPdf: "Exporter en PDF",
+      exportPdfTooltip: "Choisissez un classement et téléchargez-le comme rapport PDF distinct",
+      exportDialogTitle: "Exporter le rapport de classement",
+      exportDialogSubtitle:
+        "Sélectionnez un système de classement. Chaque téléchargement est un rapport séparé avec l'aperçu institutionnel et le détail de préparation de ce classement.",
+      downloadReport: "Télécharger",
+      reportDocumentTitle: "{institution} - rapport {ranking}",
+      printReportHeading: "Rapport de préparation {ranking}",
     },
     support: {
       title: "Gestion du soutien aux étudiants",
@@ -842,6 +949,7 @@ const fr = {
     nav: {
       dashboard: "Tableau de bord",
       users: "Utilisateurs",
+      access: "Accès par rôle",
       profile: "Profil de l'établissement",
       domains: "Domaines e-mail",
       analytics: "Analyses",
@@ -862,6 +970,43 @@ const fr = {
         users: "Utilisateurs",
       },
       quickLinks: "Liens rapides",
+    },
+    access: {
+      title: "Accès par rôle",
+      subtitle: "Choisissez des modules entiers ou des éléments précis de la barre latérale pour chaque rôle. Le tableau de bord, le profil et les analyses restent disponibles.",
+      institutionCeiling: "Modules activés pour cet établissement",
+      institutionCeilingHint: "Ils sont définis par l'administrateur global. Vous ne pouvez accorder l'accès qu'aux modules déjà activés.",
+      roleHeading: "Accès par rôle",
+      roleHint: "Sélectionnez un rôle, cochez un module entier ou choisissez des éléments individuels. Les modifications sont enregistrées immédiatement.",
+      modulesForRole: "Accès pour {role}",
+      moduleEnabledHint: "Apparaît dans la barre latérale de ce rôle lorsqu'il est activé",
+      moduleDisabledByInstitution: "Non activé pour cet établissement - demandez à un administrateur global de l'activer d'abord",
+      wholeModuleOn: "Module entier activé - tous les éléments ci-dessous sont inclus",
+      partialModuleOn: "Accès partiel - uniquement les éléments sélectionnés",
+      moduleOff: "Module désactivé pour ce rôle - cochez le module ou des éléments pour accorder l'accès",
+      itemsHint: "Ou sélectionnez des éléments précis de la barre latérale :",
+      saving: "Enregistrement…",
+      saved: "Accès par rôle mis à jour",
+      fetchError: "Impossible de charger les paramètres d'accès par rôle.",
+      saveError: "Impossible d'enregistrer les paramètres d'accès par rôle.",
+      navItems: {
+        atRisk: "Étudiants à risque",
+        students: "Étudiants",
+        support: "Soutien aux étudiants",
+        scholarships: "Bourses",
+        financialAid: "Tableau de bord de l'aide financière",
+        applications: "Candidatures aux bourses",
+        triage: "Triage et vérification",
+        decisions: "Résultats d'évaluation et attributions",
+        scholarshipOpportunities: "Opportunités de bourses",
+        configureScholarships: "Configurer les bourses",
+        grants: "Subventions et recherche",
+        grantLifecycle: "Cycle de vie des subventions",
+        grantApplications: "Candidatures aux subventions",
+        grantOpportunities: "Opportunités de subventions",
+        configureGrants: "Configurer les subventions",
+        rankings: "Classements universitaires",
+      },
     },
     users: {
       title: "Gestion des utilisateurs",
@@ -996,6 +1141,100 @@ const fr = {
     verify: "Vérifier et soumettre",
     description: "Veuillez vérifier votre lettre de recommandation ci-dessous.",
   },
+  // ─── FAQs ──────────────────────────────────────────────────────────────────
+  faqs: {
+    title: "Questions fréquemment posées",
+    subtitle:
+      "Intelligence connectée pour les universités - comment TemplumIS transforme des données institutionnelles fragmentées en éclairages stratégiques pour la planification, la performance, l'accréditation et les classements.",
+    categories: {
+      about: {
+        title: "À propos de TemplumIS",
+        intro: "Ce qu'est la plateforme et pourquoi les établissements l'adoptent.",
+        items: {
+          whatIs: {
+            q: "Qu'est-ce que TemplumIS ?",
+            a: "TemplumIS est une plateforme d'intelligence universitaire conçue par TCC Africa pour aider les établissements d'enseignement supérieur à transformer des données institutionnelles fragmentées en intelligence actionnable pour la décision stratégique, la gestion de la performance, l'accréditation et les classements universitaires.\n\nElle fournit une couche d'intelligence centralisée qui intègre les données de l'écosystème universitaire, afin que la direction accède à des insights fiables via une seule plateforme.",
+          },
+          problem: {
+            q: "Quel défi TemplumIS résout-il ?",
+            a: "Les universités doivent de plus en plus fournir des données exactes et opportunes pour la planification institutionnelle, l'assurance qualité, les rapports gouvernementaux, l'internationalisation, la performance de la recherche et les classements mondiaux.\n\nEn pratique, une grande partie de ces informations reste dispersée entre bureaux, départements et systèmes isolés. Collecte et reporting deviennent chronophages et coûteux en ressources. TemplumIS unifie ce paysage pour que les établissements s'appuient sur une source de vérité cohérente.",
+          },
+          connectedIntelligence: {
+            q: "Que signifie « Intelligence connectée pour les universités » ?",
+            a: "Cela signifie que TemplumIS ne remplace pas tous les systèmes opérationnels du jour au lendemain. Il connecte plutôt les sources académiques, de recherche, d'internationalisation, financières, d'assurance qualité et d'information étudiante dans un environnement unifié - transformant les enregistrements opérationnels en intelligence prête pour la direction.",
+          },
+        },
+      },
+      capabilities: {
+        title: "Capacités de la plateforme",
+        intro: "Comment TemplumIS soutient les opérations quotidiennes et la supervision stratégique.",
+        items: {
+          consolidate: {
+            q: "Quels types de données institutionnelles TemplumIS peut-il rassembler ?",
+            a: "TemplumIS consolide les données de l'écosystème universitaire - dossiers académiques, activité de recherche, internationalisation, finance, assurance qualité et systèmes d'information étudiants - dans un environnement unifié d'analyse et de reporting.",
+          },
+          reporting: {
+            q: "Comment TemplumIS allège-t-il le fardeau du reporting institutionnel ?",
+            a: "En centralisant les indicateurs et en automatisant la collecte lorsque c'est possible, TemplumIS réduit l'effort administratif d'assemblage des rapports de planification, des soumissions réglementaires, de l'assurance qualité et des exercices de classement. Les équipes passent moins de temps à poursuivre des tableurs et plus à valider et agir.",
+          },
+          leadership: {
+            q: "Que voient les dirigeants universitaires sur la plateforme ?",
+            a: "Les dirigeants accèdent à des tableaux de bord en temps réel et à des indicateurs de performance qui soutiennent une décision fondée sur les preuves. La plateforme renforce la planification institutionnelle grâce à une meilleure visibilité des tendances et, lorsqu'elle est configurée, à des analyses prédictives pour anticiper risques et opportunités.",
+          },
+          studentResearch: {
+            q: "Comment TemplumIS soutient-il la réussite étudiante et la performance de la recherche ?",
+            a: "Côté étudiants, les établissements peuvent suivre l'inscription, la rétention, la progression, l'obtention du diplôme, l'employabilité et la performance académique.\n\nCôté recherche, TemplumIS aide à suivre les productions, subventions, collaborations, citations, brevets et activités d'innovation - reliant l'investissement en recherche à des résultats institutionnels visibles.",
+          },
+          accreditation: {
+            q: "TemplumIS prend-il en charge l'accréditation et l'assurance qualité ?",
+            a: "Oui. La plateforme est conçue pour soutenir l'accréditation, l'assurance qualité et le reporting réglementaire en maintenant les preuves organisées, à jour et plus faciles à retrouver lors des cycles d'évaluation.",
+          },
+        },
+      },
+      rankings: {
+        title: "Classements universitaires",
+        intro: "Préparation aux classements et suivi continu de la performance.",
+        items: {
+          readiness: {
+            q: "Comment TemplumIS soutient-il la préparation aux classements ?",
+            a: "Un atout majeur de TemplumIS est la préparation aux classements et le suivi de la performance. Les établissements peuvent collecter, organiser, valider et gérer systématiquement les données requises par les grands cadres de classement - au lieu de reconstituer les dossiers chaque année à travers plusieurs bureaux.",
+          },
+          frameworks: {
+            q: "Pour quels cadres de classement les établissements peuvent-ils se préparer ?",
+            a: "TemplumIS prend en charge la gestion structurée des indicateurs pour les grands cadres mondiaux et régionaux, notamment :\n\n• QS World University Rankings\n• Times Higher Education (THE) Rankings\n• Webometrics Rankings\n• Academic Ranking of World Universities (ARWU / Shanghai)\n• Cadres de classement régionaux et nationaux\n\nCela améliore la cohérence et la préparation aux cycles annuels.",
+          },
+          repository: {
+            q: "Comment les données de classement sont-elles gérées autrement avec TemplumIS ?",
+            a: "Plutôt que de compter sur plusieurs bureaux pour compiler manuellement les soumissions, TemplumIS offre un référentiel institutionnel structuré où les indicateurs liés aux classements sont capturés, mis à jour et vérifiés en continu.\n\nCette approche réduit l'effort de reporting tout en améliorant la qualité, la cohérence et la préparation - renforçant visibilité mondiale, compétitivité et réputation.",
+          },
+        },
+      },
+      gettingStarted: {
+        title: "Pour commencer",
+        intro: "Accès, rôles, démonstrations et assistance.",
+        items: {
+          whoUses: {
+            q: "Qui utilise TemplumIS ?",
+            a: "TemplumIS sert toute la communauté institutionnelle via des portails selon le rôle : étudiants, registraires et services étudiants, bureaux de bourses et d'aide financière, bureaux de recherche, examinateurs, conseillers et sponsors, et administrateurs d'établissement ou mondiaux.",
+          },
+          accounts: {
+            q: "Comment les utilisateurs obtiennent-ils l'accès ?",
+            a: "Les étudiants et le personnel s'inscrivent généralement ou sont invités une fois leur établissement provisionné. Les administrateurs d'établissement et mondiaux utilisent des pages de connexion dédiées. L'accès est toujours limité au rôle et aux modules activés pour cet établissement.",
+          },
+          demo: {
+            q: "Pouvons-nous demander une démonstration ?",
+            a: "Oui. Les établissements souhaitant explorer comment TemplumIS soutient leurs priorités stratégiques et ambitions de classement peuvent demander une brève réunion ou démonstration. Contactez-nous via les coordonnées ci-dessous pour planifier un échange avec l'équipe TemplumIS.",
+          },
+          help: {
+            q: "Où trouver la documentation ou contacter le support ?",
+            aBefore: "Les guides produit et références techniques sont disponibles dans ",
+            aAfter: ". Pour les demandes institutionnelles, contactez Training Centre in Communication (TCC Africa), Gecaga Institute Building, Nairobi, Kenya.",
+          },
+        },
+      },
+    },
+  },
+
 };
 
 export default fr;

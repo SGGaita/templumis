@@ -24,8 +24,9 @@ import {
 } from "recharts";
 import { ST } from "@/lib/staffTheme";
 import { apiFetch } from "@/lib/api";
-import { canConfigureScholarships, isFinancialAidOfficerOnly } from "@/lib/staffPermissions";
+import { canConfigureScholarships, isFinancialAidOfficerOnly, isViceChancellor } from "@/lib/staffPermissions";
 import { isModuleEnabled, staffHomePath } from "@/lib/institutionModules";
+import VcDecisionDashboard from "@/components/staff/VcDecisionDashboard";
 
 const enrollmentTrend = [
   { month: "May", students: 1050, graduated: 12 },
@@ -185,6 +186,10 @@ export default function StaffDashboard() {
           router.replace(staffHomePath(me));
           return;
         }
+        if (isViceChancellor(me)) {
+          setLoading(false);
+          return;
+        }
         const [data, riskData] = await Promise.all([
           apiFetch("/sis-lms/stats"),
           apiFetch("/sis-lms/at-risk/summary"),
@@ -245,6 +250,10 @@ export default function StaffDashboard() {
         {error}
       </Alert>
     );
+  }
+
+  if (isViceChancellor(user)) {
+    return <VcDecisionDashboard user={user} />;
   }
 
   const statCardsData = [

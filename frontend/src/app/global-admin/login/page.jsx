@@ -66,7 +66,7 @@ export default function GlobalAdminLoginPage() {
         </CardContent>
       </Card>
       </Box>
-      <SiteFooter showLegal={false} />
+      <SiteFooter />
     </Box>
   );
 }

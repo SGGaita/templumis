@@ -13,7 +13,10 @@ from app.models import User, UserRole, Institution, InstitutionDomain, AuditLog
 from app.email import send_verification_email
 from app.routes.sis_lms import load_excel_data, sheet_to_dict_list
 from app.account_category import sync_account_category
-from app.institution_modules import normalize_enabled_modules
+from app.institution_modules import (
+    effective_enabled_modules_for_user,
+    effective_staff_role_access_for_user,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +63,10 @@ async def get_me(current_user: User = Depends(get_current_user), db: Session = D
         "institution_id": current_user.institution_id,
         "institution_name": None,
         "institution_logo_url": None,
+        "institution_domains": [],
+        "institution_primary_domain": None,
         "enabled_modules": None,
+        "staff_role_access": None,
         "account_category": category,
         "student_registration_number": current_user.student_registration_number,
         "email_verified": current_user.email_verified,
@@ -69,7 +75,7 @@ async def get_me(current_user: User = Depends(get_current_user), db: Session = D
     }
     
     if current_user.institution_id:
-        from app.models import Institution
+        from app.models import Institution, InstitutionDomain
         from app.institution_logos import public_logo_url
         institution = db.query(Institution).filter(Institution.id == current_user.institution_id).first()
         if institution:
@@ -77,8 +83,26 @@ async def get_me(current_user: User = Depends(get_current_user), db: Session = D
             user_dict["institution_logo_url"] = public_logo_url(
                 institution.id, institution.logo_url
             )
-            user_dict["enabled_modules"] = normalize_enabled_modules(
-                institution.enabled_modules
+            user_dict["enabled_modules"] = effective_enabled_modules_for_user(
+                institution.enabled_modules,
+                getattr(institution, "staff_role_modules", None),
+                current_user.role,
+                category,
+            )
+            user_dict["staff_role_access"] = effective_staff_role_access_for_user(
+                institution.enabled_modules,
+                getattr(institution, "staff_role_modules", None),
+                current_user.role,
+            )
+            domains = (
+                db.query(InstitutionDomain)
+                .filter(InstitutionDomain.institution_id == institution.id)
+                .all()
+            )
+            user_dict["institution_domains"] = [d.domain for d in domains]
+            primary = next((d for d in domains if d.is_primary), None)
+            user_dict["institution_primary_domain"] = (
+                primary.domain if primary else (domains[0].domain if domains else None)
             )
 
     return user_dict

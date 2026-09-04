@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Box,
   Grid,
@@ -27,6 +27,10 @@ import {
   DialogContent,
   DialogActions,
   Divider,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
 import CloseIcon from "@mui/icons-material/Close";
@@ -38,6 +42,10 @@ import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { ST } from "@/lib/staffTheme";
 import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { useLanguage } from "@/lib/language-context";
+import { buildPlatformInsights } from "@/lib/rankingInsights";
+import { withInstitutionDomains } from "@/lib/webometricsVisibility";
 
 const PRINT_STYLES = (
   <GlobalStyles
@@ -77,11 +85,24 @@ const PRINT_STYLES = (
         .ranking-detail-hint {
           display: none !important;
         }
-        .ranking-tab-panel {
+        .print-only {
+          display: block !important;
+        }
+        body.printing-ranking-report .ranking-tab-panel:not(.print-export-target) {
+          display: none !important;
+        }
+        body.printing-ranking-report .ranking-system-report:not(.print-export-target) {
+          display: none !important;
+        }
+        body.printing-ranking-report .ranking-tab-panel.print-export-target,
+        body.printing-ranking-report .ranking-system-report.print-export-target {
           display: block !important;
           page-break-inside: avoid;
-          margin-bottom: 24px;
+          margin-bottom: 16px;
         }
+      }
+      .print-only {
+        display: none;
       }
     `}
   />
@@ -104,14 +125,14 @@ const RANKING_SYSTEMS = [
         description: "Impact based on number of external referring domains (Ahrefs.com)",
         weight: "50%",
         performance:
-          "No data — SIS confirms an email domain (@templumis.ac) but the institutional website is not publicly indexed, so referring domains cannot be counted",
+          "No data - SIS confirms an email domain (@templumis.ac) but the institutional website is not publicly indexed, so referring domains cannot be counted",
         score: 0,
         status: "No data",
         detail: {
           source: "Ahrefs referring domains · Webometrics Visibility",
           evidence: [
             { label: "Official domain index", value: "Institutional site is not publicly indexed in the current dataset" },
-            { label: "Referring domains (Ahrefs)", value: "0 — cannot be measured until a public canonical domain is indexed" },
+            { label: "Referring domains (Ahrefs)", value: "0 - cannot be measured until a public canonical domain is indexed" },
             { label: "Web identity", value: "Student/staff email domain (@templumis.ac) is confirmed; public web footprint is not" },
           ],
           gaps: [
@@ -120,11 +141,11 @@ const RANKING_SYSTEMS = [
           ],
           actions: [
             "Publish one official, crawlable institutional domain and keep it as the single web identity",
-            "Earn genuine inbound links from partners, government, and scholarly sites — Visibility is referring domains, not traffic",
+            "Earn genuine inbound links from partners, government, and scholarly sites - Visibility is referring domains, not traffic",
             "Avoid split or conflicting domains that dilute the impact score",
           ],
           factors: [
-            { label: "Score from SIS", note: "0% — referring domains cannot be counted without a public indexed domain. Email (@templumis.ac) is not a Visibility score." },
+            { label: "Score from SIS", note: "0% - referring domains cannot be counted without a public indexed domain. Email (@templumis.ac) is not a Visibility score." },
             { label: "Domain identity", note: "A single canonical domain is required for Visibility to accumulate." },
             { label: "Inbound links", note: "The 50% weight is unique referring domains (Ahrefs), not page count or analytics." },
             { label: "Presence removed", note: "Indexed web-page count is no longer part of the ranking." },
@@ -136,7 +157,7 @@ const RANKING_SYSTEMS = [
         description: "Citations from top 310 cited researchers, excluding top 20 outliers (Google Scholar profiles)",
         weight: "10%",
         performance:
-          "SIS records 6 research theses among 15 academic staff. No Google Scholar profiles or open repository — the inputs this indicator actually counts — are in the dataset",
+          "SIS records 6 research theses among 15 academic staff. No Google Scholar profiles or open repository - the inputs this indicator actually counts - are in the dataset",
         score: 10,
         status: "Limited",
         detail: {
@@ -153,10 +174,10 @@ const RANKING_SYSTEMS = [
           actions: [
             "Create and maintain public Google Scholar profiles for academic staff",
             "Deposit theses and publications in an open-access repository with stable URLs",
-            "Keep citation profiles free of duplicate or inflated entries — outliers are excluded",
+            "Keep citation profiles free of duplicate or inflated entries - outliers are excluded",
           ],
           factors: [
-            { label: "Score from SIS", note: "10% — 6 theses among 15 staff show a research pipeline, but Google Scholar citations (the actual metric) are not in the dataset." },
+            { label: "Score from SIS", note: "10% - 6 theses among 15 staff show a research pipeline, but Google Scholar citations (the actual metric) are not in the dataset." },
             { label: "Profile coverage", note: "Transparency uses citations from the institution's top 310 cited researchers." },
             { label: "Outlier rule", note: "The top 20 most-cited names are excluded to limit manipulation." },
             { label: "Open records", note: "Public profiles and repositories are what this 10% weight can actually see." },
@@ -168,7 +189,7 @@ const RANKING_SYSTEMS = [
         description: "Research papers in the top 10% most cited (2019–2023) (Scopus / Scimago)",
         weight: "40%",
         performance:
-          "No data — 6 dissertations are underway (malaria, AI/UAV, NLP) but no Scopus/Scimago-indexed papers are confirmed, so top-10% citation share is 0",
+          "No data - 6 dissertations are underway (malaria, AI/UAV, NLP) but no Scopus/Scimago-indexed papers are confirmed, so top-10% citation share is 0",
         score: 0,
         status: "No data",
         detail: {
@@ -176,7 +197,7 @@ const RANKING_SYSTEMS = [
           evidence: [
             { label: "Active research topics", value: "Malaria, AI/UAV, and NLP dissertations are underway" },
             { label: "Indexed publications", value: "Journal articles are not yet confirmed in Scopus / Scimago" },
-            { label: "Top 10% cited papers", value: "0 — none identified in the current dataset" },
+            { label: "Top 10% cited papers", value: "0 - none identified in the current dataset" },
           ],
           gaps: [
             "No confirmed Scopus-indexed papers in the ranking window",
@@ -185,10 +206,10 @@ const RANKING_SYSTEMS = [
           actions: [
             "Convert active dissertations into peer-reviewed, indexed publications",
             "Assign DOIs at publication so papers can be tracked in Scopus/Scimago and OpenAlex",
-            "Target recognised journals in each field — Excellence is highly cited papers, not website content",
+            "Target recognised journals in each field - Excellence is highly cited papers, not website content",
           ],
           factors: [
-            { label: "Score from SIS", note: "0% — no Scopus/Scimago-indexed papers, so the top-10% citation share cannot be above zero." },
+            { label: "Score from SIS", note: "0% - no Scopus/Scimago-indexed papers, so the top-10% citation share cannot be above zero." },
             { label: "Index coverage", note: "Only Scopus/Scimago papers in the 2019–2023 window count." },
             { label: "Citation threshold", note: "The 40% weight is papers in the world's top 10% most cited, not total output." },
             { label: "Pipeline", note: "Current dissertations are a pipeline, not yet ranking-visible excellence." },
@@ -221,7 +242,7 @@ const RANKING_SYSTEMS = [
             description:
               "Academic Reputation Survey (Nov 2024–Jan 2025 combined with 2024; 108,000+ responses), weighted for a balanced global distribution of scholars and institutions",
             weight: "15%",
-            performance: "No data — institution is not yet visible in the global teaching-reputation survey",
+            performance: "No data - institution is not yet visible in the global teaching-reputation survey",
             score: 8,
             status: "No data",
           },
@@ -229,7 +250,7 @@ const RANKING_SYSTEMS = [
             name: "Staff-to-student ratio",
             description: "Academic staff relative to student headcount",
             weight: "4.5%",
-            performance: "SFR = 2.5:1 (15 instructors / 37 students) — well within top-tier global teaching-capacity benchmarks",
+            performance: "SFR = 2.5:1 (15 instructors / 37 students) - well within top-tier global teaching-capacity benchmarks",
             score: 88,
             status: "Excellent",
           },
@@ -256,7 +277,7 @@ const RANKING_SYSTEMS = [
             description:
               "Institutional income scaled against academic staff and normalised for purchasing-power parity (PPP); a proxy for infrastructure and facilities available to students and staff",
             weight: "2.5%",
-            performance: "No data — income, infrastructure spend, and PPP-adjusted figures are not in the SIS dataset",
+            performance: "No data - income, infrastructure spend, and PPP-adjusted figures are not in the SIS dataset",
             score: 5,
             status: "No data",
           },
@@ -273,9 +294,9 @@ const RANKING_SYSTEMS = [
           {
             name: "Research reputation",
             description:
-              "University reputation for research excellence among peers, from the annual Academic Reputation Survey — the largest indicator in this pillar",
+              "University reputation for research excellence among peers, from the annual Academic Reputation Survey - the largest indicator in this pillar",
             weight: "18%",
-            performance: "No data — no survey presence; institution is not yet globally known for research",
+            performance: "No data - no survey presence; institution is not yet globally known for research",
             score: 8,
             status: "No data",
           },
@@ -284,7 +305,7 @@ const RANKING_SYSTEMS = [
             description:
               "Research income scaled against academic staff, adjusted for PPP, and normalised for subject mix (science grants are typically larger than those in social sciences, arts, and humanities)",
             weight: "5.5%",
-            performance: "No data — research grant and income records are not in the institutional dataset",
+            performance: "No data - research grant and income records are not in the institutional dataset",
             score: 5,
             status: "No data",
           },
@@ -312,7 +333,7 @@ const RANKING_SYSTEMS = [
             description:
               "Average citations of published work. Elsevier Scopus data: publications 2020–2024, citations 2020–2025 (~18.7 million works, ~174.9 million citations). Field-normalised; the score blends equal country-adjusted and non-country-adjusted measures",
             weight: "15%",
-            performance: "No data — no Scopus citation records in the institutional dataset",
+            performance: "No data - no Scopus citation records in the institutional dataset",
             score: 3,
             status: "No data",
           },
@@ -320,7 +341,7 @@ const RANKING_SYSTEMS = [
             name: "Research strength",
             description: "75th percentile of field-weighted citation impact (added in 2023)",
             weight: "5%",
-            performance: "Requires indexed, cited output — none confirmed",
+            performance: "Requires indexed, cited output - none confirmed",
             score: 3,
             status: "No data",
           },
@@ -329,7 +350,7 @@ const RANKING_SYSTEMS = [
             description:
               "Number of publications in the worldwide top 10% by field-weighted citation impact, normalised by year, subject, and staff numbers (added in 2023)",
             weight: "5%",
-            performance: "Requires Scopus-indexed papers in the global top 10% FWCI — none confirmed",
+            performance: "Requires Scopus-indexed papers in the global top 10% FWCI - none confirmed",
             score: 3,
             status: "No data",
           },
@@ -357,7 +378,7 @@ const RANKING_SYSTEMS = [
             description:
               "Share of international students, with country-population normalisation so large countries are not disadvantaged versus smaller ones",
             weight: "2.5%",
-            performance: "35.1% international students (13 of 37) across 10 nationalities — strong Pan-African mix",
+            performance: "35.1% international students (13 of 37) across 10 nationalities - strong Pan-African mix",
             score: 72,
             status: "Good",
           },
@@ -383,7 +404,7 @@ const RANKING_SYSTEMS = [
             description:
               "International learning opportunities for domestic students. Currently weighted at 0% because of Covid-19 travel disruption; may receive a non-zero weight in a future cycle",
             weight: "0%",
-            performance: "Not scored in the current methodology — no outbound mobility records in the SIS",
+            performance: "Not scored in the current methodology - no outbound mobility records in the SIS",
             score: 0,
             status: "Not applicable",
           },
@@ -400,9 +421,9 @@ const RANKING_SYSTEMS = [
           {
             name: "Industry income",
             description:
-              "Research income from industry (PPP-adjusted) scaled against academic staff — a measure of knowledge transfer and the ability to attract commercial funding",
+              "Research income from industry (PPP-adjusted) scaled against academic staff - a measure of knowledge transfer and the ability to attract commercial funding",
             weight: "2%",
-            performance: "No data — no industry research-income or partnership records in the dataset",
+            performance: "No data - no industry research-income or partnership records in the dataset",
             score: 5,
             status: "No data",
           },
@@ -442,7 +463,7 @@ const RANKING_SYSTEMS = [
             name: "Faculty-to-student ratio",
             description: "Academic staff relative to student headcount",
             weight: "3%",
-            performance: "SFR = 2.5:1 (15 instructors / 37 students) — world-class teaching capacity",
+            performance: "SFR = 2.5:1 (15 instructors / 37 students) - world-class teaching capacity",
             score: 88,
             status: "Excellent",
           },
@@ -450,7 +471,7 @@ const RANKING_SYSTEMS = [
             name: "Finance per student",
             description: "Institutional spending relative to student numbers",
             weight: "3%",
-            performance: "No data — per-student finance figures are not in the SIS dataset",
+            performance: "No data - per-student finance figures are not in the SIS dataset",
             score: 5,
             status: "No data",
           },
@@ -458,7 +479,7 @@ const RANKING_SYSTEMS = [
             name: "Funding sources",
             description: "Diversity and composition of institutional funding",
             weight: "4%",
-            performance: "No data — funding-mix records are not in the institutional dataset",
+            performance: "No data - funding-mix records are not in the institutional dataset",
             score: 5,
             status: "No data",
           },
@@ -656,7 +677,7 @@ const RANKING_SYSTEMS = [
         name: "Alumni as Nobel / Fields Medal winners (Alumni)",
         description: "Weighted by year of award",
         weight: "10%",
-        performance: "Not applicable — No alumni Nobel/Fields data; 5 graduates recorded",
+        performance: "Not applicable - No alumni Nobel/Fields data; 5 graduates recorded",
         score: 0,
         status: "Not applicable",
       },
@@ -664,7 +685,7 @@ const RANKING_SYSTEMS = [
         name: "Staff as Nobel / Fields Medal winners (Award)",
         description: "",
         weight: "20%",
-        performance: "Not applicable — No data on faculty awards of this calibre",
+        performance: "Not applicable - No data on faculty awards of this calibre",
         score: 0,
         status: "Not applicable",
       },
@@ -672,7 +693,7 @@ const RANKING_SYSTEMS = [
         name: "Highly Cited Researchers (HiCi)",
         description: "Clarivate list of highly-cited academics",
         weight: "20%",
-        performance: "No data — Citation records not in institutional dataset",
+        performance: "No data - Citation records not in institutional dataset",
         score: 0,
         status: "No data",
       },
@@ -680,7 +701,7 @@ const RANKING_SYSTEMS = [
         name: "Papers in Nature & Science (N&S)",
         description: "",
         weight: "20%",
-        performance: "No data — Research still in dissertation phase; no publications confirmed",
+        performance: "No data - Research still in dissertation phase; no publications confirmed",
         score: 0,
         status: "No data",
       },
@@ -714,9 +735,9 @@ const RANKING_SYSTEMS = [
     indicators: [
       {
         name: "Academic Reputation",
-        description: "Global survey of academics on teaching and research quality — the largest QS lens",
+        description: "Global survey of academics on teaching and research quality - the largest QS lens",
         weight: "30%",
-        performance: "No data — no survey presence; institution is not yet globally known among academics",
+        performance: "No data - no survey presence; institution is not yet globally known among academics",
         score: 10,
         status: "No data",
       },
@@ -732,7 +753,7 @@ const RANKING_SYSTEMS = [
         name: "Faculty Student Ratio",
         description: "Teaching capacity: academic staff relative to student headcount. A lower ratio is scored more highly",
         weight: "10%",
-        performance: "2.5:1 ratio (15 instructors / 37 students) — well within top-tier global benchmarks (<10:1 is considered strong)",
+        performance: "2.5:1 ratio (15 instructors / 37 students) - well within top-tier global benchmarks (<10:1 is considered strong)",
         score: 88,
         status: "Excellent",
       },
@@ -740,7 +761,7 @@ const RANKING_SYSTEMS = [
         name: "Citations per Faculty",
         description: "Research impact: Scopus citations of published papers, normalised for faculty size and subject mix",
         weight: "20%",
-        performance: "No data — no Scopus citation records in the institutional dataset",
+        performance: "No data - no Scopus citation records in the institutional dataset",
         score: 5,
         status: "No data",
       },
@@ -756,7 +777,7 @@ const RANKING_SYSTEMS = [
         name: "International Student Ratio",
         description: "Share of students who are international",
         weight: "5%",
-        performance: "35.1% international students (13 of 37) from 9 non-Kenyan countries — strong Pan-African mix",
+        performance: "35.1% international students (13 of 37) from 9 non-Kenyan countries - strong Pan-African mix",
         score: 72,
         status: "Good",
       },
@@ -774,7 +795,7 @@ const RANKING_SYSTEMS = [
         description:
           "Employability of graduates: employment rate and alumni impact",
         weight: "5%",
-        performance: "5 graduates across nursing, biochemistry, engineering, economics, and law — no employment or alumni-outcome tracking",
+        performance: "5 graduates across nursing, biochemistry, engineering, economics, and law - no employment or alumni-outcome tracking",
         score: 20,
         status: "Limited",
       },
@@ -802,28 +823,28 @@ const RANKING_SYSTEMS = [
         name: "P (Scientific output)",
         description: "Total number of Web of Science publications",
         weight: "Core",
-        performance: "6 active research theses; publications pipeline in malaria, AI, NLP — none confirmed indexed",
+        performance: "6 active research theses; publications pipeline in malaria, AI, NLP - none confirmed indexed",
         score: 8,
         status: "No data",
       },
       {
-        name: "PP(top 10%) — Citation impact",
+        name: "PP(top 10%) - Citation impact",
         description: "% papers in top 10% most-cited globally",
         weight: "Core",
-        performance: "No data — No Web of Science citation records available",
+        performance: "No data - No Web of Science citation records available",
         score: 3,
         status: "No data",
       },
       {
-        name: "MCS — Mean citation score",
+        name: "MCS - Mean citation score",
         description: "Average citations per paper (field-normalised)",
         weight: "Core",
-        performance: "No data — Citation tracking requires published, indexed output",
+        performance: "No data - Citation tracking requires published, indexed output",
         score: 3,
         status: "No data",
       },
       {
-        name: "PP(collab) — International collaboration",
+        name: "PP(collab) - International collaboration",
         description: "% papers with international co-authors",
         weight: "Core",
         performance: "Multi-national student body could support collaboration; no co-authorship data recorded",
@@ -831,7 +852,7 @@ const RANKING_SYSTEMS = [
         status: "Limited",
       },
       {
-        name: "PP(gender) — Gender diversity in authorship",
+        name: "PP(gender) - Gender diversity in authorship",
         description: "% papers with female authors",
         weight: "Supplementary",
         performance: "48.6% female students (3 of 6 research students female); potential strong performance if published",
@@ -839,10 +860,10 @@ const RANKING_SYSTEMS = [
         status: "Good",
       },
       {
-        name: "PP(OA) — Open Access publications",
+        name: "PP(OA) - Open Access publications",
         description: "% papers freely available online",
         weight: "Supplementary",
-        performance: "Unknown — No open access or repository infrastructure evidenced",
+        performance: "Unknown - No open access or repository infrastructure evidenced",
         score: 10,
         status: "No data",
       },
@@ -875,7 +896,7 @@ const RANKING_SYSTEMS = [
               "Ratio of faculty members (FTE) to the total number of students (Head Count) during the ranking year",
             weight: "80 pts",
             performance:
-              "SFR = 2.5:1 (15 instructors / 37 students) — well above typical 1:15–1:20 teaching-capacity benchmarks",
+              "SFR = 2.5:1 (15 instructors / 37 students) - well above typical 1:15–1:20 teaching-capacity benchmarks",
             score: 85,
             status: "Excellent",
           },
@@ -987,7 +1008,7 @@ const RANKING_SYSTEMS = [
             description:
               "Percentage of the university's research publications ranked among the top 10% most cited globally during the last six years",
             weight: "40 pts",
-            performance: "Requires indexed, cited output — none confirmed",
+            performance: "Requires indexed, cited output - none confirmed",
             score: 3,
             status: "No data",
           },
@@ -1059,7 +1080,7 @@ const RANKING_SYSTEMS = [
             description:
               "Percentage of Scopus-indexed SDG 9 publications in Q1 and Q2 journals out of total SDG 9 research output during the last five years",
             weight: "50 pts",
-            performance: "Requires indexed SDG 9 publications — none confirmed",
+            performance: "Requires indexed SDG 9 publications - none confirmed",
             score: 3,
             status: "No data",
           },
@@ -1113,7 +1134,7 @@ const RANKING_SYSTEMS = [
             description:
               "Average patent citations received per 1,000 scholarly publications (Patent Citations per Scholarly Output)",
             weight: "10 pts",
-            performance: "Requires scholarly output and patent citations — neither is recorded",
+            performance: "Requires scholarly output and patent citations - neither is recorded",
             score: 3,
             status: "No data",
           },
@@ -1158,7 +1179,7 @@ const RANKING_SYSTEMS = [
             name: "International students enrolled",
             description: "Number of international students enrolled for study during the ranking year",
             weight: "30 pts",
-            performance: "35.1% international students (13 of 37) across 10 nationalities — strong Pan-African mix",
+            performance: "35.1% international students (13 of 37) across 10 nationalities - strong Pan-African mix",
             score: 78,
             status: "Good",
           },
@@ -1209,7 +1230,7 @@ const RANKING_SYSTEMS = [
             status: "Limited",
           },
           {
-            name: "Open Science — resources open to non-affiliates",
+            name: "Open Science - resources open to non-affiliates",
             description:
               "Provision of the university's educational and research resources, activities, and facilities to non-university affiliates, industry, and beneficiary entities",
             weight: "10 pts",
@@ -1246,14 +1267,14 @@ const RANKING_SYSTEMS = [
             description:
               "Academic Reputation Survey (Nov 2024–Jan 2025 combined with 2024; 108,000+ global responses). Universities with no votes score zero. THE Arab now uses the same global teaching-reputation scores as the World University Rankings",
             weight: "15%",
-            performance: "No data — institution is not yet visible in the global teaching-reputation survey",
+            performance: "No data - institution is not yet visible in the global teaching-reputation survey",
             score: 0,
             status: "No data",
           },
           {
             name: "Doctorates awarded-to-academic-staff ratio",
             description:
-              "Subject-weighted doctorates divided by subject-weighted academic staff, then normalised — a signal of teaching at the highest level",
+              "Subject-weighted doctorates divided by subject-weighted academic staff, then normalised - a signal of teaching at the highest level",
             weight: "5.5%",
             performance: "5 graduates recorded; doctoral awards per academic staff cannot be confirmed from SIS data",
             score: 15,
@@ -1264,7 +1285,7 @@ const RANKING_SYSTEMS = [
             description:
               "FTE staff in an academic post divided by FTE students on programmes that lead to a degree, certificate, credit, or other qualification",
             weight: "4.5%",
-            performance: "SFR = 2.5:1 (15 instructors / 37 students) — well within top-tier teaching-capacity benchmarks",
+            performance: "SFR = 2.5:1 (15 instructors / 37 students) - well within top-tier teaching-capacity benchmarks",
             score: 88,
             status: "Excellent",
           },
@@ -1282,7 +1303,7 @@ const RANKING_SYSTEMS = [
             description:
               "PPP-adjusted institutional income divided by academic staff; a proxy for infrastructure and facilities",
             weight: "2.5%",
-            performance: "No data — income, infrastructure spend, and PPP-adjusted figures are not in the SIS dataset",
+            performance: "No data - income, infrastructure spend, and PPP-adjusted figures are not in the SIS dataset",
             score: 0,
             status: "No data",
           },
@@ -1301,7 +1322,7 @@ const RANKING_SYSTEMS = [
             description:
               "Reputation for research excellence from the same global Academic Reputation Survey used in the World University Rankings (not a region-only survey)",
             weight: "18%",
-            performance: "No data — no survey presence; institution is not yet globally known for research",
+            performance: "No data - no survey presence; institution is not yet globally known for research",
             score: 0,
             status: "No data",
           },
@@ -1319,7 +1340,7 @@ const RANKING_SYSTEMS = [
             description:
               "Research income scaled against academic staff, PPP-adjusted, and normalised for subject mix",
             weight: "5.5%",
-            performance: "No data — research grant and income records are not in the institutional dataset",
+            performance: "No data - research grant and income records are not in the institutional dataset",
             score: 0,
             status: "No data",
           },
@@ -1338,7 +1359,7 @@ const RANKING_SYSTEMS = [
             description:
               "75th percentile field-weighted citation impact (FWCI) of the institution's papers; Elsevier Scopus publications 2020–2024, citations 2020–2025",
             weight: "15%",
-            performance: "No data — no Scopus citation records; 75th-percentile FWCI cannot be calculated",
+            performance: "No data - no Scopus citation records; 75th-percentile FWCI cannot be calculated",
             score: 0,
             status: "No data",
           },
@@ -1347,7 +1368,7 @@ const RANKING_SYSTEMS = [
             description:
               "Publications in the worldwide top 10% by FWCI, adjusted by year, subject, and academic/research staff",
             weight: "7.5%",
-            performance: "Requires Scopus-indexed papers in the global top 10% FWCI — none confirmed",
+            performance: "Requires Scopus-indexed papers in the global top 10% FWCI - none confirmed",
             score: 0,
             status: "No data",
           },
@@ -1375,7 +1396,7 @@ const RANKING_SYSTEMS = [
             description:
               "FTE international students divided by FTE students; country-population normalised so large countries are not disadvantaged",
             weight: "2.5%",
-            performance: "35.1% international students (13 of 37) across 10 nationalities — strong Pan-African mix",
+            performance: "35.1% international students (13 of 37) across 10 nationalities - strong Pan-African mix",
             score: 72,
             status: "Good",
           },
@@ -1401,7 +1422,7 @@ const RANKING_SYSTEMS = [
             description:
               "International learning opportunities for domestic students. Currently weighted at 0% until THE is satisfied with data quality",
             weight: "0%",
-            performance: "Not scored in the current methodology — no outbound mobility records in the SIS",
+            performance: "Not scored in the current methodology - no outbound mobility records in the SIS",
             score: 0,
             status: "Not applicable",
           },
@@ -1418,9 +1439,9 @@ const RANKING_SYSTEMS = [
           {
             name: "Industry income per academic staff",
             description:
-              "PPP-adjusted research income from industry, scaled against academic staff — a knowledge-transfer measure",
+              "PPP-adjusted research income from industry, scaled against academic staff - a knowledge-transfer measure",
             weight: "2%",
-            performance: "No data — no industry research-income or partnership records in the dataset",
+            performance: "No data - no industry research-income or partnership records in the dataset",
             score: 0,
             status: "No data",
           },
@@ -1469,76 +1490,64 @@ function buildRankingTabs(systems) {
   return tabs;
 }
 
-const RANKING_TABS = buildRankingTabs(RANKING_SYSTEMS);
+function getRatioNote(ratio) {
+  if (ratio === "N/A") return "";
+  const numericRatio = parseFloat(String(ratio).split(":")[0]);
+  if (numericRatio < 5) return "world-class";
+  if (numericRatio < 10) return "very low";
+  if (numericRatio < 15) return "good";
+  return "moderate";
+}
 
 export default function UniversityRankingsPage() {
+  const { user } = useAuth();
+  const { t } = useLanguage();
+  const L = t.staff.universityRankings;
   const [loading, setLoading] = useState(true);
   const [institutionalData, setInstitutionalData] = useState(null);
   const [institutionId, setInstitutionId] = useState(null);
   const [rankingTab, setRankingTab] = useState(0);
   const [arabSystemId, setArabSystemId] = useState("aur");
+  const [visibilityLive, setVisibilityLive] = useState(null);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [printSystemId, setPrintSystemId] = useState(null);
 
-  useEffect(() => {
-    fetchInstitutionalData();
-    
-    // Setup WebSocket for live updates
-    const ws = new WebSocket('ws://localhost:8000/ws/rankings');
-    
-    ws.onopen = () => {
-      console.log('✅ WebSocket connected for live rankings updates');
-    };
-    
-    ws.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      
-      if (message.type === 'rankings_update') {
-        console.log('📊 Received live update from Excel file');
-        // Update institutional data with new values
-        const inst = message.data.institutional_data;
-        setInstitutionalData(prev => ({
-          ...prev,
-          totalStudents: inst.total_students,
-          totalStudentsBreakdown: `${inst.ug_students} UG · ${inst.pg_students} PG`,
-          internationalStudents: inst.international_students,
-          internationalStudentsCount: `${Math.round(parseFloat(inst.international_students) / 100 * inst.total_students)} of ${inst.total_students}`,
-          femaleRatio: inst.female_ratio,
-          femaleCount: `${Math.round(parseFloat(inst.female_ratio) / 100 * inst.total_students)} of ${inst.total_students}`,
-          avgGPA: inst.avg_gpa,
-          faculty: inst.faculty,
-          researchStudents: inst.research_students,
-          activeNationalities: inst.nationalities,
-        }));
-      }
-    };
-    
-    ws.onerror = (error) => {
-      console.error('❌ WebSocket error:', error);
-    };
-    
-    ws.onclose = () => {
-      console.log('🔌 WebSocket disconnected');
-    };
-    
-    // Ping every 30 seconds to keep connection alive
-    const pingInterval = setInterval(() => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send('ping');
-      }
-    }, 30000);
-    
-    // Cleanup on unmount
-    return () => {
-      clearInterval(pingInterval);
-      ws.close();
-    };
-  }, []);
+  const institutionName = user?.institution_name || "Institution";
+  const rankingTabs = useMemo(() => {
+    const systems = withInstitutionDomains(RANKING_SYSTEMS, {
+      domains: user?.institution_domains || [],
+      primaryDomain: user?.institution_primary_domain || null,
+      liveAssessment: visibilityLive,
+    });
+    return buildRankingTabs(systems);
+  }, [user?.institution_domains, user?.institution_primary_domain, visibilityLive]);
 
-  const fetchInstitutionalData = async () => {
+  const exportableSystems = useMemo(
+    () =>
+      rankingTabs.flatMap((tab) =>
+        tab.systems.map((system) => ({
+          id: system.id,
+          title: system.title,
+          tabLabel: system.tabLabel,
+          badge: system.badge,
+          badgeColor: system.badgeColor,
+          groupLabel: tab.type === "group" ? tab.tabLabel : null,
+        }))
+      ),
+    [rankingTabs]
+  );
+
+  const printSystem = useMemo(
+    () => exportableSystems.find((system) => system.id === printSystemId) || null,
+    [exportableSystems, printSystemId]
+  );
+
+  const fetchInstitutionalData = useCallback(async () => {
     try {
       // Fetch data from Excel Rankings Dashboard
       const excelData = await apiFetch("/rankings-excel/dashboard-data");
       const inst = excelData.institutional_data;
-      
+
       // Transform Excel data to match component structure
       setInstitutionalData({
         totalStudents: inst.total_students,
@@ -1559,12 +1568,11 @@ export default function UniversityRankingsPage() {
         nationalitiesRegion: "across Africa",
         academicYear: "2023/24",
         semester: "Sem 1",
-        institutionName: "TemplumIS University",
-        rankingsData: excelData.rankings, // Store rankings data for use in cards
+        institutionName: user?.institution_name || "Institution",
+        rankingsData: excelData.rankings,
       });
     } catch (error) {
       console.error("Error fetching institutional data:", error);
-      // Fallback to default values
       setInstitutionalData({
         totalStudents: 37,
         totalStudentsBreakdown: "25 UG · 12 PG",
@@ -1584,24 +1592,123 @@ export default function UniversityRankingsPage() {
         nationalitiesRegion: "across Africa",
         academicYear: "2023/24",
         semester: "Sem 1",
-        institutionName: "TemplumIS University",
+        institutionName: user?.institution_name || "Institution",
+        rankingsData: null,
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.institution_name]);
 
-  const getRatioNote = (ratio) => {
-    if (ratio === "N/A") return "";
-    const numericRatio = parseFloat(ratio.split(":")[0]);
-    if (numericRatio < 5) return "world-class";
-    if (numericRatio < 10) return "very low";
-    if (numericRatio < 15) return "good";
-    return "moderate";
-  };
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        setVisibilityLive({
+          live: false,
+          ahrefs: { status: "loading", referring_domains: null },
+          scoring: { score: 18, status: "Limited", band: "loading" },
+          canonical_domain: user?.institution_primary_domain || null,
+          registered_domains: user?.institution_domains || [],
+        });
+        const assessment = await apiFetch("/rankings/webometrics/visibility");
+        if (!cancelled) setVisibilityLive(assessment);
+      } catch (error) {
+        console.error("Error fetching live Webometrics Visibility:", error);
+        if (!cancelled) {
+          setVisibilityLive({
+            live: false,
+            ahrefs: {
+              status: "provider_error",
+              referring_domains: null,
+              message: error?.message || "Visibility API unavailable",
+            },
+            scoring: { score: 15, status: "Limited", band: "api_error" },
+            canonical_domain: user?.institution_primary_domain || null,
+            registered_domains: user?.institution_domains || [],
+          });
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.institution_domains, user?.institution_primary_domain]);
+
+  useEffect(() => {
+    fetchInstitutionalData();
+
+    const ws = new WebSocket("ws://localhost:8000/ws/rankings");
+
+    ws.onopen = () => {
+      console.log("✅ WebSocket connected for live rankings updates");
+    };
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+
+      if (message.type === "rankings_update") {
+        console.log("📊 Received live update from Excel file");
+        // Full refresh so insights and cards stay in sync with dashboard scores
+        fetchInstitutionalData();
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error("❌ WebSocket error:", error);
+    };
+
+    ws.onclose = () => {
+      console.log("🔌 WebSocket disconnected");
+    };
+
+    const pingInterval = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send("ping");
+      }
+    }, 30000);
+
+    return () => {
+      clearInterval(pingInterval);
+      ws.close();
+    };
+  }, [fetchInstitutionalData]);
 
   const handleExportPDF = () => {
-    window.print();
+    setExportOpen(true);
+  };
+
+  const handleExportRankingReport = (system) => {
+    setExportOpen(false);
+    setPrintSystemId(system.id);
+    if (system.groupLabel) {
+      setArabSystemId(system.id);
+    }
+
+    const prevTitle = document.title;
+    document.title = L.reportDocumentTitle
+      .replace("{institution}", institutionName)
+      .replace("{ranking}", system.tabLabel);
+
+    let cleaned = false;
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+      document.body.classList.remove("printing-ranking-report");
+      document.title = prevTitle;
+      setPrintSystemId(null);
+      window.removeEventListener("afterprint", cleanup);
+    };
+    window.addEventListener("afterprint", cleanup);
+    document.body.classList.add("printing-ranking-report");
+
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        window.print();
+        // Fallback if afterprint does not fire (some browsers)
+        setTimeout(cleanup, 1500);
+      }, 80);
+    });
   };
 
   const getScoreColor = (score) => {
@@ -1642,14 +1749,14 @@ export default function UniversityRankingsPage() {
         <Box display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1}>
           <Box>
             <Typography variant="h5" fontWeight={700} sx={{ color: ST.colors.textPrimary, mb: 0.5 }}>
-              {institutionalData.institutionName} — Global ranking indicators
+              {institutionName} - Global ranking indicators
             </Typography>
             <Typography variant="body2" sx={{ color: ST.colors.textSecondary }}>
               Academic Year {institutionalData.academicYear} · {institutionalData.semester} · Based on institutional data from the LMS/SIS
             </Typography>
           </Box>
           <Box display="flex" alignItems="center" gap={1.5} className="no-print">
-            <Tooltip title="Downloads a PDF of the full ranking readiness report via the browser print dialog">
+            <Tooltip title={L.exportPdfTooltip}>
               <Button
                 variant="outlined"
                 size="small"
@@ -1666,12 +1773,86 @@ export default function UniversityRankingsPage() {
                   },
                 }}
               >
-                Export PDF
+                {L.exportPdf}
               </Button>
             </Tooltip>
           </Box>
         </Box>
       </Box>
+
+      <Dialog
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        className="no-print"
+      >
+        <DialogTitle sx={{ pr: 6, position: "relative" }}>
+          {L.exportDialogTitle}
+          <IconButton
+            aria-label={t.common.close}
+            onClick={() => setExportOpen(false)}
+            sx={{ position: "absolute", right: 8, top: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            {L.exportDialogSubtitle}
+          </Typography>
+          <List disablePadding>
+            {exportableSystems.map((system) => (
+              <ListItemButton
+                key={system.id}
+                onClick={() => handleExportRankingReport(system)}
+                sx={{
+                  borderRadius: 1,
+                  mb: 0.5,
+                  border: `1px solid ${ST.colors.border}`,
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  <Box
+                    sx={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: "50%",
+                      bgcolor: system.badgeColor,
+                    }}
+                  />
+                </ListItemIcon>
+                <ListItemText
+                  primary={system.tabLabel}
+                  secondary={
+                    system.groupLabel
+                      ? `${system.groupLabel} · ${system.title}`
+                      : system.title
+                  }
+                  primaryTypographyProps={{ fontWeight: 700 }}
+                />
+                <Typography variant="caption" color="primary" fontWeight={600} sx={{ ml: 1 }}>
+                  {L.downloadReport}
+                </Typography>
+              </ListItemButton>
+            ))}
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setExportOpen(false)}>{t.common.cancel}</Button>
+        </DialogActions>
+      </Dialog>
+
+      {printSystem && (
+        <Box className="print-only" sx={{ mb: 2 }}>
+          <Typography variant="h5" fontWeight={700}>
+            {L.printReportHeading.replace("{ranking}", printSystem.tabLabel)}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {institutionName}
+          </Typography>
+        </Box>
+      )}
 
       {/* Institutional Overview Cards */}
       <Paper sx={{ p: 3, mb: 4 }}>
@@ -1816,7 +1997,7 @@ export default function UniversityRankingsPage() {
             "& .MuiTabs-indicator": { bgcolor: ST.colors.primary, height: 3 },
           }}
         >
-          {RANKING_TABS.map((tab) => (
+          {rankingTabs.map((tab) => (
             <Tab
               key={tab.id}
               label={
@@ -1846,7 +2027,7 @@ export default function UniversityRankingsPage() {
           ))}
         </Tabs>
 
-        {RANKING_TABS.map((tab, index) => {
+        {rankingTabs.map((tab, index) => {
           const isGroup = tab.type === "group";
           const selectedSystem = isGroup
             ? tab.systems.find((system) => system.id === arabSystemId) || tab.systems[0]
@@ -1856,10 +2037,13 @@ export default function UniversityRankingsPage() {
           return (
             <Box
               key={tab.id}
-              className="ranking-tab-panel"
+              className={`ranking-tab-panel${
+                tab.systems.some((system) => system.id === printSystemId)
+                  ? " print-export-target"
+                  : ""
+              }`}
               sx={{
                 display: tabActive ? "block" : "none",
-                "@media print": { display: "block" },
               }}
             >
               {isGroup && (
@@ -1874,9 +2058,11 @@ export default function UniversityRankingsPage() {
                 return (
                   <Box
                     key={system.id}
+                    className={`ranking-system-report${
+                      system.id === printSystemId ? " print-export-target" : ""
+                    }`}
                     sx={{
                       display: isSelected ? "block" : "none",
-                      "@media print": { display: "block" },
                     }}
                   >
                     <RankingCard
@@ -1889,8 +2075,11 @@ export default function UniversityRankingsPage() {
                       criteria={system.criteria}
                       totalWeightLabel={system.totalWeightLabel}
                       methodology={system.methodology}
-                      active={tabActive && isSelected}
-                      hideHeader={isGroup}
+                      system={system}
+                      institutionalData={institutionalData}
+                      institutionName={institutionName}
+                      active={(tabActive && isSelected) || system.id === printSystemId}
+                      hideHeader={isGroup && system.id !== printSystemId}
                       embedded
                     />
                   </Box>
@@ -1901,8 +2090,8 @@ export default function UniversityRankingsPage() {
         })}
       </Paper>
 
-      {/* Methodology Note */}
-      <Alert severity="info" icon={<InfoIcon />} sx={{ mb: 4 }}>
+      {/* Methodology note - page bottom */}
+      <Alert severity="info" icon={<InfoIcon />} sx={{ mt: 1, mb: 2 }}>
         <Typography variant="body2" fontWeight={600} gutterBottom>
           Methodology note:
         </Typography>
@@ -1910,10 +2099,10 @@ export default function UniversityRankingsPage() {
           Score estimates are proxies derived from institutional LMS/SIS data available in the TemplumIS dataset.
           Indicators requiring external data (Scopus, Web of Science, employer surveys, reputation surveys) cannot be
           fully evaluated from internal records alone. Scores represent current data readiness relative to each
-          ranking's criteria, not projected ranking positions.
+          ranking&apos;s criteria, not projected ranking positions.
         </Typography>
         <Typography variant="body2">
-          Open bibliometric infrastructure — including{" "}
+          Open bibliometric infrastructure - including{" "}
           <Box
             component="a"
             href="https://openalex.org"
@@ -1932,119 +2121,12 @@ export default function UniversityRankingsPage() {
             OpenAlex
             <OpenInNewIcon sx={{ fontSize: 12 }} />
           </Box>
-          , which indexes over 250 million scholarly works and provides free DOI-level citation tracking — offers a
+          , which indexes over 250 million scholarly works and provides free DOI-level citation tracking - offers a
           supplementary pathway to assess research output where commercial indexing (Scopus, WoS) is unavailable or
           cost-prohibitive. Institutions can register DOIs through any journal publisher and verify coverage via the
           OpenAlex API at no cost.
         </Typography>
       </Alert>
-
-      {/* Analysis Sections */}
-      <Grid container spacing={3}>
-        {/* Where TemplumIS performs well */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3, height: "100%" }}>
-            <Box display="flex" alignItems="center" gap={1} mb={2}>
-              <TrendingUpIcon sx={{ color: ST.colors.success }} />
-              <Typography variant="h6" fontWeight={700}>
-                Where TemplumIS performs well
-              </Typography>
-            </Box>
-            <Box component="ul" sx={{ pl: 2, m: 0 }}>
-              <Typography component="li" variant="body2" sx={{ mb: 1.5 }}>
-                <strong>Faculty/Student Ratio (QS)</strong> — at 2.5:1, this is world-class; top global universities
-                typically aim for under 10:1
-              </Typography>
-              <Typography component="li" variant="body2" sx={{ mb: 1.5 }}>
-                <strong>International students</strong> — 35.1% from 10 nationalities scores well on QS and THE
-                diversity indicators
-              </Typography>
-              <Typography component="li" variant="body2" sx={{ mb: 1.5 }}>
-                <strong>Gender equity</strong> — 48.6% female enrolment and 50% female among research students is
-                strong for CWTS Leiden's PP(gender) metric and THE Africa's female-graduates indicator
-              </Typography>
-              <Typography component="li" variant="body2">
-                <strong>THE Africa student engagement</strong> is the strongest SSA pillar (~45% readiness): faculty
-                access at 2.5:1, course quality (GPA 3.32), and applied African research topics. Overall SSA readiness
-                is ~28% because finance, facilities, accessibility, ethics, and citation metrics still lack data
-              </Typography>
-            </Box>
-          </Paper>
-        </Grid>
-
-        {/* Where critical gaps exist */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3, height: "100%" }}>
-            <Box display="flex" alignItems="center" gap={1} mb={2}>
-              <TrendingDownIcon sx={{ color: ST.colors.error }} />
-              <Typography variant="h6" fontWeight={700}>
-                Where critical gaps exist
-              </Typography>
-            </Box>
-            <Box component="ul" sx={{ pl: 2, m: 0 }}>
-              <Typography component="li" variant="body2" sx={{ mb: 1.5 }}>
-                <strong>Citations (Scopus/WoS)</strong> — the single biggest blocker for THE, QS, CWTS Leiden, and
-                Shanghai. None of the 6 research dissertations appear to have generated indexed publications yet
-              </Typography>
-              <Typography component="li" variant="body2" sx={{ mb: 1.5 }}>
-                <strong>Shanghai ARWU</strong> — the lowest readiness (~5%) because it is almost entirely built around
-                Nobel laureates and high-impact journal papers, which are structural constraints for any emerging
-                university
-              </Typography>
-              <Typography component="li" variant="body2">
-                <strong>Reputation surveys</strong> — QS (30% weight) and THE both rely on global academic/employer
-                surveys that require years of brand-building to gain traction
-              </Typography>
-            </Box>
-          </Paper>
-        </Grid>
-
-        {/* Quick wins */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3, bgcolor: `${ST.colors.success}10`, border: `1px solid ${ST.colors.success}` }}>
-            <Box display="flex" alignItems="center" gap={1} mb={2}>
-              <CheckCircleIcon sx={{ color: ST.colors.success }} />
-              <Typography variant="h6" fontWeight={700}>
-                Quick wins to improve ranking readiness
-              </Typography>
-            </Box>
-            <Box component="ul" sx={{ pl: 2, m: 0 }}>
-              <Typography component="li" variant="body2" sx={{ mb: 1.5 }}>
-                <strong>Publish the 6 active dissertations in peer-reviewed journals</strong> → immediately unlocks
-                Scopus/WoS indicators; assigning a DOI at publication enables automatic indexing in{" "}
-                <Box
-                  component="a"
-                  href="https://openalex.org"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  sx={{
-                    color: ST.colors.primary,
-                    fontWeight: 600,
-                    textDecoration: "none",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 0.3,
-                    verticalAlign: "middle",
-                    "&:hover": { textDecoration: "underline" },
-                  }}
-                >
-                  OpenAlex
-                  <OpenInNewIcon sx={{ fontSize: 11 }} />
-                </Box>
-                , providing free citation and author disambiguation tracking across 250M+ scholarly works before
-                Scopus coverage is established
-              </Typography>
-              <Typography component="li" variant="body2" sx={{ mb: 1.5 }}>
-                <strong>Build an open-access repository</strong> → improves Webometrics Openness and CWTS PP(OA)
-              </Typography>
-              <Typography component="li" variant="body2">
-                <strong>Start tracking graduate employment outcomes</strong> → unlocks QS Employment Outcomes (5%) and
-                Employer Reputation
-              </Typography>
-            </Box>
-          </Paper>
-        </Grid>
-      </Grid>
     </Box>
   );
 }
@@ -2139,7 +2221,7 @@ function scoreInterpretation(score, status) {
     return "This indicator does not currently apply to the institution.";
   }
   if (status === "No data") {
-    return "Score is 0% because the required evidence is not in the SIS/LMS or the relevant external index. This is not a ranking-agency result — the indicator cannot be scored until the data exists.";
+    return "Score is 0% because the required evidence is not in the SIS/LMS or the relevant external index. This is not a ranking-agency result - the indicator cannot be scored until the data exists.";
   }
   if (status === "Limited") {
     return "Some relevant records exist, but coverage is still incomplete relative to how this indicator is measured.";
@@ -2628,7 +2710,7 @@ function WebometricsMethodologyDialog({ open, onClose }) {
       officialUrl={officialUrl}
     >
       <Typography variant="body2" sx={{ mb: 2, color: ST.colors.textPrimary }}>
-        Webometrics ranks universities — not websites — on digital visibility, academic openness, and research
+        Webometrics ranks universities - not websites - on digital visibility, academic openness, and research
         excellence. Scores on this page are TemplumIS data-readiness estimates against those indicators, not a
         predicted league-table position.
       </Typography>
@@ -2638,14 +2720,14 @@ function WebometricsMethodologyDialog({ open, onClose }) {
       </Typography>
       <Box component="ul" sx={{ pl: 2.5, m: 0, mb: 1 }}>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Visibility (50%)</strong> — external referring domains to the university website (Ahrefs)
+          <strong>Visibility (50%)</strong> - external referring domains to the university website (Ahrefs)
         </Typography>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Transparency (10%)</strong> — citations of the institution's top researchers on Google Scholar
+          <strong>Transparency (10%)</strong> - citations of the institution's top researchers on Google Scholar
           (top 310 profiles, excluding the top 20 outliers)
         </Typography>
         <Typography component="li" variant="body2">
-          <strong>Excellence (40%)</strong> — papers in the top 10% most cited (Scopus / Scimago)
+          <strong>Excellence (40%)</strong> - papers in the top 10% most cited (Scopus / Scimago)
         </Typography>
       </Box>
       <Typography variant="body2" sx={{ mb: 2, fontStyle: "italic", color: ST.colors.textSecondary }}>
@@ -2693,23 +2775,23 @@ function TheMethodologyDialog({ open, onClose }) {
       </Typography>
       <Box component="ul" sx={{ pl: 2.5, m: 0, mb: 1.5 }}>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Teaching (29.5%)</strong> — reputation survey, staff-to-student ratio, doctorate mix, and
+          <strong>Teaching (29.5%)</strong> - reputation survey, staff-to-student ratio, doctorate mix, and
           PPP-adjusted institutional income
         </Typography>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Research environment (29%)</strong> — research reputation, research income, and Scopus papers per
+          <strong>Research environment (29%)</strong> - research reputation, research income, and Scopus papers per
           scholar
         </Typography>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Research quality (30%)</strong> — citation impact, strength, excellence (top 10% FWCI), and
+          <strong>Research quality (30%)</strong> - citation impact, strength, excellence (top 10% FWCI), and
           influence; Elsevier Scopus, publications 2020–2024
         </Typography>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>International outlook (7.5%)</strong> — international students, staff, and co-authorship,
+          <strong>International outlook (7.5%)</strong> - international students, staff, and co-authorship,
           country-population normalised
         </Typography>
         <Typography component="li" variant="body2">
-          <strong>Industry (4%)</strong> — industry research income and patents citing the university's research
+          <strong>Industry (4%)</strong> - industry research income and patents citing the university's research
         </Typography>
       </Box>
       <Typography variant="body2" sx={{ mb: 2, fontStyle: "italic", color: ST.colors.textSecondary }}>
@@ -2758,7 +2840,7 @@ function SsaMethodologyDialog({ open, onClose }) {
     >
       <Typography variant="body2" sx={{ mb: 2, color: ST.colors.textPrimary }}>
         THE's SSA ranking is built for universities in sub-Saharan Africa. It is a hybrid of teaching, impact, and
-        research — not a Global North research-intensity table. Scores on this page are TemplumIS data-readiness
+        research - not a Global North research-intensity table. Scores on this page are TemplumIS data-readiness
         estimates against those indicators, not a predicted THE position.
       </Typography>
 
@@ -2767,23 +2849,23 @@ function SsaMethodologyDialog({ open, onClose }) {
       </Typography>
       <Box component="ul" sx={{ pl: 2.5, m: 0, mb: 1.5 }}>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Resources and finance (22%)</strong> — income per student, faculty-to-student ratio, funding-source
+          <strong>Resources and finance (22%)</strong> - income per student, faculty-to-student ratio, funding-source
           diversity, facilities, staff CPD, and student counselling
         </Typography>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Access and fairness (24%)</strong> — first-generation and low-income students, female graduates,
+          <strong>Access and fairness (24%)</strong> - first-generation and low-income students, female graduates,
           disability access, and affordability
         </Typography>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Student engagement (22%)</strong> — experiential learning, employability and careers, course quality,
+          <strong>Student engagement (22%)</strong> - experiential learning, employability and careers, course quality,
           and student–faculty interaction
         </Typography>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Ethical leadership (10%)</strong> — leadership, innovation and entrepreneurship skills, student union,
+          <strong>Ethical leadership (10%)</strong> - leadership, innovation and entrepreneurship skills, student union,
           and a published code of ethics (new in 2024)
         </Typography>
         <Typography component="li" variant="body2">
-          <strong>Africa impact (22%)</strong> — African citations, African co-authorship, and African heritage in
+          <strong>Africa impact (22%)</strong> - African citations, African co-authorship, and African heritage in
           teaching and campus life
         </Typography>
       </Box>
@@ -2842,20 +2924,20 @@ function AurMethodologyDialog({ open, onClose }) {
       </Typography>
       <Box component="ul" sx={{ pl: 2.5, m: 0, mb: 2 }}>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Education and learning (300 pts)</strong> — faculty-to-student ratios, PhD staff, digital/AI teaching,
+          <strong>Education and learning (300 pts)</strong> - faculty-to-student ratios, PhD staff, digital/AI teaching,
           interdisciplinary programmes, Scopus H-index ≥ 10, visiting experts, programmatic accreditation, undergraduate
           co-authorship, and recognised awards
         </Typography>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Scientific research (400 pts)</strong> — Scopus output, Q1/Q2 share, citations, top 10% papers,
+          <strong>Scientific research (400 pts)</strong> - Scopus output, Q1/Q2 share, citations, top 10% papers,
           international and industry co-authorship, FWCI, research-budget share, and Arabic-indexed Q1/Q2 papers
         </Typography>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Creativity, entrepreneurship, and innovation (150 pts)</strong> — SDG 9 publications, funded innovation
+          <strong>Creativity, entrepreneurship, and innovation (150 pts)</strong> - SDG 9 publications, funded innovation
           projects, incubators, patents, and startups
         </Typography>
         <Typography component="li" variant="body2">
-          <strong>International and local collaboration (150 pts)</strong> — international faculty and students, visiting
+          <strong>International and local collaboration (150 pts)</strong> - international faculty and students, visiting
           professors, joint degrees, exchanges, community engagement, and open science
         </Typography>
       </Box>
@@ -2902,23 +2984,23 @@ function TheArabMethodologyDialog({ open, onClose }) {
       </Typography>
       <Box component="ul" sx={{ pl: 2.5, m: 0, mb: 1.5 }}>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Teaching (29.5%)</strong> — teaching reputation, doctorates per academic staff, staff-to-student
+          <strong>Teaching (29.5%)</strong> - teaching reputation, doctorates per academic staff, staff-to-student
           ratio, doctorates per undergraduate degrees awarded, and PPP-adjusted income per staff
         </Typography>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Research environment (29%)</strong> — research reputation, Scopus papers per scholar, and research
+          <strong>Research environment (29%)</strong> - research reputation, Scopus papers per scholar, and research
           income per staff
         </Typography>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Research quality (30%)</strong> — research strength (75th-percentile FWCI, 15%), excellence (7.5%),
+          <strong>Research quality (30%)</strong> - research strength (75th-percentile FWCI, 15%), excellence (7.5%),
           and influence (7.5%). Unlike the world table, citation impact is not a separate 15% metric
         </Typography>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>International outlook (7.5%)</strong> — international students, staff, and co-authorship,
+          <strong>International outlook (7.5%)</strong> - international students, staff, and co-authorship,
           country-population normalised
         </Typography>
         <Typography component="li" variant="body2">
-          <strong>Industry (4%)</strong> — industry income per staff and patents citing the university (patents are new
+          <strong>Industry (4%)</strong> - industry income per staff and patents citing the university (patents are new
           to THE Arab in 2026)
         </Typography>
       </Box>
@@ -2980,23 +3062,23 @@ function ArwuMethodologyDialog({ open, onClose }) {
       </Typography>
       <Box component="ul" sx={{ pl: 2.5, m: 0, mb: 2 }}>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Alumni (10%)</strong> — graduates who won Nobel Prizes or Fields Medals (degree-year weighted)
+          <strong>Alumni (10%)</strong> - graduates who won Nobel Prizes or Fields Medals (degree-year weighted)
         </Typography>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Award (20%)</strong> — staff who won Nobel Prizes or Fields Medals while at the institution
+          <strong>Award (20%)</strong> - staff who won Nobel Prizes or Fields Medals while at the institution
         </Typography>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>HiCi (20%)</strong> — Clarivate Highly Cited Researchers (November 2024 list; primary affiliation
+          <strong>HiCi (20%)</strong> - Clarivate Highly Cited Researchers (November 2024 list; primary affiliation
           only)
         </Typography>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>N&amp;S (20%)</strong> — Nature and Science articles, 2020–2024, weighted by author affiliation
+          <strong>N&amp;S (20%)</strong> - Nature and Science articles, 2020–2024, weighted by author affiliation
         </Typography>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>PUB (20%)</strong> — Web of Science SCIE/SSCI articles in 2024 (SSCI papers count double)
+          <strong>PUB (20%)</strong> - Web of Science SCIE/SSCI articles in 2024 (SSCI papers count double)
         </Typography>
         <Typography component="li" variant="body2">
-          <strong>PCP (10%)</strong> — the five scores above, divided by FTE academic staff
+          <strong>PCP (10%)</strong> - the five scores above, divided by FTE academic staff
         </Typography>
       </Box>
       <Typography variant="body2" sx={{ mb: 2, fontStyle: "italic", color: ST.colors.textSecondary }}>
@@ -3052,23 +3134,23 @@ function QsMethodologyDialog({ open, onClose }) {
       </Typography>
       <Box component="ul" sx={{ pl: 2.5, m: 0, mb: 1.5 }}>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Research and discovery (50%)</strong> — Academic Reputation 30% (global academic survey) and Citations
+          <strong>Research and discovery (50%)</strong> - Academic Reputation 30% (global academic survey) and Citations
           per Faculty 20% (citations divided by academic staff)
         </Typography>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Employability and outcomes (20%)</strong> — Employer Reputation 15% (global employer survey) and
+          <strong>Employability and outcomes (20%)</strong> - Employer Reputation 15% (global employer survey) and
           Employment Outcomes 5% (graduate employability and alumni impact)
         </Typography>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Learning experience (10%)</strong> — Faculty-Student Ratio 10%
+          <strong>Learning experience (10%)</strong> - Faculty-Student Ratio 10%
         </Typography>
         <Typography component="li" variant="body2" sx={{ mb: 0.75 }}>
-          <strong>Global engagement (15%)</strong> — International Faculty 5%, International Research Network 5%
+          <strong>Global engagement (15%)</strong> - International Faculty 5%, International Research Network 5%
           (sustained partnerships: three or more joint papers in five years), International Student Ratio 5%.
           International Student Diversity is listed at 0%
         </Typography>
         <Typography component="li" variant="body2">
-          <strong>Sustainability (5%)</strong> — environmental, social, and governance commitment, including research
+          <strong>Sustainability (5%)</strong> - environmental, social, and governance commitment, including research
           related to the UN SDGs
         </Typography>
       </Box>
@@ -3191,6 +3273,183 @@ function GroupRankingPicker({ systems, selectedId, onSelect }) {
   );
 }
 
+function PlatformInsightsPanel({ institutionName, system, institutionalData, badgeColor }) {
+  const insights = buildPlatformInsights({
+    inst: institutionalData,
+    system,
+    institutionName,
+  });
+
+  const renderItems = (items, withArrow = false) => (
+    <Box component="ul" sx={{ pl: 2, m: 0 }}>
+      {items.map((item, idx) => (
+        <Typography
+          component="li"
+          variant="body2"
+          key={`${item.title}-${idx}`}
+          sx={{ mb: idx < items.length - 1 ? 1.25 : 0, color: ST.colors.textPrimary }}
+        >
+          <strong>{item.title}</strong>
+          {withArrow ? " → " : " - "}
+          {item.link ? (
+            <>
+              {item.text.split(item.link.label)[0]}
+              <Box
+                component="a"
+                href={item.link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{
+                  color: ST.colors.primary,
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 0.3,
+                  verticalAlign: "middle",
+                  "&:hover": { textDecoration: "underline" },
+                }}
+              >
+                {item.link.label}
+                <OpenInNewIcon sx={{ fontSize: 11 }} />
+              </Box>
+              {item.text.split(item.link.label).slice(1).join(item.link.label)}
+            </>
+          ) : (
+            item.text
+          )}
+        </Typography>
+      ))}
+    </Box>
+  );
+
+  return (
+    <Box sx={{ p: 2, borderTop: `1px solid ${ST.colors.border}`, bgcolor: ST.colors.bg || "#fafbfc" }}>
+      <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5, color: badgeColor }}>
+        {system.tabLabel || system.badge} insights for {institutionName}
+      </Typography>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+          <Paper variant="outlined" sx={{ p: 2, height: "100%" }}>
+            <Box display="flex" alignItems="center" gap={1} mb={1.25}>
+              <TrendingUpIcon sx={{ color: ST.colors.success, fontSize: 20 }} />
+              <Typography variant="subtitle2" fontWeight={700}>
+                Where {institutionName} performs well
+              </Typography>
+            </Box>
+            {renderItems(insights.strengths)}
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Paper variant="outlined" sx={{ p: 2, height: "100%" }}>
+            <Box display="flex" alignItems="center" gap={1} mb={1.25}>
+              <TrendingDownIcon sx={{ color: ST.colors.error, fontSize: 20 }} />
+              <Typography variant="subtitle2" fontWeight={700}>
+                Where critical gaps exist
+              </Typography>
+            </Box>
+            {renderItems(insights.gaps)}
+          </Paper>
+        </Grid>
+        <Grid item xs={12}>
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 2,
+              bgcolor: `${ST.colors.success}10`,
+              borderColor: ST.colors.success,
+            }}
+          >
+            <Box display="flex" alignItems="center" gap={1} mb={1.25}>
+              <CheckCircleIcon sx={{ color: ST.colors.success, fontSize: 20 }} />
+              <Typography variant="subtitle2" fontWeight={700}>
+                Quick wins for {system.tabLabel || system.badge}
+              </Typography>
+            </Box>
+            {renderItems(insights.quickWins, true)}
+          </Paper>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+}
+
+function OverallReadinessBanner({
+  badge,
+  badgeColor,
+  value,
+  totalWeightLabel,
+  indicatorCount,
+  onOpenAssessments,
+  onOpenBreakdown,
+}) {
+  return (
+    <Box
+      sx={{
+        mx: 2,
+        mt: 2,
+        mb: 1,
+        p: 2.5,
+        borderRadius: 2,
+        border: `2px solid ${badgeColor}`,
+        bgcolor: `${badgeColor}12`,
+        boxShadow: `0 8px 24px ${badgeColor}22`,
+      }}
+    >
+      <Box
+        display="flex"
+        alignItems={{ xs: "flex-start", sm: "center" }}
+        justifyContent="space-between"
+        gap={2}
+        flexWrap="wrap"
+      >
+        <Box>
+          <Typography
+            variant="overline"
+            sx={{ color: badgeColor, fontWeight: 800, letterSpacing: 1.1, display: "block" }}
+          >
+            Overall readiness
+          </Typography>
+          <Typography variant="h4" fontWeight={800} sx={{ color: ST.colors.textPrimary, lineHeight: 1.1 }}>
+            {formatScorePct(value)}
+          </Typography>
+          <Typography variant="body2" sx={{ color: ST.colors.textSecondary, mt: 0.5 }}>
+            {badge} framework{totalWeightLabel ? ` · ${totalWeightLabel} total weight` : ""}
+            {indicatorCount != null ? ` · ${indicatorCount} indicators` : ""}
+          </Typography>
+        </Box>
+        <Box sx={{ flex: 1, minWidth: 200, maxWidth: 420 }}>
+          <ReadinessBar value={value} color={badgeColor} height={14} label={formatScorePct(value)} />
+          <Box display="flex" gap={1} mt={1.25} flexWrap="wrap" className="no-print">
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={onOpenAssessments}
+              sx={{ textTransform: "none", fontWeight: 600, borderColor: badgeColor, color: badgeColor }}
+            >
+              View assessments
+            </Button>
+            <Button
+              size="small"
+              variant="contained"
+              onClick={onOpenBreakdown}
+              endIcon={<KeyboardArrowRightIcon />}
+              sx={{
+                textTransform: "none",
+                fontWeight: 700,
+                bgcolor: badgeColor,
+                "&:hover": { bgcolor: badgeColor, filter: "brightness(0.92)" },
+              }}
+            >
+              Score breakdown
+            </Button>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
 function RankingCard({
   badge,
   badgeColor,
@@ -3201,6 +3460,9 @@ function RankingCard({
   criteria,
   totalWeightLabel,
   methodology,
+  system,
+  institutionalData,
+  institutionName,
   active = true,
   hideHeader = false,
   embedded,
@@ -3293,6 +3555,20 @@ function RankingCard({
         badgeColor={badgeColor}
         onClose={() => setDetail(null)}
         onTabChange={(tab) => setDetail((current) => (current ? { ...current, tab } : current))}
+      />
+
+      <OverallReadinessBanner
+        badge={badge}
+        badgeColor={badgeColor}
+        value={computedOverall}
+        totalWeightLabel={totalWeightLabel}
+        indicatorCount={allIndicators.length}
+        onOpenAssessments={() =>
+          openGroup(`${badge} overall readiness`, allIndicators, 0, totalWeightLabel)
+        }
+        onOpenBreakdown={() =>
+          openGroup(`${badge} overall readiness`, allIndicators, 1, totalWeightLabel)
+        }
       />
 
       {hasCriteria && (
@@ -3396,36 +3672,6 @@ function RankingCard({
               </TableContainer>
             </Box>
           ))}
-          <Box
-            onClick={() =>
-              openGroup(`${badge} overall readiness`, allIndicators, 1, totalWeightLabel)
-            }
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                openGroup(`${badge} overall readiness`, allIndicators, 1, totalWeightLabel);
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            sx={{
-              px: 2,
-              py: 2,
-              bgcolor: `${badgeColor}08`,
-              borderTop: `1px solid ${ST.colors.border}`,
-              cursor: "pointer",
-              "&:hover": { bgcolor: `${badgeColor}14` },
-            }}
-          >
-            <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap">
-              <Typography variant="body2" fontWeight={700}>
-                {badge} overall readiness{totalWeightLabel ? ` · ${totalWeightLabel}` : ""}
-              </Typography>
-              <Box sx={{ minWidth: 220, flex: 1, maxWidth: 360 }}>
-                <ReadinessBar value={computedOverall} color={badgeColor} label={formatScorePct(computedOverall)} />
-              </Box>
-            </Box>
-          </Box>
         </>
       ) : (
         <TableContainer>
@@ -3433,34 +3679,18 @@ function RankingCard({
             <IndicatorTableHead />
             <TableBody>
               <IndicatorRows indicators={indicators || []} onOpenDetail={openIndicator} />
-              <TableRow sx={{ bgcolor: `${badgeColor}08` }}>
-                <TableCell colSpan={2}>
-                  <Typography variant="body2" fontWeight={700}>
-                    {badge} overall readiness
-                  </Typography>
-                </TableCell>
-                <ClickableCell
-                  tooltip="View indicator assessments"
-                  onClick={() =>
-                    openGroup(`${badge} overall readiness`, indicators || [], 0, totalWeightLabel)
-                  }
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    {(indicators || []).length} indicators · view assessments
-                  </Typography>
-                </ClickableCell>
-                <ClickableCell
-                  tooltip="View overall score breakdown"
-                  onClick={() =>
-                    openGroup(`${badge} overall readiness`, indicators || [], 1, totalWeightLabel)
-                  }
-                >
-                  <ReadinessBar value={computedOverall} color={badgeColor} label={formatScorePct(computedOverall)} />
-                </ClickableCell>
-              </TableRow>
             </TableBody>
           </Table>
         </TableContainer>
+      )}
+
+      {system && (
+        <PlatformInsightsPanel
+          institutionName={institutionName}
+          system={system}
+          institutionalData={institutionalData}
+          badgeColor={badgeColor}
+        />
       )}
     </Wrapper>
   );

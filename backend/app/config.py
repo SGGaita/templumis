@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     smtp_user: str = ""
     smtp_password: str = ""
     from_email: str = "TemplumIS <no-reply@templumis.org>"
+
+    # Optional Ahrefs API v3 token for live Webometrics Visibility (referring domains)
+    ahrefs_api_token: str = ""
     
     @property
     def SMTP_HOST(self) -> str:

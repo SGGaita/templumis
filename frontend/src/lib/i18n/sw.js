@@ -46,6 +46,14 @@ const sw = {
     termsOfService: "Masharti ya Huduma",
     contact: "Wasiliana",
     documentation: "Nyaraka",
+    footer: {
+      usefulLinks: "Viungo muhimu",
+      home: "Nyumbani",
+      faqs: "Maswali yanayoulizwa mara kwa mara",
+      addressOrg: "Training Centre in Communication",
+      addressBuilding: "Gecaga Institute Building",
+      addressCity: "Nairobi, Kenya",
+    },
     required: "Inahitajika",
     optional: "Si lazima",
     yes: "Ndiyo",
@@ -78,7 +86,7 @@ const sw = {
     },
     modules: {
       heading: "Moduli Kuu",
-      subheading: "Moduli nne zilizounganishwa zinazoshughulikia mzunguko wote wa data ya kitaasisi.",
+      subheading: "Moduli tano zilizounganishwa zinazoshughulikia mzunguko wote wa data ya kitaasisi.",
       enrollment: {
         title: "Usajili & Mafanikio ya Wanafunzi",
         description:
@@ -98,6 +106,11 @@ const sw = {
         title: "Ruzuku & Utafiti",
         description:
           "Fuatilia uwekezaji wa utafiti, viwango vya matumizi ya ruzuku, ramani ya matokeo ya uchapishaji, na arifa za utiifu wa maadili/IRB.",
+      },
+      rankings: {
+        title: "Orodha za Vyuo Vikuu",
+        description:
+          "Fuatilia utendaji wa taasisi katika mifumo mikuu ya orodha za kimataifa kwa utayari wa viashiria, malengo, na dashibodi za moja kwa moja.",
       },
     },
   },
@@ -519,8 +532,9 @@ const sw = {
         grantApplications: "Maombi ya Ruzuku",
         grantConfigure: "Sanidi Ruzuku",
         grantLifecycle: "Hatua za Ruzuku",
-        rankings: "Orodha ya Daraja",
+        rankings: "Orodha ya Daraja za Vyuo",
         analytics: "Uchambuzi",
+        executiveBriefing: "Muhtasari wa utendaji",
       },
     },
     topbar: {
@@ -545,6 +559,72 @@ const sw = {
         programDistribution: "Usambazaji wa Programu",
         topNationalities: "Utaifa Maarufu",
         complianceStatus: "Hali ya Utiifu",
+      },
+    },
+    vcDashboard: {
+      badge: "Makamu Mkuu",
+      title: "Dashibodi ya maamuzi ya taasisi",
+      subtitle: "Ishara za dharura, afya ya portfolio, na nyenzo kwa uongozi — si foleni za uendeshaji.",
+      dataAsOf: "Data kufikia {when}",
+      openBriefing: "Fungua muhtasari kamili wa utendaji",
+      loadError: "Imeshindwa kupakia vipimo vya uongozi",
+      status: {
+        onTarget: "Kwenye lengo",
+        watch: "Angalia",
+        actionNeeded: "Hatua inahitajika",
+      },
+      attention: {
+        title: "Inahitaji umakini",
+      },
+      pulse: {
+        title: "Mapigo ya taasisi",
+        totalStudents: "Jumla ya wanafunzi",
+        activeStudents: "{count} hai",
+        onTrack: "Katika njia",
+        atRisk: "Wanafunzi walio hatarini",
+        atRiskShare: "{pct}% ya usajili",
+        feeCollection: "Ukusanyaji wa ada",
+        avgGpa: "GPA ya taasisi",
+        rankingReadiness: "Utayari wa daraja",
+        vsTarget: "Lengo {target}",
+      },
+      success: {
+        title: "Mafanikio ya wanafunzi",
+        subtitle: "Mchanganyiko wa utii, vichochezi vya hatari, na uhifadhi",
+        cta: "Kagua walio hatarini",
+        onTrack: "Katika njia",
+        atRisk: "Hatarini",
+        critical: "Muhimu",
+        finances: "Fedha",
+        attendance: "Mahudhurio",
+        academic: "Kiakademia",
+        probation: "{count} katika majaribio au kusimamishwa",
+        retention: "Uhifadhi wa mwaka 1 {pct}%",
+        graduation: "Kuhitimu kwa miaka 4 {pct}%",
+      },
+      portfolio: {
+        title: "Portfolio na ufikiaji",
+        subtitle: "Mkazo wa programu na bomba la misaada",
+        ugPg: "Shahada ya kwanza / uzamili",
+        international: "Wanafunzi wa kimataifa",
+        female: "Sehemu ya wanawake",
+        aidPending: "{count} inasubiri",
+        aidCommittee: "{count} tayari kwa kamati",
+        aidAwarded: "{count} zimetolewa",
+        aidCta: "Maamuzi ya misaada",
+      },
+      trend: {
+        title: "Usajili kwa mwaka wa kuingia",
+        subtitle: "Ukubwa wa makundi kutoka rekodi za SIS",
+        students: "Wanafunzi",
+      },
+      rankings: {
+        title: "Daraja za vyuo na utayari",
+        subtitle: "Utayari wa taasisi katika mifumo ya daraja",
+        cta: "Fungua daraja za vyuo",
+        overall: "Utayari wa jumla",
+        unavailable: "Data ya utayari wa daraja haipatikani. Fungua daraja baada ya kupakia data ya taasisi.",
+        grantsNote: "Ruzuku za utafiti: {pending} zinazosubiri · {approved} zilizoidhinishwa",
       },
     },
     enrollment: {
@@ -674,12 +754,39 @@ const sw = {
       performance: "Utendaji wa Wanafunzi",
       programs: "Uchambuzi wa Programu",
       exportReport: "Hamisha Ripoti",
+      retentionTab: "Uhifadhi",
+      retention: {
+        oneYear: "Uhifadhi wa mwaka 1",
+        fourYear: "Kuhitimu kwa miaka 4",
+        cohortsTracked: "Makundi {count} yanafanyiwa ufuatiliaji",
+        snapshot: "Picha {date}",
+        cohortAverage: "Wastani wa kundi",
+        initialSize: "Ukubwa wa awali wa kundi",
+        acrossSnapshots: "Katika picha za hivi karibuni za makundi",
+        graduated: "Waliomaliza",
+        fromTracked: "Kutoka makundi yanayofuatiliwa",
+        byCohort: "Uhifadhi kwa kundi",
+        byCohortSub: "Picha ya hivi karibuni kwa kila kundi la kuingia",
+        retentionSeries: "Uhifadhi wa mwaka 1 %",
+        graduationSeries: "Kuhitimu kwa miaka 4 %",
+        unavailable: "Vipimo vya uhifadhi wa makundi bado havipatikani. Panda au synisha picha za uhifadhi ili kufungua mwonekano huu.",
+      },
     },
     rankings: {
       title: "Orodha ya Daraja",
       gpaRankings: "Orodha ya GPA",
       coursePerformance: "Utendaji wa Kozi",
       scholarshipRates: "Viwango vya Mafanikio ya Ufadhili",
+    },
+    universityRankings: {
+      exportPdf: "Hamisha PDF",
+      exportPdfTooltip: "Chagua cheo na ukipakue kama ripoti yake ya PDF",
+      exportDialogTitle: "Hamisha ripoti ya cheo",
+      exportDialogSubtitle:
+        "Chagua mfumo mmoja wa cheo. Kila upakuaji ni ripoti tofauti yenye muhtasari wa taasisi na maelezo ya utayari wa cheo hicho.",
+      downloadReport: "Pakua",
+      reportDocumentTitle: "{institution} - ripoti ya {ranking}",
+      printReportHeading: "Ripoti ya utayari wa {ranking}",
     },
     support: {
       title: "Usimamizi wa Msaada wa Wanafunzi",
@@ -842,6 +949,7 @@ const sw = {
     nav: {
       dashboard: "Dashibodi",
       users: "Watumiaji",
+      access: "Ufikiaji wa majukumu",
       profile: "Wasifu wa Taasisi",
       domains: "Vikoa vya Barua Pepe",
       analytics: "Uchambuzi",
@@ -862,6 +970,43 @@ const sw = {
         users: "Watumiaji",
       },
       quickLinks: "Viungo vya Haraka",
+    },
+    access: {
+      title: "Ufikiaji wa majukumu",
+      subtitle: "Chagua moduli nzima au vipengee mahususi vya upau wa pembeni ambavyo kila jukumu linaweza kufungua. Dashibodi, wasifu, na uchanganuzi hubaki kupatikana.",
+      institutionCeiling: "Moduli zilizowezeshwa kwa taasisi hii",
+      institutionCeilingHint: "Hizi huwekwa na msimamizi wa kimataifa. Unaweza tu kutoa ufikiaji kwa moduli ambazo tayari zimewashwa.",
+      roleHeading: "Ufikiaji kwa jukumu",
+      roleHint: "Chagua jukumu, kisha weka alama moduli nzima au panua na uchague vipengee vya upau wa pembeni. Mabadiliko huhifadhiwa mara moja.",
+      modulesForRole: "Ufikiaji wa {role}",
+      moduleEnabledHint: "Inaonekana kwenye upau wa pembeni wa jukumu hili ikiwa imewezeshwa",
+      moduleDisabledByInstitution: "Haijawezeshwa kwa taasisi hii - muombe msimamizi wa kimataifa aianzishe kwanza",
+      wholeModuleOn: "Moduli nzima imewezeshwa - vipengee vyote vya upau wa pembeni vimejumuishwa",
+      partialModuleOn: "Ufikiaji wa sehemu - vipengee vilivyochaguliwa tu",
+      moduleOff: "Moduli imezimwa kwa jukumu hili - weka alama moduli au vipengee ili kutoa ufikiaji",
+      itemsHint: "Au chagua vipengee mahususi vya upau wa pembeni:",
+      saving: "Inahifadhi…",
+      saved: "Ufikiaji wa majukumu umesasishwa",
+      fetchError: "Haikuweza kupakia mipangilio ya ufikiaji wa majukumu.",
+      saveError: "Haikuweza kuhifadhi mipangilio ya ufikiaji wa majukumu.",
+      navItems: {
+        atRisk: "Wanafunzi walio hatarini",
+        students: "Wanafunzi",
+        support: "Msaada wa wanafunzi",
+        scholarships: "Ufadhili",
+        financialAid: "Dashibodi ya msaada wa kifedha",
+        applications: "Maombi ya ufadhili",
+        triage: "Uchunguzi na uthibitishaji",
+        decisions: "Matokeo ya ukaguzi na tuzo",
+        scholarshipOpportunities: "Fursa za ufadhili",
+        configureScholarships: "Sanidi ufadhili",
+        grants: "Ruzuku na utafiti",
+        grantLifecycle: "Mtiririko wa ruzuku",
+        grantApplications: "Maombi ya ruzuku",
+        grantOpportunities: "Fursa za ruzuku",
+        configureGrants: "Sanidi ruzuku",
+        rankings: "Vyeo vya vyuo",
+      },
     },
     users: {
       title: "Usimamizi wa Watumiaji",
@@ -996,6 +1141,100 @@ const sw = {
     verify: "Thibitisha & Wasilisha",
     description: "Tafadhali thibitisha barua yako ya mapendekezo hapa chini.",
   },
+  // ─── FAQs ──────────────────────────────────────────────────────────────────
+  faqs: {
+    title: "Maswali Yanayoulizwa Mara kwa Mara",
+    subtitle:
+      "Akili iliyounganishwa kwa vyuo vikuu - jinsi TemplumIS inavyogeuza data iliyotawanyika kuwa maarifa ya kimkakati kwa upangaji, utendaji, uthibitishaji, na orodha.",
+    categories: {
+      about: {
+        title: "Kuhusu TemplumIS",
+        intro: "Jukwaa ni nini na kwa nini taasisi zinakipokea.",
+        items: {
+          whatIs: {
+            q: "TemplumIS ni nini?",
+            a: "TemplumIS ni jukwaa la akili ya chuo kikuu lililoundwa na TCC Africa kusaidia taasisi za elimu ya juu kugeuza data iliyotawanyika kuwa akili inayoweza kutumika kwa maamuzi ya kimkakati, usimamizi wa utendaji, uthibitishaji, na orodha za vyuo vikuu.\n\nLinatoa safu kuu ya akili inayounganisha data kutoka katika mfumo wote wa chuo kikuu, ili uongozi upate maarifa ya kuaminika kupitia jukwaa moja.",
+          },
+          problem: {
+            q: "TemplumIS inashughulikia changamoto gani?",
+            a: "Vyuo vikuu vinazidi kuhitajika kutoa data sahihi na kwa wakati kwa upangaji wa kitaasisi, uhakikisho wa ubora, ripoti za serikali, uenezaji wa kimataifa, utendaji wa utafiti, na mifumo ya orodha za kimataifa.\n\nKwa kawaida, taarifa nyingi zinasambazwa katika ofisi, idara, na mifumo tofauti. Ukusanyaji na ripoti huwa zinachukua muda na rasilimali. TemplumIS inaunganisha mazingira haya ili taasisi zifanye kazi kutoka chanzo kimoja cha ukweli.",
+          },
+          connectedIntelligence: {
+            q: "“Akili Iliyounganishwa kwa Vyuo Vikuu” inamaanisha nini?",
+            a: "Inamaanisha TemplumIS haibadilishi kila mfumo wa uendeshaji mara moja. Badala yake, inaunganisha vyanzo vya kitaaluma, utafiti, uenezaji wa kimataifa, fedha, uhakikisho wa ubora, na taarifa za wanafunzi katika mazingira moja - ikigeuza rekodi za uendeshaji kuwa akili tayari kwa uongozi.",
+          },
+        },
+      },
+      capabilities: {
+        title: "Uwezo wa jukwaa",
+        intro: "Jinsi TemplumIS inavyounga mkono shughuli za kila siku na uangalizi wa kimkakati.",
+        items: {
+          consolidate: {
+            q: "TemplumIS inaweza kuleta pamoja data gani ya kitaasisi?",
+            a: "TemplumIS inaunganisha data kutoka katika mfumo wote wa chuo kikuu - ikiwa ni pamoja na rekodi za kitaaluma, shughuli za utafiti, uenezaji wa kimataifa, fedha, uhakikisho wa ubora, na mifumo ya taarifa za wanafunzi - katika mazingira moja ya uchambuzi na ripoti.",
+          },
+          reporting: {
+            q: "TemplumIS inapunguza vipi mzigo wa ripoti za kitaasisi?",
+            a: "Kwa kuweka viashiria katikati na kugeuza ukusanyaji kiotomatiki pale inapowezekana, TemplumIS inapunguza juhudi za kiutawala za kuandaa ripoti za upangaji, mawasilisho ya kisheria, uhakikisho wa ubora, na mazoezi ya orodha. Timu hutumia muda mdogo kufuatilia lahajedwali na zaidi kuthibitisha na kuchukua hatua.",
+          },
+          leadership: {
+            q: "Viongozi wa chuo kikuu wanaona nini kwenye jukwaa?",
+            a: "Viongozi hupata dashibodi za moja kwa moja na viashiria vya utendaji vinavyounga mkono maamuzi yanayotegemea ushahidi. Jukwaa linaboresha upangaji wa kitaasisi kwa uwazi wa mwenendo wa utendaji na, pale ilipoanzishwa, uchambuzi wa kutabiri wa kutarajia hatari na fursa.",
+          },
+          studentResearch: {
+            q: "TemplumIS inasaidiaje mafanikio ya wanafunzi na utendaji wa utafiti?",
+            a: "Upande wa wanafunzi, taasisi zinaweza kufuatilia usajili, uhifadhi, maendeleo, kuhitimu, ishara za ajira, na utendaji wa kitaaluma.\n\nUpande wa utafiti, TemplumIS husaidia kufuatilia matokeo, ruzuku, ushirikiano, nukuu, hataza, na shughuli za uvumbuzi - ikiunganisha uwekezaji wa utafiti na matokeo yanayoonekana.",
+          },
+          accreditation: {
+            q: "Je, TemplumIS inaunga mkono uthibitishaji na uhakikisho wa ubora?",
+            a: "Ndiyo. Jukwaa limeundwa kusaidia uthibitishaji, uhakikisho wa ubora, na ripoti za udhibiti kwa kuweka ushahidi uliopangwa, wa sasa, na rahisi kupatikana wakati wa mizunguko ya ukaguzi.",
+          },
+        },
+      },
+      rankings: {
+        title: "Orodha za vyuo vikuu",
+        intro: "Utayari wa orodha na ufuatiliaji endelevu wa utendaji.",
+        items: {
+          readiness: {
+            q: "TemplumIS inasaidiaje utayari wa orodha za vyuo vikuu?",
+            a: "Nguvu kuu ya TemplumIS ni utayari wa orodha na ufuatiliaji wa utendaji. Taasisi zinaweza kukusanya, kupanga, kuthibitisha, na kusimamia data inayohitajika kwa mifumo mikuu ya orodha - badala ya kuandaa mawasilisho kutoka mwanzo kila mwaka katika ofisi nyingi.",
+          },
+          frameworks: {
+            q: "Taasisi zinaweza kujiandaa kwa mifumo gani ya orodha?",
+            a: "TemplumIS inaunga mkono usimamizi wa viashiria kwa mifumo mikuu ya kimataifa na kikanda, ikiwa ni pamoja na:\n\n• QS World University Rankings\n• Times Higher Education (THE) Rankings\n• Webometrics Rankings\n• Academic Ranking of World Universities (ARWU / Shanghai)\n• Mifumo ya orodha za kikanda na kitaifa\n\nHii husaidia taasisi kuboresha uthabiti na utayari kwa mizunguko ya kila mwaka.",
+          },
+          repository: {
+            q: "Data ya orodha inasimamiwa vipi tofauti kwa TemplumIS?",
+            a: "Badala ya kutegemea ofisi nyingi kuandaa mawasilisho kwa mikono, TemplumIS inatoa hifadhi iliyopangwa ya kitaasisi ambapo viashiria vinavyohusiana na orodha vinakusanywa, kusasishwa, na kuthibitishwa kwa endelevu.\n\nMbinu hiyo inapunguza juhudi za ripoti huku ikiboresha ubora wa data, uthabiti, na utayari - ikiongeza mwonekano wa kimataifa, ushindani, na sifa kwa muda.",
+          },
+        },
+      },
+      gettingStarted: {
+        title: "Kuanza",
+        intro: "Ufikiaji, majukumu, maonyesho, na msaada.",
+        items: {
+          whoUses: {
+            q: "Nani anatumia TemplumIS?",
+            a: "TemplumIS inahudumia jamii yote ya kitaasisi kupitia milango kulingana na jukumu: wanafunzi, wasajili na huduma za wanafunzi, ofisi za ufadhili, ofisi za utafiti, wakaguzi, washauri na wadhamini, na wasimamizi wa taasisi au wa kimataifa.",
+          },
+          accounts: {
+            q: "Watumiaji wanapataje ufikiaji?",
+            a: "Wanafunzi na wafanyakazi kwa kawaida hujisajili au wanaalikwa mara taasisi yao inapofunguliwa kwenye jukwaa. Wasimamizi wa taasisi na wa kimataifa hutumia kurasa maalum za kuingia. Ufikiaji daima unawekwa kulingana na jukumu na moduli zilizowezeshwa kwa taasisi hiyo.",
+          },
+          demo: {
+            q: "Je, tunaweza kuomba onyesho?",
+            a: "Ndiyo. Taasisi zinazotaka kuchunguza jinsi TemplumIS inavyounga mkono vipaumbele vya kimkakati na malengo ya orodha zinaweza kuomba mkutano mfupi au onyesho. Wasiliana kupitia maelezo ya mawasiliano hapa chini kupanga mazungumzo na timu ya TemplumIS.",
+          },
+          help: {
+            q: "Ninaweza kupata nyaraka au msaada wapi?",
+            aBefore: "Mwongozo wa bidhaa na rejea za kiufundi zinapatikana katika ",
+            aAfter: ". Kwa maswali ya kitaasisi, wasiliana na Training Centre in Communication (TCC Africa), Gecaga Institute Building, Nairobi, Kenya.",
+          },
+        },
+      },
+    },
+  },
+
 };
 
 export default sw;

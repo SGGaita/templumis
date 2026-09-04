@@ -5,7 +5,7 @@ from typing import List, Optional
 import openpyxl
 import secrets
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, date as date_cls
 
 from app.excel_paths import resolve_excel_path
 from app.scholarship_excel import normalize_scholarship_record
@@ -24,7 +24,14 @@ from app.scholarship_applications import (
 
 from ..database import get_db
 from ..auth import get_current_user, require_role
-from ..models import User
+from ..models import (
+    Cohort,
+    CohortRetentionMetric,
+    ScholarshipProgram,
+    StudentGrantApplication,
+    StudentScholarshipApplication,
+    User,
+)
 
 router = APIRouter(prefix="/api/sis-lms", tags=["SIS/LMS"])
 
@@ -1292,6 +1299,137 @@ def _parse_rankings_snapshot(wb) -> dict:
         return None
 
 
+def _float_or_none(value):
+    if value is None:
+        return None
+    try:
+        return round(float(value), 1)
+    except (TypeError, ValueError):
+        return None
+
+
+def _retention_summary(db: Session, institution_id: Optional[int]) -> dict:
+    """Aggregate cohort retention / graduation from Postgres."""
+    q = db.query(CohortRetentionMetric)
+    if institution_id:
+        q = q.filter(CohortRetentionMetric.institution_id == institution_id)
+    rows = q.order_by(CohortRetentionMetric.snapshot_date.desc()).all()
+    if not rows:
+        return {
+            "has_data": False,
+            "cohort_count": 0,
+            "avg_retention_1yr": None,
+            "avg_graduation_4yr": None,
+            "latest_snapshot_date": None,
+            "cohorts": [],
+        }
+
+    def avg_field(attr):
+        vals = [_float_or_none(getattr(r, attr)) for r in rows]
+        vals = [v for v in vals if v is not None]
+        return round(sum(vals) / len(vals), 1) if vals else None
+
+    cohort_ids = {r.cohort_id for r in rows if r.cohort_id}
+    cohort_names = {}
+    if cohort_ids:
+        for c in db.query(Cohort).filter(Cohort.id.in_(cohort_ids)).all():
+            cohort_names[c.id] = c.name or f"Cohort {c.start_year}"
+
+    # Prefer one row per cohort (latest snapshot)
+    latest_by_cohort = {}
+    for r in rows:
+        if r.cohort_id not in latest_by_cohort:
+            latest_by_cohort[r.cohort_id] = r
+
+    cohorts = []
+    for cid, r in sorted(
+        latest_by_cohort.items(),
+        key=lambda item: item[1].snapshot_date or date_cls.min,
+        reverse=True,
+    ):
+        cohorts.append({
+            "cohort_id": cid,
+            "cohort_name": cohort_names.get(cid, f"Cohort {cid}"),
+            "snapshot_date": r.snapshot_date.isoformat() if r.snapshot_date else None,
+            "initial_cohort_size": r.initial_cohort_size,
+            "current_enrolled": r.current_enrolled,
+            "graduated": r.graduated or 0,
+            "withdrawn": r.withdrawn or 0,
+            "retention_rate_1yr": _float_or_none(r.retention_rate_1yr),
+            "graduation_rate_4yr": _float_or_none(r.graduation_rate_4yr),
+        })
+
+    latest = rows[0]
+    return {
+        "has_data": True,
+        "cohort_count": len(cohorts),
+        "avg_retention_1yr": avg_field("retention_rate_1yr"),
+        "avg_graduation_4yr": avg_field("graduation_rate_4yr"),
+        "latest_snapshot_date": latest.snapshot_date.isoformat() if latest.snapshot_date else None,
+        "total_initial": sum(c["initial_cohort_size"] or 0 for c in cohorts),
+        "total_graduated": sum(c["graduated"] or 0 for c in cohorts),
+        "cohorts": cohorts[:12],
+    }
+
+
+def _aid_pipeline_summary(db: Session) -> dict:
+    """Scholarship / grant pipeline counts for leadership dashboards."""
+    schol_apps = db.query(StudentScholarshipApplication).all()
+    grant_apps = db.query(StudentGrantApplication).all()
+    schol_programs = (
+        db.query(ScholarshipProgram).filter(ScholarshipProgram.program_kind == "scholarship").all()
+    )
+    grant_programs = (
+        db.query(ScholarshipProgram).filter(ScholarshipProgram.program_kind == "grant").all()
+    )
+
+    def pending(rows):
+        return sum(
+            1
+            for r in rows
+            if str(r.status).lower() in ("submitted for review", "pending", "under review")
+        )
+
+    def awarded(rows):
+        return sum(1 for r in rows if str(r.status).lower() in ("awarded", "approved"))
+
+    ready_for_committee = sum(
+        1 for r in schol_apps if (r.triage_queue or "") == "ready_for_committee"
+    )
+
+    return {
+        "scholarships": {
+            "opportunities_published": sum(1 for p in schol_programs if p.workflow_status == "published"),
+            "applications_total": len(schol_apps),
+            "applications_pending": pending(schol_apps),
+            "applications_awarded": awarded(schol_apps),
+            "ready_for_committee": ready_for_committee,
+        },
+        "grants": {
+            "opportunities_published": sum(1 for p in grant_programs if p.workflow_status == "published"),
+            "applications_total": len(grant_apps),
+            "applications_pending": pending(grant_apps),
+            "applications_approved": awarded(grant_apps),
+        },
+    }
+
+
+def _enrollment_trend_from_cohorts(cohorts: dict) -> list:
+    """Build a real enrollment-by-intake-year series from SIS cohort buckets."""
+    series = []
+    for name, count in (cohorts or {}).items():
+        label = str(name).replace("Cohort ", "").strip() or "Unknown"
+        if label.lower() == "unknown":
+            continue
+        try:
+            year = int(label[:4])
+        except (TypeError, ValueError):
+            year = None
+        series.append({"label": label, "year": year, "students": int(count or 0)})
+    series.sort(key=lambda x: (x["year"] is None, x["year"] or 0, x["label"]))
+    return series
+
+
 @router.get("/analytics/executive")
 async def get_executive_analytics(
     current_user: User = Depends(get_current_user),
@@ -1310,6 +1448,9 @@ async def get_executive_analytics(
 
     stats = await get_stats(current_user=current_user, db=db)
     at_risk_students = [s for s in _load_enriched_students() if s.get("is_at_risk")]
+    retention = _retention_summary(db, getattr(current_user, "institution_id", None))
+    aid_pipeline = _aid_pipeline_summary(db)
+    enrollment_trend = _enrollment_trend_from_cohorts(stats.get("students_by_cohort") or {})
 
     total = stats.get("total_students") or 0
     majors_sorted = sorted(
@@ -1402,6 +1543,33 @@ async def get_executive_analytics(
             "priority": "high",
             "title": "Rankings readiness",
             "message": f"Average ranking-system readiness is {rankings_snapshot['avg_ranking_readiness_pct']}%. Prioritize data and research visibility investments.",
+            "href": "/staff/rankings",
+        })
+
+    if retention.get("has_data") and retention.get("avg_retention_1yr") is not None:
+        ret = retention["avg_retention_1yr"]
+        if ret < 80:
+            insights.append({
+                "priority": "high",
+                "title": "Retention watch",
+                "message": f"Average 1-year retention is {ret}%. Student success interventions and programme review are recommended.",
+                "href": "/staff/at-risk",
+            })
+        else:
+            insights.append({
+                "priority": "low",
+                "title": "Retention strength",
+                "message": f"Average 1-year retention is {ret}% across tracked cohorts.",
+            })
+
+    pending_aid = (aid_pipeline.get("scholarships") or {}).get("applications_pending") or 0
+    ready_committee = (aid_pipeline.get("scholarships") or {}).get("ready_for_committee") or 0
+    if pending_aid or ready_committee:
+        insights.append({
+            "priority": "medium" if ready_committee else "low",
+            "title": "Aid pipeline",
+            "message": f"{pending_aid} scholarship applications pending review; {ready_committee} ready for committee.",
+            "href": "/staff/scholarships/decisions",
         })
 
     benchmarks = [
@@ -1454,6 +1622,15 @@ async def get_executive_analytics(
             "unit": "%",
             "status": "good" if rankings_snapshot["avg_ranking_readiness_pct"] >= 70 else "watch" if rankings_snapshot["avg_ranking_readiness_pct"] >= 50 else "critical",
         })
+    if retention.get("avg_retention_1yr") is not None:
+        ret = retention["avg_retention_1yr"]
+        benchmarks.append({
+            "label": "1-year retention",
+            "value": ret,
+            "target": 85,
+            "unit": "%",
+            "status": "good" if ret >= 85 else "watch" if ret >= 75 else "critical",
+        })
 
     risk_by_category = {"finances": 0, "attendance": 0, "academic": 0}
     for student in at_risk_students:
@@ -1477,6 +1654,8 @@ async def get_executive_analytics(
             "female_pct": intl["female_pct"],
             "probation_count": leadership["student_success"]["probation_or_suspended"],
             "ranking_readiness_pct": rankings_snapshot["avg_ranking_readiness_pct"] if rankings_snapshot else None,
+            "retention_1yr_pct": retention.get("avg_retention_1yr"),
+            "graduation_4yr_pct": retention.get("avg_graduation_4yr"),
         },
         "leadership": leadership,
         "rankings_snapshot": rankings_snapshot,
@@ -1502,6 +1681,9 @@ async def get_executive_analytics(
         "students_by_gender": stats.get("students_by_gender", {}),
         "students_by_year": stats.get("students_by_year", {}),
         "insights": insights[:8],
+        "retention": retention,
+        "aid_pipeline": aid_pipeline,
+        "enrollment_trend": enrollment_trend,
     }
 
 

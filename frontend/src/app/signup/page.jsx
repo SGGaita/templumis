@@ -654,7 +654,7 @@ export default function SignupPage() {
         </Paper>
       </Container>
 
-      <SiteFooter showLegal={false} />
+      <SiteFooter />
     </Box>
   );
 }

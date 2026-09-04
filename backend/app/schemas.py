@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, field_validator, model_validator
 from datetime import datetime, date
 from typing import Optional, List, Dict, Any
 
@@ -21,7 +21,10 @@ class UserOut(BaseModel):
     institution_id: int | None
     institution_name: str | None = None
     institution_logo_url: str | None = None
+    institution_domains: list[str] = []
+    institution_primary_domain: str | None = None
     enabled_modules: Dict[str, List[str]] | None = None
+    staff_role_access: Dict[str, Any] | None = None
     account_category: str | None
     student_registration_number: str | None
     email_verified: bool
@@ -47,6 +50,7 @@ class InstitutionOut(BaseModel):
     contact_email: str | None
     address: str | None
     enabled_modules: Dict[str, List[str]] | None = None
+    staff_role_modules: Dict[str, Any] | None = None
     is_active: bool
     created_at: datetime
     domains: list["DomainOut"] = []
@@ -60,6 +64,22 @@ class InstitutionOut(BaseModel):
         from app.institution_modules import normalize_enabled_modules
         return normalize_enabled_modules(value)
 
+    @field_validator("staff_role_modules", mode="before")
+    @classmethod
+    def _normalize_role_modules(cls, value):
+        from app.institution_modules import normalize_staff_role_modules
+        return normalize_staff_role_modules(value)
+
+    @model_validator(mode="after")
+    def _clip_role_modules_to_enabled(self):
+        from app.institution_modules import normalize_staff_role_modules
+        ceiling = (self.enabled_modules or {}).get("staff")
+        self.staff_role_modules = normalize_staff_role_modules(
+            self.staff_role_modules,
+            ceiling,
+        )
+        return self
+
 
 class InstitutionUpdate(BaseModel):
     name: str | None = None
@@ -67,6 +87,7 @@ class InstitutionUpdate(BaseModel):
     address: str | None = None
     is_active: bool | None = None
     enabled_modules: Dict[str, List[str]] | None = None
+    staff_role_modules: Dict[str, Any] | None = None
 
 
 class DomainCreate(BaseModel):

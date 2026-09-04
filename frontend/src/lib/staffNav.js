@@ -94,13 +94,7 @@ export const staffNavGroups = [
     label: "Institutional insight",
     items: [
       { text: "University Rankings", icon: <EmojiEventsIcon fontSize="small" />, path: "/staff/rankings", module: "rankings" },
-      { text: "Analytics", icon: <BarChartIcon fontSize="small" />, path: "/staff/analytics" },
-    ],
-  },
-  {
-    label: "System",
-    items: [
-      { text: "Settings", icon: <SettingsIcon fontSize="small" />, path: "/staff/settings" },
+      { text: "Analytics", icon: <BarChartIcon fontSize="small" />, path: "/staff/analytics", textKey: "analytics" },
     ],
   },
 ];
@@ -139,7 +133,7 @@ export function canAccessStaffNavItem(item, user) {
 
 function applyInstitutionModules(groups, user) {
   const enabled = normalizeEnabledModules(user?.enabled_modules).staff;
-  return filterNavGroupsByModules(groups, enabled);
+  return filterNavGroupsByModules(groups, enabled, user?.staff_role_access || null);
 }
 
 /** Financial Aid Officer: scholarships & grants only. Sponsor: sponsorship only. Other staff: full nav. */
@@ -193,7 +187,17 @@ export function getStaffNavGroups(user) {
     staffNavGroups
       .map((group) => ({
         ...group,
-        items: group.items.filter((item) => canAccessStaffNavItem(item, user)),
+        items: group.items
+          .filter((item) => canAccessStaffNavItem(item, user))
+          .map((item) => {
+            if (
+              user?.role === "vice_chancellor" &&
+              item.path === "/staff/analytics"
+            ) {
+              return { ...item, text: "Executive briefing" };
+            }
+            return item;
+          }),
       }))
       .filter((group) => group.items.length > 0),
     user

@@ -14,6 +14,7 @@ from app.routes import (
     auth, global_admin, institution_admin, students, sis_lms,
     student_journey, student_support, rankings, rankings_excel, rankings_websocket,
     scholarship_programs, financial_aid, triage, evaluation, awards,
+    webometrics_visibility,
 )
 from sqlalchemy import text
 from app import scholarship_catalog
@@ -43,6 +44,7 @@ app.include_router(student_support.router)
 app.include_router(rankings.router)
 app.include_router(rankings_excel.router)
 app.include_router(rankings_websocket.router)
+app.include_router(webometrics_visibility.router)
 app.include_router(scholarship_programs.router)
 app.include_router(financial_aid.router)
 app.include_router(financial_aid.grants_router)
@@ -134,6 +136,9 @@ def ensure_scholarship_tables():
             conn.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {typ}"))
         conn.execute(
             text("ALTER TABLE institutions ADD COLUMN IF NOT EXISTS enabled_modules JSON")
+        )
+        conn.execute(
+            text("ALTER TABLE institutions ADD COLUMN IF NOT EXISTS staff_role_modules JSON")
         )
     try:
         with engine.begin() as conn:

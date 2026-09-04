@@ -66,7 +66,7 @@ export default function InstitutionLoginPage() {
         </CardContent>
       </Card>
       </Box>
-      <SiteFooter showLegal={false} />
+      <SiteFooter />
     </Box>
   );
 }

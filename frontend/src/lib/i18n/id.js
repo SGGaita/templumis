@@ -46,6 +46,14 @@ const id = {
     termsOfService: "Ketentuan Layanan",
     contact: "Kontak",
     documentation: "Dokumentasi",
+    footer: {
+      usefulLinks: "Tautan berguna",
+      home: "Beranda",
+      faqs: "Tanya jawab",
+      addressOrg: "Training Centre in Communication",
+      addressBuilding: "Gecaga Institute Building",
+      addressCity: "Nairobi, Kenya",
+    },
     required: "Wajib",
     optional: "Opsional",
     yes: "Ya",
@@ -78,7 +86,7 @@ const id = {
     },
     modules: {
       heading: "Modul Inti",
-      subheading: "Empat modul terintegrasi yang mencakup siklus hidup data institusional lengkap.",
+      subheading: "Lima modul terintegrasi yang mencakup siklus hidup data institusional lengkap.",
       enrollment: {
         title: "Pendaftaran & Kesuksesan Mahasiswa",
         description:
@@ -98,6 +106,11 @@ const id = {
         title: "Hibah & Penelitian",
         description:
           "Lacak investasi penelitian, tingkat konsumsi hibah, pemetaan output publikasi, dan peringatan kepatuhan etika/IRB.",
+      },
+      rankings: {
+        title: "Peringkat Universitas",
+        description:
+          "Lacak kinerja institusi di sistem peringkat global utama dengan kesiapan indikator, target, dan dasbor langsung.",
       },
     },
   },
@@ -519,8 +532,9 @@ const id = {
         grantApplications: "Aplikasi Hibah",
         grantConfigure: "Konfigurasi Hibah",
         grantLifecycle: "Siklus Hidup Hibah",
-        rankings: "Peringkat",
+        rankings: "Peringkat universitas",
         analytics: "Analitik",
+        executiveBriefing: "Briefing eksekutif",
       },
     },
     topbar: {
@@ -545,6 +559,72 @@ const id = {
         programDistribution: "Distribusi Program",
         topNationalities: "Kewarganegaraan Teratas",
         complianceStatus: "Status Kepatuhan",
+      },
+    },
+    vcDashboard: {
+      badge: "Wakil Rektor",
+      title: "Dasbor keputusan institusi",
+      subtitle: "Sinyal pengecualian, kesehatan portofolio, dan tuas untuk pimpinan — bukan antrean operasional.",
+      dataAsOf: "Data per {when}",
+      openBriefing: "Buka briefing eksekutif lengkap",
+      loadError: "Gagal memuat metrik kepemimpinan",
+      status: {
+        onTarget: "Sesuai target",
+        watch: "Pantau",
+        actionNeeded: "Perlu tindakan",
+      },
+      attention: {
+        title: "Perlu perhatian",
+      },
+      pulse: {
+        title: "Denyut institusi",
+        totalStudents: "Total mahasiswa",
+        activeStudents: "{count} aktif",
+        onTrack: "Sesuai jalur",
+        atRisk: "Mahasiswa berisiko",
+        atRiskShare: "{pct}% dari pendaftaran",
+        feeCollection: "Penagihan biaya",
+        avgGpa: "IPK institusi",
+        rankingReadiness: "Kesiapan peringkat",
+        vsTarget: "Target {target}",
+      },
+      success: {
+        title: "Keberhasilan mahasiswa",
+        subtitle: "Kepatuhan, pemicu risiko, dan retensi",
+        cta: "Tinjau berisiko",
+        onTrack: "Sesuai jalur",
+        atRisk: "Berisiko",
+        critical: "Kritis",
+        finances: "Keuangan",
+        attendance: "Kehadiran",
+        academic: "Akademik",
+        probation: "{count} masa percobaan atau ditangguhkan",
+        retention: "Retensi 1 thn {pct}%",
+        graduation: "Kelulusan 4 thn {pct}%",
+      },
+      portfolio: {
+        title: "Portofolio & akses",
+        subtitle: "Konsentrasi program dan saluran bantuan",
+        ugPg: "Sarjana / pascasarjana",
+        international: "Mahasiswa internasional",
+        female: "Porsi perempuan",
+        aidPending: "{count} tertunda",
+        aidCommittee: "{count} siap untuk komite",
+        aidAwarded: "{count} diberikan",
+        aidCta: "Keputusan bantuan",
+      },
+      trend: {
+        title: "Pendaftaran per tahun masuk",
+        subtitle: "Ukuran kohort dari catatan SIS",
+        students: "Mahasiswa",
+      },
+      rankings: {
+        title: "Peringkat universitas & kesiapan",
+        subtitle: "Kesiapan institusi di sistem peringkat",
+        cta: "Buka peringkat universitas",
+        overall: "Kesiapan keseluruhan",
+        unavailable: "Data kesiapan peringkat tidak tersedia. Buka peringkat setelah mengunggah data institusi.",
+        grantsNote: "Hibah penelitian: {pending} tertunda · {approved} disetujui",
       },
     },
     enrollment: {
@@ -674,12 +754,39 @@ const id = {
       performance: "Kinerja Mahasiswa",
       programs: "Analisis Program",
       exportReport: "Ekspor Laporan",
+      retentionTab: "Retensi",
+      retention: {
+        oneYear: "Retensi 1 tahun",
+        fourYear: "Kelulusan 4 tahun",
+        cohortsTracked: "{count} kohort dilacak",
+        snapshot: "Snapshot {date}",
+        cohortAverage: "Rata-rata kohort",
+        initialSize: "Ukuran awal kohort",
+        acrossSnapshots: "Pada snapshot kohort terbaru",
+        graduated: "Lulus",
+        fromTracked: "Dari kohort yang dilacak",
+        byCohort: "Retensi per kohort",
+        byCohortSub: "Snapshot terbaru per kohort masuk",
+        retentionSeries: "Retensi 1 thn %",
+        graduationSeries: "Kelulusan 4 thn %",
+        unavailable: "Metrik retensi kohort belum tersedia. Seed atau sinkronkan snapshot retensi untuk membuka tampilan ini.",
+      },
     },
     rankings: {
       title: "Peringkat",
       gpaRankings: "Peringkat IPK",
       coursePerformance: "Kinerja Mata Kuliah",
       scholarshipRates: "Tingkat Keberhasilan Beasiswa",
+    },
+    universityRankings: {
+      exportPdf: "Ekspor PDF",
+      exportPdfTooltip: "Pilih peringkat dan unduh sebagai laporan PDF tersendiri",
+      exportDialogTitle: "Ekspor laporan peringkat",
+      exportDialogSubtitle:
+        "Pilih satu sistem peringkat. Setiap unduhan adalah laporan terpisah dengan ringkasan institusi dan detail kesiapan peringkat tersebut.",
+      downloadReport: "Unduh",
+      reportDocumentTitle: "{institution} - laporan {ranking}",
+      printReportHeading: "Laporan kesiapan {ranking}",
     },
     support: {
       title: "Manajemen Dukungan Mahasiswa",
@@ -842,6 +949,7 @@ const id = {
     nav: {
       dashboard: "Dasbor",
       users: "Pengguna",
+      access: "Akses peran",
       profile: "Profil Institusi",
       domains: "Domain Email",
       analytics: "Analitik",
@@ -862,6 +970,43 @@ const id = {
         users: "Pengguna",
       },
       quickLinks: "Tautan Cepat",
+    },
+    access: {
+      title: "Akses peran",
+      subtitle: "Pilih seluruh modul atau item bilah sisi tertentu untuk setiap peran. Dasbor, profil, dan analitik tetap tersedia.",
+      institutionCeiling: "Modul yang diaktifkan untuk institusi ini",
+      institutionCeilingHint: "Diatur oleh admin global. Anda hanya dapat memberi akses ke modul yang sudah aktif.",
+      roleHeading: "Akses berdasarkan peran",
+      roleHint: "Pilih peran, centang seluruh modul atau pilih item satu per satu. Perubahan disimpan segera.",
+      modulesForRole: "Akses untuk {role}",
+      moduleEnabledHint: "Muncul di bilah sisi peran ini saat diaktifkan",
+      moduleDisabledByInstitution: "Belum diaktifkan untuk institusi ini - minta admin global mengaktifkannya terlebih dahulu",
+      wholeModuleOn: "Seluruh modul diaktifkan - semua item di bawah disertakan",
+      partialModuleOn: "Akses sebagian - hanya item yang dipilih",
+      moduleOff: "Modul nonaktif untuk peran ini - centang modul atau item untuk memberi akses",
+      itemsHint: "Atau pilih item bilah sisi tertentu:",
+      saving: "Menyimpan…",
+      saved: "Akses peran diperbarui",
+      fetchError: "Tidak dapat memuat pengaturan akses peran.",
+      saveError: "Tidak dapat menyimpan pengaturan akses peran.",
+      navItems: {
+        atRisk: "Mahasiswa berisiko",
+        students: "Mahasiswa",
+        support: "Dukungan mahasiswa",
+        scholarships: "Beasiswa",
+        financialAid: "Dasbor bantuan keuangan",
+        applications: "Pendaftaran beasiswa",
+        triage: "Triase & verifikasi",
+        decisions: "Hasil tinjauan dan penghargaan",
+        scholarshipOpportunities: "Peluang beasiswa",
+        configureScholarships: "Konfigurasi beasiswa",
+        grants: "Hibah & penelitian",
+        grantLifecycle: "Siklus hidup hibah",
+        grantApplications: "Pendaftaran hibah",
+        grantOpportunities: "Peluang hibah",
+        configureGrants: "Konfigurasi hibah",
+        rankings: "Peringkat universitas",
+      },
     },
     users: {
       title: "Manajemen Pengguna",
@@ -996,6 +1141,100 @@ const id = {
     verify: "Verifikasi & Kirim",
     description: "Silakan verifikasi surat rekomendasi Anda di bawah ini.",
   },
+  // ─── FAQs ──────────────────────────────────────────────────────────────────
+  faqs: {
+    title: "Pertanyaan yang sering diajukan",
+    subtitle:
+      "Connected intelligence untuk universitas - bagaimana TemplumIS mengubah data institusional yang terfragmentasi menjadi wawasan strategis untuk perencanaan, kinerja, akreditasi, dan pemeringkatan.",
+    categories: {
+      about: {
+        title: "Tentang TemplumIS",
+        intro: "Apa platform ini dan mengapa institusi mengadopsinya.",
+        items: {
+          whatIs: {
+            q: "Apa itu TemplumIS?",
+            a: "TemplumIS adalah platform intelijen universitas yang dirancang oleh TCC Africa untuk membantu perguruan tinggi mengubah data institusional yang terfragmentasi menjadi intelijen yang dapat ditindaklanjuti bagi pengambilan keputusan strategis, manajemen kinerja, akreditasi, dan pemeringkatan universitas.\n\nPlatform ini menyediakan lapisan intelijen terpusat yang mengintegrasikan data dari seluruh ekosistem universitas, sehingga pimpinan dapat mengakses wawasan yang andal melalui satu platform.",
+          },
+          problem: {
+            q: "Tantangan apa yang ditangani TemplumIS?",
+            a: "Universitas semakin dituntut menyediakan data yang akurat dan tepat waktu untuk perencanaan institusional, penjaminan mutu, pelaporan pemerintah, internasionalisasi, kinerja penelitian, dan kerangka pemeringkatan global.\n\nDalam praktiknya, banyak informasi itu masih tersebar di berbagai kantor, departemen, dan sistem terpisah. Pengumpulan dan pelaporan menjadi memakan waktu dan sumber daya. TemplumIS menyatukan lanskap ini agar institusi dapat bekerja dari satu sumber kebenaran yang koheren.",
+          },
+          connectedIntelligence: {
+            q: "Apa arti “Connected Intelligence for Universities”?",
+            a: "Artinya TemplumIS tidak menggantikan setiap sistem operasional dalam semalam. Sebaliknya, platform ini menghubungkan sumber akademik, penelitian, internasionalisasi, keuangan, penjaminan mutu, dan informasi mahasiswa ke dalam lingkungan terpadu - mengubah catatan operasional menjadi intelijen siap bagi pimpinan.",
+          },
+        },
+      },
+      capabilities: {
+        title: "Kapabilitas platform",
+        intro: "Bagaimana TemplumIS mendukung operasi sehari-hari dan pengawasan strategis.",
+        items: {
+          consolidate: {
+            q: "Jenis data institusional apa yang dapat digabungkan TemplumIS?",
+            a: "TemplumIS mengonsolidasikan data dari seluruh ekosistem universitas - termasuk catatan akademik, aktivitas penelitian, internasionalisasi, keuangan, penjaminan mutu, dan sistem informasi mahasiswa - ke dalam lingkungan terpadu untuk analisis dan pelaporan.",
+          },
+          reporting: {
+            q: "Bagaimana TemplumIS mengurangi beban pelaporan institusional?",
+            a: "Dengan memusatkan indikator dan mengotomatiskan pengumpulan sejauh mungkin, TemplumIS mengurangi upaya administratif dalam menyusun laporan untuk perencanaan, pengajuan regulasi, penjaminan mutu, dan latihan pemeringkatan. Tim menghabiskan lebih sedikit waktu mengejar spreadsheet dan lebih banyak waktu memvalidasi serta menindaklanjuti wawasan.",
+          },
+          leadership: {
+            q: "Apa yang dilihat pimpinan universitas di platform?",
+            a: "Pimpinan mengakses dasbor waktu nyata dan indikator kinerja yang mendukung pengambilan keputusan berbasis bukti. Platform memperkuat perencanaan institusional dengan visibilitas yang lebih jelas terhadap tren kinerja dan, jika dikonfigurasi, analitik prediktif untuk mengantisipasi risiko dan peluang.",
+          },
+          studentResearch: {
+            q: "Bagaimana TemplumIS mendukung keberhasilan mahasiswa dan kinerja penelitian?",
+            a: "Di sisi mahasiswa, institusi dapat melacak pendaftaran, retensi, progresi, kelulusan, sinyal keterserapan kerja, dan kinerja akademik.\n\nDi sisi penelitian, TemplumIS membantu memantau luaran, hibah, kolaborasi, sitasi, paten, dan aktivitas inovasi - menghubungkan investasi penelitian dengan hasil institusional yang terlihat.",
+          },
+          accreditation: {
+            q: "Apakah TemplumIS mendukung akreditasi dan penjaminan mutu?",
+            a: "Ya. Platform ini dirancang untuk mendukung akreditasi, penjaminan mutu, dan pelaporan regulasi dengan menjaga bukti yang mendasarinya tetap terorganisasi, terkini, dan lebih mudah diambil saat siklus tinjauan tiba.",
+          },
+        },
+      },
+      rankings: {
+        title: "Pemeringkatan universitas",
+        intro: "Kesiapan pemeringkatan dan pemantauan kinerja berkelanjutan.",
+        items: {
+          readiness: {
+            q: "Bagaimana TemplumIS mendukung kesiapan pemeringkatan universitas?",
+            a: "Kekuatan inti TemplumIS adalah kesiapan pemeringkatan dan pemantauan kinerja. Institusi dapat secara sistematis mengumpulkan, mengorganisasi, memvalidasi, dan mengelola data yang diperlukan untuk kerangka pemeringkatan utama - alih-alih menyusun pengajuan dari awal setiap tahun di berbagai kantor.",
+          },
+          frameworks: {
+            q: "Kerangka pemeringkatan mana yang dapat dipersiapkan institusi?",
+            a: "TemplumIS mendukung pengelolaan indikator terstruktur untuk kerangka global dan regional utama, termasuk:\n\n• QS World University Rankings\n• Times Higher Education (THE) Rankings\n• Webometrics Rankings\n• Academic Ranking of World Universities (ARWU / Shanghai)\n• Kerangka pemeringkatan regional dan nasional\n\nIni membantu institusi meningkatkan konsistensi dan kesiapan untuk siklus pemeringkatan tahunan.",
+          },
+          repository: {
+            q: "Bagaimana data pemeringkatan dikelola secara berbeda dengan TemplumIS?",
+            a: "Alih-alih mengandalkan banyak kantor untuk menyusun pengajuan pemeringkatan secara manual, TemplumIS menyediakan repositori institusional terstruktur di mana indikator terkait pemeringkatan terus ditangkap, diperbarui, dan diverifikasi.\n\nPendekatan itu mengurangi upaya pelaporan sekaligus meningkatkan kualitas data, konsistensi, dan kesiapan institusional - memperkuat visibilitas global, daya saing, dan reputasi dari waktu ke waktu.",
+          },
+        },
+      },
+      gettingStarted: {
+        title: "Memulai",
+        intro: "Akses, peran, demonstrasi, dan dukungan.",
+        items: {
+          whoUses: {
+            q: "Siapa yang menggunakan TemplumIS?",
+            a: "TemplumIS melayani seluruh komunitas institusional melalui portal berbasis peran: mahasiswa, registrasi dan layanan mahasiswa, kantor beasiswa dan bantuan keuangan, kantor penelitian, peninjau, pembimbing dan sponsor, serta administrator institusi atau global.",
+          },
+          accounts: {
+            q: "Bagaimana pengguna mendapatkan akses?",
+            a: "Mahasiswa dan staf biasanya mendaftar atau diundang setelah institusi mereka diprovisikan di platform. Administrator institusi dan global menggunakan halaman login khusus. Akses selalu dibatasi sesuai peran pengguna dan modul yang diaktifkan untuk institusi tersebut.",
+          },
+          demo: {
+            q: "Bisakah kami meminta demonstrasi?",
+            a: "Ya. Institusi yang ingin mengeksplorasi bagaimana TemplumIS mendukung prioritas strategis dan ambisi pemeringkatan dapat meminta pertemuan singkat atau demonstrasi. Hubungi melalui detail kontak di bawah untuk menjadwalkan percakapan dengan tim TemplumIS.",
+          },
+          help: {
+            q: "Di mana saya dapat menemukan dokumentasi atau menghubungi dukungan?",
+            aBefore: "Panduan produk dan referensi teknis tersedia di ",
+            aAfter: ". Untuk pertanyaan institusional, hubungi Training Centre in Communication (TCC Africa), Gecaga Institute Building, Nairobi, Kenya.",
+          },
+        },
+      },
+    },
+  },
+
 };
 
 export default id;

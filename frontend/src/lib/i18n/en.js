@@ -46,6 +46,14 @@ const en = {
     termsOfService: "Terms of Service",
     contact: "Contact",
     documentation: "Documentation",
+    footer: {
+      usefulLinks: "Useful links",
+      home: "Home",
+      faqs: "FAQs",
+      addressOrg: "Training Centre in Communication",
+      addressBuilding: "Gecaga Institute Building",
+      addressCity: "Nairobi, Kenya",
+    },
     required: "Required",
     optional: "Optional",
     yes: "Yes",
@@ -78,7 +86,7 @@ const en = {
     },
     modules: {
       heading: "Core Modules",
-      subheading: "Four integrated modules covering the complete institutional data lifecycle.",
+      subheading: "Five integrated modules covering the complete institutional data lifecycle.",
       enrollment: {
         title: "Enrollment & Student Success",
         description:
@@ -98,6 +106,11 @@ const en = {
         title: "Grants & Research",
         description:
           "Track research investment, grant burn rates, publication output mapping, and ethics/IRB compliance alerts.",
+      },
+      rankings: {
+        title: "University Rankings",
+        description:
+          "Track institutional performance across major global ranking systems with indicator readiness, targets, and live dashboards.",
       },
     },
   },
@@ -519,8 +532,9 @@ const en = {
         grantApplications: "Grant Applications",
         grantConfigure: "Configure Grants",
         grantLifecycle: "Grant Lifecycle",
-        rankings: "Rankings",
+        rankings: "University Rankings",
         analytics: "Analytics",
+        executiveBriefing: "Executive briefing",
       },
     },
     topbar: {
@@ -545,6 +559,72 @@ const en = {
         programDistribution: "Program Distribution",
         topNationalities: "Top Nationalities",
         complianceStatus: "Compliance Status",
+      },
+    },
+    vcDashboard: {
+      badge: "Vice Chancellor",
+      title: "Institutional decision dashboard",
+      subtitle: "Exception signals, portfolio health, and levers for leadership — not operational queues.",
+      dataAsOf: "Data as of {when}",
+      openBriefing: "Open full executive briefing",
+      loadError: "Failed to load leadership metrics",
+      status: {
+        onTarget: "On target",
+        watch: "Watch",
+        actionNeeded: "Action needed",
+      },
+      attention: {
+        title: "Needs attention",
+      },
+      pulse: {
+        title: "Institution pulse",
+        totalStudents: "Total students",
+        activeStudents: "{count} active",
+        onTrack: "On track",
+        atRisk: "At-risk students",
+        atRiskShare: "{pct}% of enrolment",
+        feeCollection: "Fee collection",
+        avgGpa: "Institution GPA",
+        rankingReadiness: "Ranking readiness",
+        vsTarget: "Target {target}",
+      },
+      success: {
+        title: "Student success",
+        subtitle: "Compliance mix, risk drivers, and retention",
+        cta: "Review at-risk",
+        onTrack: "On track",
+        atRisk: "At risk",
+        critical: "Critical",
+        finances: "Finances",
+        attendance: "Attendance",
+        academic: "Academic",
+        probation: "{count} on probation or suspended",
+        retention: "1-yr retention {pct}%",
+        graduation: "4-yr graduation {pct}%",
+      },
+      portfolio: {
+        title: "Portfolio & access",
+        subtitle: "Programme concentration and aid pipeline",
+        ugPg: "Undergraduate / postgraduate",
+        international: "International students",
+        female: "Female share",
+        aidPending: "{count} pending",
+        aidCommittee: "{count} ready for committee",
+        aidAwarded: "{count} awarded",
+        aidCta: "Aid decisions",
+      },
+      trend: {
+        title: "Enrollment by intake year",
+        subtitle: "Live cohort sizes from institutional SIS records",
+        students: "Students",
+      },
+      rankings: {
+        title: "University rankings & readiness",
+        subtitle: "Institution readiness across ranking systems",
+        cta: "Open University Rankings",
+        overall: "Overall readiness",
+        unavailable: "Rankings readiness data is not available. Open University Rankings after uploading institutional rankings data.",
+        grantsNote: "Research grants: {pending} pending · {approved} approved",
       },
     },
     enrollment: {
@@ -674,12 +754,39 @@ const en = {
       performance: "Student Performance",
       programs: "Program Analysis",
       exportReport: "Export Report",
+      retentionTab: "Retention",
+      retention: {
+        oneYear: "1-year retention",
+        fourYear: "4-year graduation",
+        cohortsTracked: "{count} cohorts tracked",
+        snapshot: "Snapshot {date}",
+        cohortAverage: "Cohort average",
+        initialSize: "Initial cohort size",
+        acrossSnapshots: "Across latest cohort snapshots",
+        graduated: "Graduated",
+        fromTracked: "From tracked cohorts",
+        byCohort: "Retention by cohort",
+        byCohortSub: "Latest snapshot per intake cohort",
+        retentionSeries: "1-yr retention %",
+        graduationSeries: "4-yr graduation %",
+        unavailable: "Cohort retention metrics are not available yet. Seed or sync retention snapshots to unlock this view.",
+      },
     },
     rankings: {
       title: "Rankings",
       gpaRankings: "GPA Rankings",
       coursePerformance: "Course Performance",
       scholarshipRates: "Scholarship Success Rates",
+    },
+    universityRankings: {
+      exportPdf: "Export PDF",
+      exportPdfTooltip: "Choose a ranking and download it as its own PDF report",
+      exportDialogTitle: "Export ranking report",
+      exportDialogSubtitle:
+        "Select one ranking system. Each download is a separate report with institutional overview and that ranking's readiness detail.",
+      downloadReport: "Download",
+      reportDocumentTitle: "{institution} - {ranking} report",
+      printReportHeading: "{ranking} readiness report",
     },
     support: {
       title: "Student Support Management",
@@ -842,6 +949,7 @@ const en = {
     nav: {
       dashboard: "Dashboard",
       users: "Users",
+      access: "Role access",
       profile: "Institution Profile",
       domains: "Email Domains",
       analytics: "Analytics",
@@ -862,6 +970,46 @@ const en = {
         users: "Users",
       },
       quickLinks: "Quick Links",
+    },
+    access: {
+      title: "Role access",
+      subtitle:
+        "Choose whole modules or specific sidebar items each role can open. Dashboard, profile, and analytics stay available.",
+      institutionCeiling: "Modules enabled for this institution",
+      institutionCeilingHint:
+        "These are set by the global administrator. You can only grant roles access to modules that are already on.",
+      roleHeading: "Access by role",
+      roleHint:
+        "Select a role, then tick a whole module or expand and pick individual sidebar items. Changes save immediately.",
+      modulesForRole: "Access for {role}",
+      moduleEnabledHint: "Appears in this role's staff sidebar when enabled",
+      moduleDisabledByInstitution: "Not enabled for this institution - ask a global admin to turn it on first",
+      wholeModuleOn: "Entire module enabled - all sidebar items below are included",
+      partialModuleOn: "Partial access - only the selected sidebar items below",
+      moduleOff: "Module off for this role - tick the module or individual items to grant access",
+      itemsHint: "Or select specific sidebar items:",
+      saving: "Saving…",
+      saved: "Role access updated",
+      fetchError: "Could not load role access settings.",
+      saveError: "Could not save role access settings.",
+      navItems: {
+        atRisk: "At-Risk Students",
+        students: "Students",
+        support: "Student Support",
+        scholarships: "Scholarships",
+        financialAid: "Financial aid dashboard",
+        applications: "Scholarship applications",
+        triage: "Triage & verification",
+        decisions: "Review outcome and awards",
+        scholarshipOpportunities: "Scholarship opportunities",
+        configureScholarships: "Configure scholarships",
+        grants: "Grants & research",
+        grantLifecycle: "Grant lifecycle pipeline",
+        grantApplications: "Grant applications",
+        grantOpportunities: "Grant opportunities",
+        configureGrants: "Configure grants",
+        rankings: "University rankings",
+      },
     },
     users: {
       title: "User Management",
@@ -995,6 +1143,101 @@ const en = {
     title: "Recommendation Letter",
     verify: "Verify & Submit",
     description: "Please verify your recommendation letter below.",
+  },
+
+  // ─── FAQs ──────────────────────────────────────────────────────────────────
+  faqs: {
+    title: "Frequently Asked Questions",
+    subtitle:
+      "Connected intelligence for universities - how TemplumIS turns fragmented institutional data into strategic insight for planning, performance, accreditation, and rankings.",
+    categories: {
+      about: {
+        title: "About TemplumIS",
+        intro: "What the platform is and why institutions adopt it.",
+        items: {
+          whatIs: {
+            q: "What is TemplumIS?",
+            a: "TemplumIS is a university intelligence platform designed by TCC Africa to help higher education institutions transform fragmented institutional data into actionable intelligence for strategic decision-making, performance management, accreditation, and university rankings.\n\nIt provides a centralized intelligence layer that integrates data from across the university ecosystem, so leadership can access reliable insights through a single platform.",
+          },
+          problem: {
+            q: "What challenge does TemplumIS address?",
+            a: "Universities are increasingly required to provide accurate, timely data for institutional planning, quality assurance, government reporting, internationalization, research performance, and global ranking frameworks.\n\nIn practice, much of that information remains dispersed across offices, departments, and standalone systems. Collection and reporting become time-consuming and resource-intensive. TemplumIS consolidates this landscape so institutions can work from one coherent source of truth.",
+          },
+          connectedIntelligence: {
+            q: "What does “Connected Intelligence for Universities” mean?",
+            a: "It means TemplumIS does not replace every operational system overnight. Instead, it connects academic, research, internationalization, finance, quality assurance, and student information sources into a unified environment - turning operational records into leadership-ready intelligence.",
+          },
+        },
+      },
+      capabilities: {
+        title: "Platform capabilities",
+        intro: "How TemplumIS supports day-to-day operations and strategic oversight.",
+        items: {
+          consolidate: {
+            q: "What kinds of institutional data can TemplumIS bring together?",
+            a: "TemplumIS consolidates data from across the university ecosystem - including academic records, research activity, internationalization, finance, quality assurance, and student information systems - into a unified environment for analysis and reporting.",
+          },
+          reporting: {
+            q: "How does TemplumIS reduce the burden of institutional reporting?",
+            a: "By centralizing indicators and automating collection where possible, TemplumIS reduces the administrative effort of assembling reports for planning, regulatory submissions, quality assurance, and ranking exercises. Teams spend less time chasing spreadsheets and more time validating and acting on insights.",
+          },
+          leadership: {
+            q: "What do university leaders see in the platform?",
+            a: "Leaders access real-time dashboards and performance indicators that support evidence-based decision-making. The platform strengthens institutional planning with clearer visibility into performance trends and, where configured, predictive analytics to anticipate risk and opportunity.",
+          },
+          studentResearch: {
+            q: "How does TemplumIS support student success and research performance?",
+            a: "On the student side, institutions can track enrollment, retention, progression, graduation, employability signals, and academic performance.\n\nOn the research side, TemplumIS helps monitor outputs, grants, collaborations, citations, patents, and innovation activities - linking research investment to visible institutional outcomes.",
+          },
+          accreditation: {
+            q: "Does TemplumIS support accreditation and quality assurance?",
+            a: "Yes. The platform is designed to support accreditation, quality assurance, and regulatory reporting by keeping the underlying evidence organized, current, and easier to retrieve when review cycles arrive.",
+          },
+        },
+      },
+      rankings: {
+        title: "University rankings",
+        intro: "Ranking readiness and continuous performance monitoring.",
+        items: {
+          readiness: {
+            q: "How does TemplumIS support university ranking readiness?",
+            a: "A core strength of TemplumIS is ranking readiness and performance monitoring. Institutions can systematically collect, organize, validate, and manage the data required for major ranking frameworks - instead of assembling submissions from scratch each year across multiple offices.",
+          },
+          frameworks: {
+            q: "Which ranking frameworks can institutions prepare for?",
+            a: "TemplumIS supports structured indicator management for major global and regional frameworks, including:\n\n• QS World University Rankings\n• Times Higher Education (THE) Rankings\n• Webometrics Rankings\n• Academic Ranking of World Universities (ARWU / Shanghai)\n• Regional and national ranking frameworks\n\nThis helps institutions improve consistency and preparedness for annual ranking cycles.",
+          },
+          repository: {
+            q: "How is ranking data managed differently with TemplumIS?",
+            a: "Rather than relying on multiple offices to manually compile ranking submissions, TemplumIS provides a structured institutional repository where ranking-related indicators are continuously captured, updated, and verified.\n\nThat approach reduces reporting effort while improving data quality, consistency, and institutional preparedness - strengthening global visibility, competitiveness, and reputation over time.",
+          },
+        },
+      },
+      gettingStarted: {
+        title: "Getting started",
+        intro: "Access, roles, demonstrations, and support.",
+        items: {
+          whoUses: {
+            q: "Who uses TemplumIS?",
+            a: "TemplumIS serves the full institutional community through role-based portals: students, registrars and student services, scholarship and financial-aid offices, research offices, reviewers, advisors and sponsors, and institution or global administrators.",
+          },
+          accounts: {
+            q: "How do users get access?",
+            a: "Students and staff typically sign up or are invited once their institution is provisioned on the platform. Institution and global administrators use dedicated login pages. Access is always scoped to the user’s role and the modules enabled for that institution.",
+          },
+          demo: {
+            q: "Can we request a demonstration?",
+            a: "Yes. Institutions that want to explore how TemplumIS supports strategic priorities and ranking ambitions can request a brief meeting or demonstration. Reach out through the contact details below to schedule a conversation with the TemplumIS team.",
+          },
+          help: {
+            q: "Where can I find documentation or contact support?",
+            aBefore: "Product guides and technical references are available in ",
+            aAfter:
+              ". For institutional enquiries, contact Training Centre in Communication (TCC Africa), Gecaga Institute Building, Nairobi, Kenya.",
+          },
+        },
+      },
+    },
   },
 };
 

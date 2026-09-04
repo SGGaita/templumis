@@ -17,6 +17,10 @@ export function isFinancialAidOfficerOnly(user) {
   return user?.role === "scholarship_office";
 }
 
+export function isViceChancellor(user) {
+  return user?.role === "vice_chancellor" || user?.role === "global_admin";
+}
+
 const FAO_ALLOWED_PATH_PREFIXES = [
   "/staff/financial-aid",
   "/staff/scholarships",

@@ -199,7 +199,7 @@ function VerifyEmailContent() {
         </Paper>
       </Container>
 
-      <SiteFooter showLegal={false} />
+      <SiteFooter />
     </Box>
   );
 }

@@ -46,6 +46,14 @@ const ko = {
     termsOfService: "서비스 약관",
     contact: "문의",
     documentation: "문서",
+    footer: {
+      usefulLinks: "유용한 링크",
+      home: "홈",
+      faqs: "자주 묻는 질문",
+      addressOrg: "Training Centre in Communication",
+      addressBuilding: "Gecaga Institute Building",
+      addressCity: "케냐 나이로비",
+    },
     required: "필수",
     optional: "선택",
     yes: "예",
@@ -78,7 +86,7 @@ const ko = {
     },
     modules: {
       heading: "핵심 모듈",
-      subheading: "전체 기관 데이터 수명 주기를 다루는 네 가지 통합 모듈.",
+      subheading: "전체 기관 데이터 수명 주기를 다루는 다섯 가지 통합 모듈.",
       enrollment: {
         title: "등록 및 학생 성공",
         description:
@@ -98,6 +106,11 @@ const ko = {
         title: "보조금 및 연구",
         description:
           "연구 투자, 보조금 소진율, 출판물 출력 매핑 및 윤리/IRB 준수 경고를 추적하세요.",
+      },
+      rankings: {
+        title: "대학 순위",
+        description:
+          "지표 준비도, 목표 및 실시간 대시보드로 주요 글로벌 순위 시스템에서 기관 성과를 추적하세요.",
       },
     },
   },
@@ -519,8 +532,9 @@ const ko = {
         grantApplications: "보조금 신청",
         grantConfigure: "보조금 구성",
         grantLifecycle: "보조금 수명 주기",
-        rankings: "순위",
+        rankings: "대학 순위",
         analytics: "분석",
+        executiveBriefing: "경영진 브리핑",
       },
     },
     topbar: {
@@ -545,6 +559,72 @@ const ko = {
         programDistribution: "프로그램 분포",
         topNationalities: "주요 국적",
         complianceStatus: "준수 상태",
+      },
+    },
+    vcDashboard: {
+      badge: "부총장",
+      title: "기관 의사결정 대시보드",
+      subtitle: "예외 신호, 포트폴리오 건전성, 리더십 레버 — 운영 대기열이 아닙니다.",
+      dataAsOf: "{when} 기준 데이터",
+      openBriefing: "전체 경영진 브리핑 열기",
+      loadError: "리더십 지표를 불러오지 못했습니다",
+      status: {
+        onTarget: "목표 달성",
+        watch: "주시",
+        actionNeeded: "조치 필요",
+      },
+      attention: {
+        title: "주의 필요",
+      },
+      pulse: {
+        title: "기관 맥박",
+        totalStudents: "전체 학생",
+        activeStudents: "{count}명 재학",
+        onTrack: "정상 진행",
+        atRisk: "위험 학생",
+        atRiskShare: "등록의 {pct}%",
+        feeCollection: "등록금 수납",
+        avgGpa: "기관 GPA",
+        rankingReadiness: "순위 준비도",
+        vsTarget: "목표 {target}",
+      },
+      success: {
+        title: "학생 성공",
+        subtitle: "준수 구성, 위험 요인, 유지율",
+        cta: "위험 학생 검토",
+        onTrack: "정상 진행",
+        atRisk: "위험",
+        critical: "심각",
+        finances: "재정",
+        attendance: "출석",
+        academic: "학업",
+        probation: "{count}명 유예 또는 정학",
+        retention: "1년 유지율 {pct}%",
+        graduation: "4년 졸업률 {pct}%",
+      },
+      portfolio: {
+        title: "포트폴리오 및 접근성",
+        subtitle: "프로그램 집중도와 지원 파이프라인",
+        ugPg: "학부 / 대학원",
+        international: "국제 학생",
+        female: "여성 비율",
+        aidPending: "{count}건 대기",
+        aidCommittee: "{count}건 위원회 준비",
+        aidAwarded: "{count}건 수여",
+        aidCta: "지원 결정",
+      },
+      trend: {
+        title: "입학 연도별 등록",
+        subtitle: "SIS 기록의 코호트 규모",
+        students: "학생",
+      },
+      rankings: {
+        title: "대학 순위 및 준비도",
+        subtitle: "순위 시스템별 기관 준비도",
+        cta: "대학 순위 열기",
+        overall: "전체 준비도",
+        unavailable: "순위 준비도 데이터가 없습니다. 기관 데이터 업로드 후 순위를 여세요.",
+        grantsNote: "연구 지원금: {pending}건 대기 · {approved}건 승인",
       },
     },
     enrollment: {
@@ -674,12 +754,39 @@ const ko = {
       performance: "학생 성과",
       programs: "프로그램 분석",
       exportReport: "보고서 내보내기",
+      retentionTab: "유지율",
+      retention: {
+        oneYear: "1년 유지율",
+        fourYear: "4년 졸업률",
+        cohortsTracked: "{count}개 코호트 추적 중",
+        snapshot: "스냅샷 {date}",
+        cohortAverage: "코호트 평균",
+        initialSize: "초기 코호트 규모",
+        acrossSnapshots: "최신 코호트 스냅샷 기준",
+        graduated: "졸업생",
+        fromTracked: "추적 중인 코호트에서",
+        byCohort: "코호트별 유지율",
+        byCohortSub: "입학 코호트별 최신 스냅샷",
+        retentionSeries: "1년 유지율 %",
+        graduationSeries: "4년 졸업률 %",
+        unavailable: "코호트 유지율 지표가 아직 없습니다. 스냅샷을 동기화하여 이 화면을 여세요.",
+      },
     },
     rankings: {
       title: "순위",
       gpaRankings: "평점 순위",
       coursePerformance: "강좌 성과",
       scholarshipRates: "장학금 성공률",
+    },
+    universityRankings: {
+      exportPdf: "PDF 내보내기",
+      exportPdfTooltip: "순위를 선택해 개별 PDF 보고서로 다운로드하세요",
+      exportDialogTitle: "순위 보고서 내보내기",
+      exportDialogSubtitle:
+        "순위 시스템을 하나 선택하세요. 각 다운로드는 기관 개요와 해당 순위 준비도 상세가 담긴 별도 보고서입니다.",
+      downloadReport: "다운로드",
+      reportDocumentTitle: "{institution} - {ranking} 보고서",
+      printReportHeading: "{ranking} 준비도 보고서",
     },
     support: {
       title: "학생 지원 관리",
@@ -842,6 +949,7 @@ const ko = {
     nav: {
       dashboard: "대시보드",
       users: "사용자",
+      access: "역할 접근",
       profile: "기관 프로필",
       domains: "이메일 도메인",
       analytics: "분석",
@@ -862,6 +970,43 @@ const ko = {
         users: "사용자",
       },
       quickLinks: "빠른 링크",
+    },
+    access: {
+      title: "역할 접근",
+      subtitle: "각 역할에 대해 전체 모듈 또는 특정 사이드바 항목을 선택할 수 있습니다. 대시보드, 프로필, 분석은 계속 사용할 수 있습니다.",
+      institutionCeiling: "이 기관에 사용 설정된 모듈",
+      institutionCeilingHint: "글로벌 관리자가 설정합니다. 이미 켜진 모듈에만 접근을 부여할 수 있습니다.",
+      roleHeading: "역할별 접근",
+      roleHint: "역할을 선택한 뒤 전체 모듈을 체크하거나 개별 사이드바 항목을 고르세요. 변경 사항은 즉시 저장됩니다.",
+      modulesForRole: "{role} 접근 권한",
+      moduleEnabledHint: "사용 설정 시 이 역할의 교직원 사이드바에 표시됩니다",
+      moduleDisabledByInstitution: "이 기관에 사용 설정되지 않음 - 먼저 글로벌 관리자에게 켜 달라고 요청하세요",
+      wholeModuleOn: "전체 모듈 사용 - 아래 사이드바 항목이 모두 포함됩니다",
+      partialModuleOn: "부분 접근 - 선택한 항목만",
+      moduleOff: "이 역할에 대해 모듈 꺼짐 - 모듈 또는 항목을 체크해 접근을 부여하세요",
+      itemsHint: "또는 특정 사이드바 항목을 선택하세요:",
+      saving: "저장 중…",
+      saved: "역할 접근이 업데이트되었습니다",
+      fetchError: "역할 접근 설정을 불러올 수 없습니다.",
+      saveError: "역할 접근 설정을 저장할 수 없습니다.",
+      navItems: {
+        atRisk: "위험 학생",
+        students: "학생",
+        support: "학생 지원",
+        scholarships: "장학금",
+        financialAid: "재정 지원 대시보드",
+        applications: "장학금 신청",
+        triage: "분류 및 검증",
+        decisions: "심사 결과 및 수여",
+        scholarshipOpportunities: "장학금 기회",
+        configureScholarships: "장학금 구성",
+        grants: "연구비 및 연구",
+        grantLifecycle: "연구비 수명주기",
+        grantApplications: "연구비 신청",
+        grantOpportunities: "연구비 기회",
+        configureGrants: "연구비 구성",
+        rankings: "대학 순위",
+      },
     },
     users: {
       title: "사용자 관리",
@@ -996,6 +1141,100 @@ const ko = {
     verify: "확인 및 제출",
     description: "아래에서 추천서를 확인해주세요.",
   },
+  // ─── FAQs ──────────────────────────────────────────────────────────────────
+  faqs: {
+    title: "자주 묻는 질문",
+    subtitle:
+      "대학을 위한 연결된 인텔리전스 - TemplumIS가 분산된 기관 데이터를 기획·성과·인증·랭킹을 위한 전략적 인사이트로 전환하는 방법.",
+    categories: {
+      about: {
+        title: "TemplumIS 소개",
+        intro: "플랫폼이 무엇이며 기관이 도입하는 이유.",
+        items: {
+          whatIs: {
+            q: "TemplumIS란 무엇인가요?",
+            a: "TemplumIS는 TCC Africa가 설계한 대학 인텔리전스 플랫폼으로, 고등교육기관이 분산된 기관 데이터를 전략적 의사결정, 성과 관리, 인증 및 대학 랭킹을 위한 실행 가능한 인텔리전스로 전환하도록 돕습니다.\n\n대학 생태계 전반의 데이터를 통합하는 중앙 집중형 인텔리전스 계층을 제공하여, 리더십이 단일 플랫폼을 통해 신뢰할 수 있는 인사이트에 접근할 수 있게 합니다.",
+          },
+          problem: {
+            q: "TemplumIS는 어떤 문제를 해결하나요?",
+            a: "대학은 기관 기획, 품질 보증, 정부 보고, 국제화, 연구 성과 및 글로벌 랭킹 프레임워크를 위해 정확하고 시의적절한 데이터를 제공해야 하는 요구가 커지고 있습니다.\n\n실제로 그 정보의 상당 부분은 사무소, 부서, 독립 시스템에 흩어져 있습니다. 수집과 보고는 시간과 자원이 많이 듭니다. TemplumIS는 이 환경을 통합하여 기관이 하나의 일관된 단일 진실 원천을 기준으로 일할 수 있게 합니다.",
+          },
+          connectedIntelligence: {
+            q: "“Connected Intelligence for Universities”는 무엇을 의미하나요?",
+            a: "TemplumIS가 하룻밤 사이에 모든 운영 시스템을 대체하지는 않는다는 뜻입니다. 대신 학사, 연구, 국제화, 재무, 품질 보증, 학생 정보 소스를 통합 환경으로 연결하여 - 운영 기록을 리더십이 바로 활용할 수 있는 인텔리전스로 전환합니다.",
+          },
+        },
+      },
+      capabilities: {
+        title: "플랫폼 역량",
+        intro: "TemplumIS가 일상 운영과 전략적 감독을 지원하는 방식.",
+        items: {
+          consolidate: {
+            q: "TemplumIS는 어떤 기관 데이터를 모을 수 있나요?",
+            a: "TemplumIS는 대학 생태계 전반의 데이터 - 학사 기록, 연구 활동, 국제화, 재무, 품질 보증, 학생 정보 시스템 포함 - 를 분석과 보고를 위한 통합 환경으로 집약합니다.",
+          },
+          reporting: {
+            q: "TemplumIS는 기관 보고 부담을 어떻게 줄이나요?",
+            a: "지표를 중앙화하고 가능한 경우 수집을 자동화함으로써 TemplumIS는 기획, 규제 제출, 품질 보증, 랭킹 작업을 위한 보고서 작성의 행정 부담을 줄입니다. 팀은 스프레드시트를 쫓는 시간은 줄이고, 인사이트를 검증하고 실행하는 데 더 많은 시간을 씁니다.",
+          },
+          leadership: {
+            q: "대학 리더는 플랫폼에서 무엇을 보나요?",
+            a: "리더는 근거 기반 의사결정을 지원하는 실시간 대시보드와 성과 지표에 접근합니다. 플랫폼은 성과 추세에 대한 더 명확한 가시성으로 기관 기획을 강화하며, 구성된 경우 위험과 기회를 예측하는 예측 분석을 제공합니다.",
+          },
+          studentResearch: {
+            q: "TemplumIS는 학생 성공과 연구 성과를 어떻게 지원하나요?",
+            a: "학생 측면에서 기관은 입학, 유지, 진학, 졸업, 취업 신호, 학업 성과를 추적할 수 있습니다.\n\n연구 측면에서 TemplumIS는 성과물, 연구비, 협력, 인용, 특허, 혁신 활동을 모니터링하도록 도와 - 연구 투자를 가시적인 기관 성과와 연결합니다.",
+          },
+          accreditation: {
+            q: "TemplumIS는 인증과 품질 보증을 지원하나요?",
+            a: "네. 플랫폼은 인증, 품질 보증, 규제 보고를 지원하도록 설계되어, 기본 증거를 체계적이고 최신 상태로 유지하며 심사 주기가 도래했을 때 더 쉽게 검색할 수 있게 합니다.",
+          },
+        },
+      },
+      rankings: {
+        title: "대학 랭킹",
+        intro: "랭킹 준비도와 지속적인 성과 모니터링.",
+        items: {
+          readiness: {
+            q: "TemplumIS는 대학 랭킹 준비도를 어떻게 지원하나요?",
+            a: "TemplumIS의 핵심 강점은 랭킹 준비도와 성과 모니터링입니다. 기관은 주요 랭킹 프레임워크에 필요한 데이터를 체계적으로 수집·정리·검증·관리할 수 있습니다 - 매년 여러 부서가 제출물을 처음부터 조립하는 방식이 아닙니다.",
+          },
+          frameworks: {
+            q: "기관은 어떤 랭킹 프레임워크를 준비할 수 있나요?",
+            a: "TemplumIS는 주요 글로벌·지역 프레임워크를 위한 구조화된 지표 관리를 지원합니다. 포함 대상:\n\n• QS World University Rankings\n• Times Higher Education (THE) Rankings\n• Webometrics Rankings\n• Academic Ranking of World Universities (ARWU / Shanghai)\n• 지역 및 국가 랭킹 프레임워크\n\n이를 통해 기관은 연간 랭킹 주기에 대한 일관성과 준비도를 높일 수 있습니다.",
+          },
+          repository: {
+            q: "TemplumIS에서는 랭킹 데이터가 어떻게 다르게 관리되나요?",
+            a: "여러 부서가 랭킹 제출물을 수동으로 취합하는 방식 대신, TemplumIS는 랭킹 관련 지표가 지속적으로 수집·갱신·검증되는 구조화된 기관 저장소를 제공합니다.\n\n이 접근은 보고 노력을 줄이면서 데이터 품질, 일관성, 기관 준비도를 높여 - 시간이 지남에 따라 글로벌 가시성, 경쟁력, 평판을 강화합니다.",
+          },
+        },
+      },
+      gettingStarted: {
+        title: "시작하기",
+        intro: "접근, 역할, 데모 및 지원.",
+        items: {
+          whoUses: {
+            q: "누가 TemplumIS를 사용하나요?",
+            a: "TemplumIS는 역할 기반 포털을 통해 전체 기관 커뮤니티를 지원합니다. 대상은 학생, 등록 및 학생 서비스, 장학금·재정 지원 사무소, 연구처, 심사자, 자문·후원자, 기관 또는 글로벌 관리자입니다.",
+          },
+          accounts: {
+            q: "사용자는 어떻게 접근 권한을 받나요?",
+            a: "학생과 직원은 일반적으로 기관이 플랫폼에 프로비저닝된 후 가입하거나 초대를 받습니다. 기관 및 글로벌 관리자는 전용 로그인 페이지를 사용합니다. 접근은 항상 사용자 역할과 해당 기관에 활성화된 모듈로 제한됩니다.",
+          },
+          demo: {
+            q: "데모를 요청할 수 있나요?",
+            a: "네. TemplumIS가 전략적 우선순위와 랭킹 목표를 어떻게 지원하는지 살펴보고자 하는 기관은 짧은 미팅 또는 데모를 요청할 수 있습니다. 아래 연락처로 TemplumIS 팀과의 대화를 예약하세요.",
+          },
+          help: {
+            q: "문서나 지원은 어디서 찾을 수 있나요?",
+            aBefore: "제품 가이드와 기술 참고 자료는 ",
+            aAfter: "에서 확인할 수 있습니다. 기관 문의는 Training Centre in Communication (TCC Africa), Gecaga Institute Building, Nairobi, Kenya로 연락하세요.",
+          },
+        },
+      },
+    },
+  },
+
 };
 
 export default ko;

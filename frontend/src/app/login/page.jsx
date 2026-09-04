@@ -101,7 +101,7 @@ export default function LoginPage() {
         </Paper>
       </Container>
 
-      <SiteFooter showLegal={false} />
+      <SiteFooter />
     </Box>
   );
 }

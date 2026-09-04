@@ -11,14 +11,56 @@ export const DEFAULT_ENABLED_MODULES = {
   staff: ["enrollment", "scholarships", "support", "grants", "rankings"],
 };
 
+export const STAFF_ACCESS_ROLES = [
+  "vice_chancellor",
+  "registrar",
+  "scholarship_office",
+  "student_services",
+  "research_office",
+];
+
+/** Controllable staff sidebar items grouped by product module */
+export const STAFF_MODULE_NAV_ITEMS = {
+  enrollment: [
+    { id: "at_risk", path: "/staff/at-risk", labelKey: "atRisk" },
+    {
+      id: "students",
+      path: "/staff/students",
+      labelKey: "students",
+      matchPrefixes: ["/staff/enrollment"],
+    },
+  ],
+  support: [{ id: "support", path: "/staff/support", labelKey: "support" }],
+  scholarships: [
+    { id: "scholarships", path: "/staff/scholarships", labelKey: "scholarships" },
+    { id: "financial_aid", path: "/staff/financial-aid", labelKey: "financialAid" },
+    { id: "applications", path: "/staff/scholarships/applications", labelKey: "applications" },
+    { id: "triage", path: "/staff/scholarships/triage", labelKey: "triage" },
+    { id: "decisions", path: "/staff/scholarships/decisions", labelKey: "decisions" },
+    { id: "opportunities", path: "/staff/scholarships/opportunities", labelKey: "scholarshipOpportunities" },
+    { id: "configure", path: "/staff/scholarships/configure", labelKey: "configureScholarships" },
+  ],
+  grants: [
+    { id: "grants", path: "/staff/grants", labelKey: "grants" },
+    { id: "lifecycle", path: "/staff/grants/lifecycle", labelKey: "grantLifecycle" },
+    { id: "applications", path: "/staff/grants/applications", labelKey: "grantApplications" },
+    { id: "opportunities", path: "/staff/grants/opportunities", labelKey: "grantOpportunities" },
+    { id: "configure", path: "/staff/grants/configure", labelKey: "configureGrants" },
+  ],
+  rankings: [{ id: "rankings", path: "/staff/rankings", labelKey: "rankings" }],
+};
+
+export const FULL_MODULE = "*";
+
 const STUDENT_ALWAYS = ["/student", "/student/profile"];
-const STAFF_ALWAYS = ["/staff", "/staff/profile", "/staff/settings", "/staff/analytics"];
+const STAFF_ALWAYS = ["/staff", "/staff/profile", "/staff/analytics"];
 const INSTITUTION_ADMIN_ALWAYS = [
   "/institution/admin",
   "/institution/admin/analytics",
   "/institution/admin/users",
   "/institution/admin/domains",
   "/institution/admin/profile",
+  "/institution/admin/access",
   "/institution/admin/activity",
 ];
 
@@ -67,21 +109,218 @@ export function normalizeEnabledModules(raw) {
   return out;
 }
 
+export function moduleItemPaths(moduleId) {
+  return (STAFF_MODULE_NAV_ITEMS[moduleId] || []).map((item) => item.path);
+}
+
+function pathMatchesItem(pathname, item) {
+  if (!pathname || !item?.path) return false;
+  if (pathname === item.path || pathname.startsWith(`${item.path}/`)) return true;
+  return (item.matchPrefixes || []).some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+}
+
+export function findStaffNavCatalogItem(pathname) {
+  const matches = [];
+  for (const [moduleId, items] of Object.entries(STAFF_MODULE_NAV_ITEMS)) {
+    for (const item of items) {
+      if (pathMatchesItem(pathname, item)) {
+        matches.push({ moduleId, item, score: item.path.length });
+      }
+    }
+  }
+  if (!matches.length) return null;
+  matches.sort((a, b) => b.score - a.score);
+  return matches[0];
+}
+
+function normalizeModuleGrant(value, moduleId) {
+  const paths = moduleItemPaths(moduleId);
+  const pathSet = new Set(paths);
+  if (value === FULL_MODULE || value === "all" || value === true) return FULL_MODULE;
+  if (!Array.isArray(value)) return [];
+  const seen = [];
+  for (const entry of value) {
+    if (typeof entry === "string" && pathSet.has(entry) && !seen.includes(entry)) {
+      seen.push(entry);
+    }
+  }
+  const ordered = paths.filter((p) => seen.includes(p));
+  if (!ordered.length) return [];
+  if (ordered.length === paths.length) return FULL_MODULE;
+  return ordered;
+}
+
+function defaultRoleGrants(ceiling) {
+  const ceilingSet = new Set(ceiling);
+  return Object.fromEntries(
+    DEFAULT_ENABLED_MODULES.staff.map((moduleId) => [
+      moduleId,
+      ceilingSet.has(moduleId) ? FULL_MODULE : [],
+    ])
+  );
+}
+
+function legacyModulesToGrants(modules, ceiling) {
+  const ceilingSet = new Set(ceiling);
+  const selected = new Set(modules);
+  return Object.fromEntries(
+    DEFAULT_ENABLED_MODULES.staff.map((moduleId) => [
+      moduleId,
+      ceilingSet.has(moduleId) && selected.has(moduleId) ? FULL_MODULE : [],
+    ])
+  );
+}
+
+export function normalizeStaffRoleModules(raw, enabledStaff = null) {
+  const ceiling = Array.isArray(enabledStaff)
+    ? DEFAULT_ENABLED_MODULES.staff.filter((id) => enabledStaff.includes(id))
+    : [...DEFAULT_ENABLED_MODULES.staff];
+  const out = Object.fromEntries(
+    STAFF_ACCESS_ROLES.map((role) => [role, defaultRoleGrants(ceiling)])
+  );
+  if (!raw || typeof raw !== "object") return out;
+
+  for (const role of STAFF_ACCESS_ROLES) {
+    const entry = raw[role];
+    if (entry == null) continue;
+    if (Array.isArray(entry)) {
+      out[role] = legacyModulesToGrants(
+        entry.filter((m) => typeof m === "string"),
+        ceiling
+      );
+      continue;
+    }
+    if (typeof entry !== "object") continue;
+    const grants = defaultRoleGrants([]);
+    for (const moduleId of DEFAULT_ENABLED_MODULES.staff) {
+      if (!ceiling.includes(moduleId)) {
+        grants[moduleId] = [];
+        continue;
+      }
+      grants[moduleId] = normalizeModuleGrant(
+        Object.prototype.hasOwnProperty.call(entry, moduleId) ? entry[moduleId] : [],
+        moduleId
+      );
+    }
+    out[role] = grants;
+  }
+  return out;
+}
+
+export function modulesFromRoleGrants(grants) {
+  if (!grants || typeof grants !== "object") return [];
+  return DEFAULT_ENABLED_MODULES.staff.filter((moduleId) => {
+    const value = grants[moduleId];
+    return value === FULL_MODULE || (Array.isArray(value) && value.length > 0);
+  });
+}
+
 export function isModuleEnabled(raw, portal, moduleId) {
   return normalizeEnabledModules(raw)[portal]?.includes(moduleId) ?? false;
 }
 
-export function navItemAllowed(item, enabledList) {
-  if (item.modules?.length) return item.modules.some((m) => enabledList.includes(m));
-  if (item.module) return enabledList.includes(item.module);
-  return true;
+export function isRoleModuleFullyEnabled(grants, moduleId) {
+  return grants?.[moduleId] === FULL_MODULE;
 }
 
-export function filterNavGroupsByModules(groups, enabledList) {
+export function isRoleNavItemEnabled(grants, moduleId, path) {
+  const value = grants?.[moduleId];
+  if (value === FULL_MODULE) return true;
+  if (Array.isArray(value)) return value.includes(path);
+  return false;
+}
+
+export function roleModuleSelectionState(grants, moduleId) {
+  const paths = moduleItemPaths(moduleId);
+  const value = grants?.[moduleId];
+  if (value === FULL_MODULE) return { checked: true, indeterminate: false, selected: paths };
+  if (!Array.isArray(value) || !value.length) {
+    return { checked: false, indeterminate: false, selected: [] };
+  }
+  return {
+    checked: false,
+    indeterminate: true,
+    selected: value,
+  };
+}
+
+/** Toggle whole module for a role (full ↔ off). */
+export function toggleRoleModuleSelection(staffRoleModules, role, moduleId, enabledModules = null) {
+  const ceiling = normalizeEnabledModules(enabledModules).staff;
+  const current = normalizeStaffRoleModules(staffRoleModules, ceiling);
+  if (!STAFF_ACCESS_ROLES.includes(role) || !ceiling.includes(moduleId)) return current;
+  const nextGrant = current[role][moduleId] === FULL_MODULE ? [] : FULL_MODULE;
+  return {
+    ...current,
+    [role]: {
+      ...current[role],
+      [moduleId]: nextGrant,
+    },
+  };
+}
+
+/** Toggle a single sidebar item within a module. */
+export function toggleRoleNavItemSelection(
+  staffRoleModules,
+  role,
+  moduleId,
+  path,
+  enabledModules = null
+) {
+  const ceiling = normalizeEnabledModules(enabledModules).staff;
+  const current = normalizeStaffRoleModules(staffRoleModules, ceiling);
+  if (!STAFF_ACCESS_ROLES.includes(role) || !ceiling.includes(moduleId)) return current;
+  const paths = moduleItemPaths(moduleId);
+  if (!paths.includes(path)) return current;
+
+  let selected;
+  const value = current[role][moduleId];
+  if (value === FULL_MODULE) selected = [...paths];
+  else if (Array.isArray(value)) selected = [...value];
+  else selected = [];
+
+  if (selected.includes(path)) selected = selected.filter((p) => p !== path);
+  else selected.push(path);
+
+  const ordered = paths.filter((p) => selected.includes(p));
+  const nextGrant =
+    ordered.length === 0 ? [] : ordered.length === paths.length ? FULL_MODULE : ordered;
+
+  return {
+    ...current,
+    [role]: {
+      ...current[role],
+      [moduleId]: nextGrant,
+    },
+  };
+}
+
+export function roleAllowsStaffPath(staffRoleAccess, pathname) {
+  const match = findStaffNavCatalogItem(pathname);
+  if (!match) return true;
+  if (!staffRoleAccess || typeof staffRoleAccess !== "object") return true;
+  return isRoleNavItemEnabled(staffRoleAccess, match.moduleId, match.item.path);
+}
+
+export function navItemAllowed(item, enabledList, staffRoleAccess = null) {
+  if (!item.module && !item.modules?.length) return true;
+  if (item.modules?.length) {
+    if (!item.modules.some((m) => enabledList.includes(m))) return false;
+  } else if (item.module && !enabledList.includes(item.module)) {
+    return false;
+  }
+  if (!staffRoleAccess || !item.path) return true;
+  if (!item.module) return true;
+  return isRoleNavItemEnabled(staffRoleAccess, item.module, item.path);
+}
+
+export function filterNavGroupsByModules(groups, enabledList, staffRoleAccess = null) {
   return groups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => navItemAllowed(item, enabledList)),
+      items: group.items.filter((item) => navItemAllowed(item, enabledList, staffRoleAccess)),
     }))
     .filter((group) => group.items.length > 0);
 }
@@ -103,10 +342,11 @@ export function isStudentPathAllowed(pathname, enabled) {
   return isPathAllowed(pathname, list, STUDENT_ALWAYS, STUDENT_PATH_MODULES);
 }
 
-export function isStaffPathAllowed(pathname, enabled) {
+export function isStaffPathAllowed(pathname, enabled, staffRoleAccess = null) {
   const list = normalizeEnabledModules(enabled).staff;
   if (pathname === "/staff" || pathname === "/staff/") return true;
-  return isPathAllowed(pathname, list, STAFF_ALWAYS, STAFF_PATH_MODULES);
+  if (!isPathAllowed(pathname, list, STAFF_ALWAYS, STAFF_PATH_MODULES)) return false;
+  return roleAllowsStaffPath(staffRoleAccess, pathname);
 }
 
 export function isInstitutionAdminPathAllowed(pathname, enabled) {

@@ -11,6 +11,10 @@ from app.schemas import (
     InstitutionOut, InstitutionUpdate,
     InstitutionUserCreate, UserUpdate, UserOut,
 )
+from app.institution_modules import (
+    normalize_enabled_modules,
+    normalize_staff_role_modules,
+)
 
 INSTITUTION_ROLES = {
     UserRole.VICE_CHANCELLOR,
@@ -55,9 +59,19 @@ async def update_institution_profile(
 ):
     inst = _get_admin_institution(current_user, db)
 
-    for field, value in data.model_dump(exclude_unset=True).items():
-        if field == "is_active":
-            continue
+    updates = data.model_dump(exclude_unset=True)
+    # Institution-wide module ceiling is managed by global admin
+    updates.pop("enabled_modules", None)
+    if "is_active" in updates:
+        updates.pop("is_active")
+    if "staff_role_modules" in updates:
+        ceiling = normalize_enabled_modules(inst.enabled_modules)["staff"]
+        updates["staff_role_modules"] = normalize_staff_role_modules(
+            updates["staff_role_modules"],
+            ceiling,
+        )
+
+    for field, value in updates.items():
         setattr(inst, field, value)
 
     db.add(AuditLog(
@@ -66,7 +80,7 @@ async def update_institution_profile(
         action="update_institution_profile",
         entity_type="institution",
         entity_id=inst.id,
-        details=data.model_dump(exclude_unset=True),
+        details=updates,
     ))
     db.commit()
     db.refresh(inst)

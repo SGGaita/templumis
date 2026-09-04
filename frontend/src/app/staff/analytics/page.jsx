@@ -46,6 +46,7 @@ import {
 } from "recharts";
 import { ST } from "@/lib/staffTheme";
 import { apiFetch } from "@/lib/api";
+import { useLanguage } from "@/lib/language-context";
 
 const CHART_COLORS = [ST.chart.blue, ST.chart.teal, ST.chart.purple, ST.chart.orange, ST.chart.indigo, ST.chart.green];
 
@@ -124,6 +125,7 @@ const BENCHMARK_ACTIONS = {
   "Institution GPA": { tab: 0 },
   "International students": { tab: 0 },
   "Ranking readiness": { tab: 4 },
+  "1-year retention": { tab: 5 },
 };
 
 const BenchmarkCard = ({ item, active, onClick }) => {
@@ -177,12 +179,14 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-const TAB_LABELS = ["Overview", "Enrollment mix", "Student success", "Financial", "Strategy & rankings"];
+const TAB_LABELS = ["Overview", "Enrollment mix", "Student success", "Financial", "Strategy & rankings", "Retention"];
 
 const PRINT_BODY_CLASSES = ["print-analytics-summary", "print-analytics-tab", "print-analytics-full"];
 
 export default function ExecutiveAnalyticsPage() {
   const router = useRouter();
+  const { t } = useLanguage();
+  const R = t.staff.analytics.retention;
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -229,9 +233,11 @@ export default function ExecutiveAnalyticsPage() {
 
   const goInsight = useCallback((insight) => {
     const t = (insight.title || "").toLowerCase();
-    if (t.includes("risk") || t.includes("standing")) setTab(2);
+    if (t.includes("retention")) setTab(5);
+    else if (t.includes("risk") || t.includes("standing")) setTab(2);
     else if (t.includes("revenue") || t.includes("collection")) setTab(3);
     else if (t.includes("ranking")) setTab(4);
+    else if (t.includes("aid") || t.includes("scholarship")) setTab(3);
     else if (t.includes("program") || t.includes("enrollment")) setTab(1);
     else setTab(0);
   }, []);
@@ -546,6 +552,7 @@ export default function ExecutiveAnalyticsPage() {
         <Tab label="Student success" />
         <Tab label="Financial" />
         <Tab label="Strategy & rankings" />
+        <Tab label={t.staff.analytics.retentionTab} />
       </Tabs>
 
       <Box
@@ -1397,6 +1404,88 @@ export default function ExecutiveAnalyticsPage() {
             </Panel>
           </Grid>
         </Grid>
+      </Box>
+
+      <Box
+        className={`analytics-tab-panel analytics-print-break ${tab === 5 ? "is-active-tab" : ""}`}
+        sx={{ display: tab === 5 ? "block" : "none" }}
+      >
+        <Typography variant="h6" fontWeight={700} sx={{ mb: 2, display: "none", "@media print": { display: "block" } }}>
+          {TAB_LABELS[5]}
+        </Typography>
+        {data.retention?.has_data ? (
+          <Grid container spacing={2.5}>
+            <Grid item xs={12} sm={6} md={3}>
+              <KpiCard
+                label={R.oneYear}
+                value={data.retention.avg_retention_1yr != null ? `${data.retention.avg_retention_1yr}%` : "—"}
+                sub={R.cohortsTracked.replace("{count}", String(data.retention.cohort_count || 0))}
+                icon={<TrendingUpIcon />}
+                color={ST.colors.success}
+                bg={ST.colors.successLight}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <KpiCard
+                label={R.fourYear}
+                value={data.retention.avg_graduation_4yr != null ? `${data.retention.avg_graduation_4yr}%` : "—"}
+                sub={
+                  data.retention.latest_snapshot_date
+                    ? R.snapshot.replace("{date}", data.retention.latest_snapshot_date)
+                    : R.cohortAverage
+                }
+                icon={<SchoolIcon />}
+                color={ST.colors.primary}
+                bg={ST.colors.primaryLight}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <KpiCard
+                label={R.initialSize}
+                value={(data.retention.total_initial || 0).toLocaleString()}
+                sub={R.acrossSnapshots}
+                icon={<PeopleIcon />}
+                color={ST.colors.info}
+                bg={ST.colors.infoLight}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <KpiCard
+                label={R.graduated}
+                value={(data.retention.total_graduated || 0).toLocaleString()}
+                sub={R.fromTracked}
+                icon={<CheckCircleIcon />}
+                color={ST.colors.success}
+                bg={ST.colors.successLight}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Panel title={R.byCohort} subtitle={R.byCohortSub}>
+                <Box sx={{ height: 280 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={(data.retention.cohorts || []).map((c) => ({
+                        name: c.cohort_name,
+                        retention: c.retention_rate_1yr ?? 0,
+                        graduation: c.graduation_rate_4yr ?? 0,
+                      }))}
+                      margin={{ top: 8, right: 8, left: -10, bottom: 40 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke={ST.chart.grid} vertical={false} />
+                      <XAxis dataKey="name" tick={{ fontSize: 10, fill: ST.chart.text }} tickLine={false} axisLine={false} angle={-25} textAnchor="end" interval={0} />
+                      <YAxis tick={{ fontSize: 11, fill: ST.chart.text }} tickLine={false} axisLine={false} unit="%" />
+                      <Tooltip />
+                      <Bar dataKey="retention" name={R.retentionSeries} fill={ST.chart.blue} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="graduation" name={R.graduationSeries} fill={ST.chart.teal} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Panel>
+            </Grid>
+          </Grid>
+        ) : (
+          <Alert severity="info">{R.unavailable}</Alert>
+        )}
       </Box>
 
       <Divider sx={{ my: 3 }} className="analytics-no-print" />

@@ -22,6 +22,7 @@ import BusinessIcon from "@mui/icons-material/Business";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import HistoryIcon from "@mui/icons-material/History";
 import ScienceIcon from "@mui/icons-material/Science";
+import TuneIcon from "@mui/icons-material/Tune";
 import LogoutIcon from "@mui/icons-material/Logout";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -54,6 +55,7 @@ export default function InstitutionAdminLayout({ children }) {
       label: IA.navSections.management,
       items: [
         { text: IA.nav.users, icon: <PeopleIcon sx={{ fontSize: 20 }} />, path: "/institution/admin/users" },
+        { text: IA.nav.access, icon: <TuneIcon sx={{ fontSize: 20 }} />, path: "/institution/admin/access" },
         { text: IA.nav.domains, icon: <DomainIcon sx={{ fontSize: 20 }} />, path: "/institution/admin/domains" },
         { text: IA.nav.profile, icon: <BusinessIcon sx={{ fontSize: 20 }} />, path: "/institution/admin/profile" },
         ...(isModuleEnabled(user?.enabled_modules, "staff", "grants")

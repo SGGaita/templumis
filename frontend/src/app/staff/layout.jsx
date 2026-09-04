@@ -110,7 +110,7 @@ function StaffLayoutInner({ children }) {
 
   useEffect(() => {
     if (!user) return;
-    if (!isStaffPathAllowed(pathname, user.enabled_modules)) {
+    if (!isStaffPathAllowed(pathname, user.enabled_modules, user.staff_role_access)) {
       router.replace(staffHomePath(user));
     }
   }, [user, pathname, router]);

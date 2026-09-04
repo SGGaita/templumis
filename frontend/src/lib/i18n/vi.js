@@ -46,6 +46,14 @@ const vi = {
     termsOfService: "Điều khoản dịch vụ",
     contact: "Liên hệ",
     documentation: "Tài liệu",
+    footer: {
+      usefulLinks: "Liên kết hữu ích",
+      home: "Trang chủ",
+      faqs: "Câu hỏi thường gặp",
+      addressOrg: "Training Centre in Communication",
+      addressBuilding: "Gecaga Institute Building",
+      addressCity: "Nairobi, Kenya",
+    },
     required: "Bắt buộc",
     optional: "Tùy chọn",
     yes: "Có",
@@ -78,7 +86,7 @@ const vi = {
     },
     modules: {
       heading: "Mô-đun cốt lõi",
-      subheading: "Bốn mô-đun tích hợp bao phủ toàn bộ vòng đời dữ liệu tổ chức.",
+      subheading: "Năm mô-đun tích hợp bao phủ toàn bộ vòng đời dữ liệu tổ chức.",
       enrollment: {
         title: "Tuyển sinh & Thành công sinh viên",
         description:
@@ -98,6 +106,11 @@ const vi = {
         title: "Tài trợ & Nghiên cứu",
         description:
           "Theo dõi đầu tư nghiên cứu, tỷ lệ sử dụng tài trợ, ánh xạ đầu ra xuất bản và cảnh báo tuân thủ đạo đức/IRB.",
+      },
+      rankings: {
+        title: "Xếp hạng đại học",
+        description:
+          "Theo dõi hiệu suất tổ chức trên các hệ thống xếp hạng toàn cầu chính với mức sẵn sàng chỉ số, mục tiêu và bảng điều khiển trực tiếp.",
       },
     },
   },
@@ -519,8 +532,9 @@ const vi = {
         grantApplications: "Đơn xin tài trợ",
         grantConfigure: "Cấu hình tài trợ",
         grantLifecycle: "Vòng đời tài trợ",
-        rankings: "Xếp hạng",
+        rankings: "Xếp hạng đại học",
         analytics: "Phân tích",
+        executiveBriefing: "Tóm tắt điều hành",
       },
     },
     topbar: {
@@ -545,6 +559,72 @@ const vi = {
         programDistribution: "Phân bố chương trình",
         topNationalities: "Quốc tịch hàng đầu",
         complianceStatus: "Trạng thái tuân thủ",
+      },
+    },
+    vcDashboard: {
+      badge: "Phó hiệu trưởng",
+      title: "Bảng quyết định thể chế",
+      subtitle: "Tín hiệu ngoại lệ, sức khỏe danh mục và đòn bẩy lãnh đạo — không phải hàng đợi vận hành.",
+      dataAsOf: "Dữ liệu tính đến {when}",
+      openBriefing: "Mở tóm tắt điều hành đầy đủ",
+      loadError: "Không tải được chỉ số lãnh đạo",
+      status: {
+        onTarget: "Đạt mục tiêu",
+        watch: "Theo dõi",
+        actionNeeded: "Cần hành động",
+      },
+      attention: {
+        title: "Cần chú ý",
+      },
+      pulse: {
+        title: "Nhịp đập thể chế",
+        totalStudents: "Tổng sinh viên",
+        activeStudents: "{count} đang học",
+        onTrack: "Đúng hướng",
+        atRisk: "Sinh viên rủi ro",
+        atRiskShare: "{pct}% tuyển sinh",
+        feeCollection: "Thu học phí",
+        avgGpa: "GPA thể chế",
+        rankingReadiness: "Mức sẵn sàng xếp hạng",
+        vsTarget: "Mục tiêu {target}",
+      },
+      success: {
+        title: "Thành công sinh viên",
+        subtitle: "Tuân thủ, yếu tố rủi ro và giữ chân",
+        cta: "Xem sinh viên rủi ro",
+        onTrack: "Đúng hướng",
+        atRisk: "Rủi ro",
+        critical: "Nghiêm trọng",
+        finances: "Tài chính",
+        attendance: "Chuyên cần",
+        academic: "Học thuật",
+        probation: "{count} đang thử việc hoặc đình chỉ",
+        retention: "Giữ chân 1 năm {pct}%",
+        graduation: "Tốt nghiệp 4 năm {pct}%",
+      },
+      portfolio: {
+        title: "Danh mục & tiếp cận",
+        subtitle: "Tập trung chương trình và đường ống hỗ trợ",
+        ugPg: "Đại học / sau đại học",
+        international: "Sinh viên quốc tế",
+        female: "Tỷ lệ nữ",
+        aidPending: "{count} đang chờ",
+        aidCommittee: "{count} sẵn sàng cho ủy ban",
+        aidAwarded: "{count} đã trao",
+        aidCta: "Quyết định hỗ trợ",
+      },
+      trend: {
+        title: "Tuyển sinh theo năm nhập học",
+        subtitle: "Quy mô đoàn hệ từ hồ sơ SIS",
+        students: "Sinh viên",
+      },
+      rankings: {
+        title: "Xếp hạng đại học & mức sẵn sàng",
+        subtitle: "Mức sẵn sàng của thể chế trên các hệ thống xếp hạng",
+        cta: "Mở xếp hạng đại học",
+        overall: "Mức sẵn sàng tổng thể",
+        unavailable: "Chưa có dữ liệu mức sẵn sàng xếp hạng. Mở xếp hạng sau khi tải dữ liệu thể chế.",
+        grantsNote: "Tài trợ nghiên cứu: {pending} đang chờ · {approved} đã duyệt",
       },
     },
     enrollment: {
@@ -674,12 +754,39 @@ const vi = {
       performance: "Hiệu suất sinh viên",
       programs: "Phân tích chương trình",
       exportReport: "Xuất báo cáo",
+      retentionTab: "Giữ chân",
+      retention: {
+        oneYear: "Giữ chân 1 năm",
+        fourYear: "Tốt nghiệp 4 năm",
+        cohortsTracked: "{count} đoàn hệ đang theo dõi",
+        snapshot: "Ảnh chụp {date}",
+        cohortAverage: "Trung bình đoàn hệ",
+        initialSize: "Quy mô đoàn hệ ban đầu",
+        acrossSnapshots: "Trên các ảnh chụp đoàn hệ mới nhất",
+        graduated: "Đã tốt nghiệp",
+        fromTracked: "Từ các đoàn hệ đang theo dõi",
+        byCohort: "Giữ chân theo đoàn hệ",
+        byCohortSub: "Ảnh chụp mới nhất mỗi đoàn hệ nhập học",
+        retentionSeries: "Giữ chân 1 năm %",
+        graduationSeries: "Tốt nghiệp 4 năm %",
+        unavailable: "Chỉ số giữ chân theo đoàn hệ chưa sẵn có. Đồng bộ ảnh chụp để mở chế độ xem này.",
+      },
     },
     rankings: {
       title: "Xếp hạng",
       gpaRankings: "Xếp hạng điểm trung bình",
       coursePerformance: "Hiệu suất môn học",
       scholarshipRates: "Tỷ lệ thành công học bổng",
+    },
+    universityRankings: {
+      exportPdf: "Xuất PDF",
+      exportPdfTooltip: "Chọn một bảng xếp hạng và tải xuống thành báo cáo PDF riêng",
+      exportDialogTitle: "Xuất báo cáo xếp hạng",
+      exportDialogSubtitle:
+        "Chọn một hệ thống xếp hạng. Mỗi lần tải là một báo cáo riêng với tổng quan cơ sở và chi tiết mức sẵn sàng của xếp hạng đó.",
+      downloadReport: "Tải xuống",
+      reportDocumentTitle: "{institution} - báo cáo {ranking}",
+      printReportHeading: "Báo cáo mức sẵn sàng {ranking}",
     },
     support: {
       title: "Quản lý hỗ trợ sinh viên",
@@ -842,6 +949,7 @@ const vi = {
     nav: {
       dashboard: "Bảng điều khiển",
       users: "Người dùng",
+      access: "Quyền truy cập theo vai trò",
       profile: "Hồ sơ tổ chức",
       domains: "Tên miền email",
       analytics: "Phân tích",
@@ -862,6 +970,43 @@ const vi = {
         users: "Người dùng",
       },
       quickLinks: "Liên kết nhanh",
+    },
+    access: {
+      title: "Quyền truy cập theo vai trò",
+      subtitle: "Có thể chọn cả module hoặc từng mục thanh bên cho mỗi vai trò. Bảng điều khiển, hồ sơ và phân tích vẫn khả dụng.",
+      institutionCeiling: "Module đã bật cho cơ sở này",
+      institutionCeilingHint: "Do quản trị viên toàn cục thiết lập. Bạn chỉ có thể cấp quyền cho các module đã bật.",
+      roleHeading: "Quyền truy cập theo vai trò",
+      roleHint: "Chọn vai trò, đánh dấu cả module hoặc chọn từng mục. Thay đổi được lưu ngay.",
+      modulesForRole: "Quyền truy cập cho {role}",
+      moduleEnabledHint: "Hiện trên thanh bên của vai trò này khi được bật",
+      moduleDisabledByInstitution: "Chưa bật cho cơ sở này - nhờ quản trị viên toàn cục bật trước",
+      wholeModuleOn: "Đã bật cả module - gồm tất cả mục thanh bên bên dưới",
+      partialModuleOn: "Truy cập một phần - chỉ các mục đã chọn",
+      moduleOff: "Module tắt với vai trò này - đánh dấu module hoặc mục để cấp quyền",
+      itemsHint: "Hoặc chọn các mục thanh bên cụ thể:",
+      saving: "Đang lưu…",
+      saved: "Đã cập nhật quyền truy cập theo vai trò",
+      fetchError: "Không tải được cài đặt quyền truy cập theo vai trò.",
+      saveError: "Không lưu được cài đặt quyền truy cập theo vai trò.",
+      navItems: {
+        atRisk: "Sinh viên có nguy cơ",
+        students: "Sinh viên",
+        support: "Hỗ trợ sinh viên",
+        scholarships: "Học bổng",
+        financialAid: "Bảng điều khiển hỗ trợ tài chính",
+        applications: "Đơn học bổng",
+        triage: "Phân loại & xác minh",
+        decisions: "Kết quả xét duyệt và trao thưởng",
+        scholarshipOpportunities: "Cơ hội học bổng",
+        configureScholarships: "Cấu hình học bổng",
+        grants: "Tài trợ & nghiên cứu",
+        grantLifecycle: "Vòng đời tài trợ",
+        grantApplications: "Đơn tài trợ",
+        grantOpportunities: "Cơ hội tài trợ",
+        configureGrants: "Cấu hình tài trợ",
+        rankings: "Xếp hạng đại học",
+      },
     },
     users: {
       title: "Quản lý người dùng",
@@ -996,6 +1141,100 @@ const vi = {
     verify: "Xác minh & Gửi",
     description: "Vui lòng xác minh thư giới thiệu của bạn bên dưới.",
   },
+  // ─── FAQs ──────────────────────────────────────────────────────────────────
+  faqs: {
+    title: "Câu hỏi thường gặp",
+    subtitle:
+      "Connected intelligence cho các trường đại học - cách TemplumIS biến dữ liệu tổ chức phân tán thành thông tin chiến lược phục vụ lập kế hoạch, hiệu suất, kiểm định và xếp hạng.",
+    categories: {
+      about: {
+        title: "Về TemplumIS",
+        intro: "Nền tảng là gì và vì sao các cơ sở giáo dục áp dụng.",
+        items: {
+          whatIs: {
+            q: "TemplumIS là gì?",
+            a: "TemplumIS là nền tảng trí tuệ đại học do TCC Africa thiết kế nhằm giúp các cơ sở giáo dục đại học biến dữ liệu tổ chức phân tán thành trí tuệ có thể hành động phục vụ ra quyết định chiến lược, quản lý hiệu suất, kiểm định và xếp hạng đại học.\n\nNền tảng cung cấp lớp trí tuệ tập trung tích hợp dữ liệu từ toàn bộ hệ sinh thái đại học, để lãnh đạo tiếp cận thông tin đáng tin cậy qua một nền tảng duy nhất.",
+          },
+          problem: {
+            q: "TemplumIS giải quyết thách thức nào?",
+            a: "Các trường đại học ngày càng phải cung cấp dữ liệu chính xác, kịp thời cho lập kế hoạch tổ chức, đảm bảo chất lượng, báo cáo chính phủ, quốc tế hóa, hiệu suất nghiên cứu và các khung xếp hạng toàn cầu.\n\nTrên thực tế, phần lớn thông tin đó vẫn phân tán giữa các văn phòng, khoa/phòng ban và hệ thống độc lập. Thu thập và báo cáo trở nên tốn thời gian và nguồn lực. TemplumIS hợp nhất bối cảnh này để các cơ sở làm việc từ một nguồn sự thật nhất quán.",
+          },
+          connectedIntelligence: {
+            q: "“Connected Intelligence for Universities” nghĩa là gì?",
+            a: "Nghĩa là TemplumIS không thay thế mọi hệ thống vận hành trong một sớm một chiều. Thay vào đó, nền tảng kết nối các nguồn học thuật, nghiên cứu, quốc tế hóa, tài chính, đảm bảo chất lượng và thông tin sinh viên thành một môi trường thống nhất - biến hồ sơ vận hành thành trí tuệ sẵn sàng cho lãnh đạo.",
+          },
+        },
+      },
+      capabilities: {
+        title: "Năng lực nền tảng",
+        intro: "Cách TemplumIS hỗ trợ vận hành hàng ngày và giám sát chiến lược.",
+        items: {
+          consolidate: {
+            q: "TemplumIS có thể hợp nhất những loại dữ liệu tổ chức nào?",
+            a: "TemplumIS hợp nhất dữ liệu từ toàn bộ hệ sinh thái đại học - bao gồm hồ sơ học thuật, hoạt động nghiên cứu, quốc tế hóa, tài chính, đảm bảo chất lượng và hệ thống thông tin sinh viên - vào một môi trường thống nhất phục vụ phân tích và báo cáo.",
+          },
+          reporting: {
+            q: "TemplumIS giảm gánh nặng báo cáo tổ chức như thế nào?",
+            a: "Bằng cách tập trung các chỉ số và tự động hóa thu thập khi có thể, TemplumIS giảm nỗ lực hành chính khi lắp ráp báo cáo cho lập kế hoạch, nộp hồ sơ theo quy định, đảm bảo chất lượng và các đợt xếp hạng. Nhóm dành ít thời gian đuổi theo bảng tính hơn và nhiều thời gian hơn để xác thực cũng như hành động dựa trên thông tin.",
+          },
+          leadership: {
+            q: "Lãnh đạo đại học thấy gì trên nền tảng?",
+            a: "Lãnh đạo truy cập bảng điều khiển thời gian thực và các chỉ số hiệu suất hỗ trợ ra quyết định dựa trên bằng chứng. Nền tảng củng cố lập kế hoạch tổ chức với tầm nhìn rõ hơn về xu hướng hiệu suất và, khi được cấu hình, phân tích dự đoán để dự báo rủi ro và cơ hội.",
+          },
+          studentResearch: {
+            q: "TemplumIS hỗ trợ thành công của sinh viên và hiệu suất nghiên cứu như thế nào?",
+            a: "Về phía sinh viên, các cơ sở có thể theo dõi tuyển sinh, duy trì, tiến trình, tốt nghiệp, tín hiệu việc làm và kết quả học tập.\n\nVề phía nghiên cứu, TemplumIS giúp giám sát đầu ra, tài trợ, hợp tác, trích dẫn, bằng sáng chế và hoạt động đổi mới - liên kết đầu tư nghiên cứu với kết quả tổ chức có thể nhìn thấy.",
+          },
+          accreditation: {
+            q: "TemplumIS có hỗ trợ kiểm định và đảm bảo chất lượng không?",
+            a: "Có. Nền tảng được thiết kế để hỗ trợ kiểm định, đảm bảo chất lượng và báo cáo theo quy định bằng cách giữ bằng chứng nền tảng có tổ chức, cập nhật và dễ truy xuất hơn khi đến chu kỳ đánh giá.",
+          },
+        },
+      },
+      rankings: {
+        title: "Xếp hạng đại học",
+        intro: "Sẵn sàng xếp hạng và giám sát hiệu suất liên tục.",
+        items: {
+          readiness: {
+            q: "TemplumIS hỗ trợ sẵn sàng xếp hạng đại học như thế nào?",
+            a: "Một thế mạnh cốt lõi của TemplumIS là sẵn sàng xếp hạng và giám sát hiệu suất. Các cơ sở có thể thu thập, tổ chức, xác thực và quản lý một cách có hệ thống dữ liệu cần thiết cho các khung xếp hạng chính - thay vì lắp ráp hồ sơ nộp từ đầu mỗi năm qua nhiều văn phòng.",
+          },
+          frameworks: {
+            q: "Các cơ sở có thể chuẩn bị cho khung xếp hạng nào?",
+            a: "TemplumIS hỗ trợ quản lý chỉ số có cấu trúc cho các khung toàn cầu và khu vực chính, bao gồm:\n\n• QS World University Rankings\n• Times Higher Education (THE) Rankings\n• Webometrics Rankings\n• Academic Ranking of World Universities (ARWU / Shanghai)\n• Các khung xếp hạng khu vực và quốc gia\n\nĐiều này giúp các cơ sở cải thiện tính nhất quán và mức độ sẵn sàng cho các chu kỳ xếp hạng hàng năm.",
+          },
+          repository: {
+            q: "Dữ liệu xếp hạng được quản lý khác đi như thế nào với TemplumIS?",
+            a: "Thay vì dựa vào nhiều văn phòng để biên soạn thủ công hồ sơ xếp hạng, TemplumIS cung cấp kho lưu trữ tổ chức có cấu trúc nơi các chỉ số liên quan đến xếp hạng được ghi nhận, cập nhật và xác minh liên tục.\n\nCách tiếp cận đó giảm nỗ lực báo cáo đồng thời nâng cao chất lượng dữ liệu, tính nhất quán và mức độ sẵn sàng của tổ chức - củng cố tầm nhìn toàn cầu, năng lực cạnh tranh và danh tiếng theo thời gian.",
+          },
+        },
+      },
+      gettingStarted: {
+        title: "Bắt đầu",
+        intro: "Truy cập, vai trò, buổi demo và hỗ trợ.",
+        items: {
+          whoUses: {
+            q: "Ai sử dụng TemplumIS?",
+            a: "TemplumIS phục vụ toàn bộ cộng đồng tổ chức qua các cổng theo vai trò: sinh viên, phòng đăng ký và dịch vụ sinh viên, văn phòng học bổng và hỗ trợ tài chính, văn phòng nghiên cứu, người đánh giá, cố vấn và nhà tài trợ, cũng như quản trị viên tổ chức hoặc toàn cục.",
+          },
+          accounts: {
+            q: "Người dùng nhận quyền truy cập như thế nào?",
+            a: "Sinh viên và nhân viên thường đăng ký hoặc được mời khi tổ chức của họ đã được cấp trên nền tảng. Quản trị viên tổ chức và toàn cục sử dụng trang đăng nhập riêng. Quyền truy cập luôn giới hạn theo vai trò của người dùng và các mô-đun được bật cho tổ chức đó.",
+          },
+          demo: {
+            q: "Chúng tôi có thể yêu cầu buổi demo không?",
+            a: "Có. Các cơ sở muốn tìm hiểu cách TemplumIS hỗ trợ ưu tiên chiến lược và mục tiêu xếp hạng có thể yêu cầu cuộc họp ngắn hoặc buổi demo. Liên hệ qua thông tin bên dưới để xếp lịch trao đổi với đội ngũ TemplumIS.",
+          },
+          help: {
+            q: "Tôi tìm tài liệu hoặc liên hệ hỗ trợ ở đâu?",
+            aBefore: "Hướng dẫn sản phẩm và tài liệu kỹ thuật có trong ",
+            aAfter: ". Đối với yêu cầu của tổ chức, liên hệ Training Centre in Communication (TCC Africa), Gecaga Institute Building, Nairobi, Kenya.",
+          },
+        },
+      },
+    },
+  },
+
 };
 
 export default vi;

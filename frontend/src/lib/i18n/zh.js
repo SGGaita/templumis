@@ -46,6 +46,14 @@ const zh = {
     termsOfService: "服务条款",
     contact: "联系我们",
     documentation: "文档",
+    footer: {
+      usefulLinks: "实用链接",
+      home: "首页",
+      faqs: "常见问题",
+      addressOrg: "Training Centre in Communication",
+      addressBuilding: "Gecaga Institute Building",
+      addressCity: "肯尼亚内罗毕",
+    },
     required: "必填",
     optional: "可选",
     yes: "是",
@@ -78,7 +86,7 @@ const zh = {
     },
     modules: {
       heading: "核心模块",
-      subheading: "涵盖完整机构数据生命周期的四个集成模块。",
+      subheading: "涵盖完整机构数据生命周期的五个集成模块。",
       enrollment: {
         title: "招生与学生成功",
         description:
@@ -98,6 +106,11 @@ const zh = {
         title: "资助与研究",
         description:
           "跟踪研究投资、资助消耗率、出版物产出映射和伦理/IRB合规警报。",
+      },
+      rankings: {
+        title: "大学排名",
+        description:
+          "通过指标就绪度、目标与实时仪表板，跟踪机构在主要全球排名体系中的表现。",
       },
     },
   },
@@ -519,8 +532,9 @@ const zh = {
         grantApplications: "资助申请",
         grantConfigure: "资助配置",
         grantLifecycle: "资助生命周期",
-        rankings: "排名",
+        rankings: "大学排名",
         analytics: "分析",
+        executiveBriefing: "高管简报",
       },
     },
     topbar: {
@@ -545,6 +559,72 @@ const zh = {
         programDistribution: "项目分布",
         topNationalities: "主要国籍",
         complianceStatus: "合规状态",
+      },
+    },
+    vcDashboard: {
+      badge: "副校长",
+      title: "机构决策仪表板",
+      subtitle: "例外信号、组合健康与领导杠杆——而非运营队列。",
+      dataAsOf: "数据截至 {when}",
+      openBriefing: "打开完整高管简报",
+      loadError: "无法加载领导指标",
+      status: {
+        onTarget: "达标",
+        watch: "关注",
+        actionNeeded: "需要行动",
+      },
+      attention: {
+        title: "需要关注",
+      },
+      pulse: {
+        title: "机构脉搏",
+        totalStudents: "学生总数",
+        activeStudents: "{count} 在读",
+        onTrack: "进展顺利",
+        atRisk: "高风险学生",
+        atRiskShare: "占入学的 {pct}%",
+        feeCollection: "学费收缴",
+        avgGpa: "机构 GPA",
+        rankingReadiness: "排名就绪度",
+        vsTarget: "目标 {target}",
+      },
+      success: {
+        title: "学生成功",
+        subtitle: "合规构成、风险驱动与留存",
+        cta: "查看高风险",
+        onTrack: "进展顺利",
+        atRisk: "有风险",
+        critical: "严重",
+        finances: "财务",
+        attendance: "出勤",
+        academic: "学业",
+        probation: "{count} 人留校察看或停学",
+        retention: "一年留存 {pct}%",
+        graduation: "四年毕业 {pct}%",
+      },
+      portfolio: {
+        title: "组合与可及性",
+        subtitle: "专业集中度与资助管道",
+        ugPg: "本科 / 研究生",
+        international: "国际学生",
+        female: "女性占比",
+        aidPending: "{count} 待处理",
+        aidCommittee: "{count} 待委员会",
+        aidAwarded: "{count} 已授予",
+        aidCta: "资助决策",
+      },
+      trend: {
+        title: "按入学年份的招生",
+        subtitle: "来自 SIS 记录的队列规模",
+        students: "学生",
+      },
+      rankings: {
+        title: "大学排名与就绪度",
+        subtitle: "各排名体系中的机构就绪度",
+        cta: "打开大学排名",
+        overall: "总体就绪度",
+        unavailable: "排名就绪数据不可用。上传机构排名数据后打开排名。",
+        grantsNote: "科研资助：{pending} 待处理 · {approved} 已批准",
       },
     },
     enrollment: {
@@ -674,12 +754,39 @@ const zh = {
       performance: "学生表现",
       programs: "项目分析",
       exportReport: "导出报告",
+      retentionTab: "留存",
+      retention: {
+        oneYear: "一年留存率",
+        fourYear: "四年毕业率",
+        cohortsTracked: "已跟踪 {count} 个队列",
+        snapshot: "快照 {date}",
+        cohortAverage: "队列平均",
+        initialSize: "初始队列规模",
+        acrossSnapshots: "跨最新队列快照",
+        graduated: "已毕业",
+        fromTracked: "来自已跟踪队列",
+        byCohort: "按队列留存",
+        byCohortSub: "每个入学队列的最新快照",
+        retentionSeries: "一年留存 %",
+        graduationSeries: "四年毕业 %",
+        unavailable: "队列留存指标尚不可用。请播种或同步留存快照以解锁此视图。",
+      },
     },
     rankings: {
       title: "排名",
       gpaRankings: "GPA排名",
       coursePerformance: "课程表现",
       scholarshipRates: "奖学金成功率",
+    },
+    universityRankings: {
+      exportPdf: "导出 PDF",
+      exportPdfTooltip: "选择一个排名并下载为独立的 PDF 报告",
+      exportDialogTitle: "导出排名报告",
+      exportDialogSubtitle:
+        "选择一个排名体系。每次下载均为单独报告，包含机构概览及该排名的就绪详情。",
+      downloadReport: "下载",
+      reportDocumentTitle: "{institution} - {ranking} 报告",
+      printReportHeading: "{ranking} 就绪报告",
     },
     support: {
       title: "学生支持管理",
@@ -842,6 +949,7 @@ const zh = {
     nav: {
       dashboard: "仪表板",
       users: "用户",
+      access: "角色访问",
       profile: "机构资料",
       domains: "邮箱域名",
       analytics: "分析",
@@ -862,6 +970,43 @@ const zh = {
         users: "用户",
       },
       quickLinks: "快速链接",
+    },
+    access: {
+      title: "角色访问",
+      subtitle: "可为每个角色选择整个模块或特定侧边栏项。仪表板、个人资料和分析始终可用。",
+      institutionCeiling: "本机构已启用的模块",
+      institutionCeilingHint: "由全局管理员设置。您只能授予已开启模块的访问权限。",
+      roleHeading: "按角色访问",
+      roleHint: "选择角色，勾选整个模块或单独选择侧边栏项。更改会立即保存。",
+      modulesForRole: "{role} 的访问权限",
+      moduleEnabledHint: "启用后显示在该角色的教职工侧边栏",
+      moduleDisabledByInstitution: "本机构未启用 - 请先请全局管理员开启",
+      wholeModuleOn: "已启用整个模块 - 包含下方全部侧边栏项",
+      partialModuleOn: "部分访问 - 仅所选侧边栏项",
+      moduleOff: "该角色未启用此模块 - 勾选模块或单项以授予访问",
+      itemsHint: "或选择特定侧边栏项：",
+      saving: "保存中…",
+      saved: "角色访问已更新",
+      fetchError: "无法加载角色访问设置。",
+      saveError: "无法保存角色访问设置。",
+      navItems: {
+        atRisk: "风险学生",
+        students: "学生",
+        support: "学生支持",
+        scholarships: "奖学金",
+        financialAid: "助学金仪表板",
+        applications: "奖学金申请",
+        triage: "分拣与核验",
+        decisions: "评审结果与奖励",
+        scholarshipOpportunities: "奖学金机会",
+        configureScholarships: "配置奖学金",
+        grants: "资助与研究",
+        grantLifecycle: "资助生命周期",
+        grantApplications: "资助申请",
+        grantOpportunities: "资助机会",
+        configureGrants: "配置资助",
+        rankings: "大学排名",
+      },
     },
     users: {
       title: "用户管理",
@@ -996,6 +1141,100 @@ const zh = {
     verify: "验证并提交",
     description: "请在下方验证您的推荐信。",
   },
+  // ─── FAQs ──────────────────────────────────────────────────────────────────
+  faqs: {
+    title: "常见问题",
+    subtitle:
+      "面向大学的互联智能-TemplumIS 如何将分散的机构数据转化为战略洞察，服务于规划、绩效、认证与排名。",
+    categories: {
+      about: {
+        title: "关于 TemplumIS",
+        intro: "平台是什么，以及机构为何采用它。",
+        items: {
+          whatIs: {
+            q: "什么是 TemplumIS？",
+            a: "TemplumIS 是由 TCC Africa 设计的大学智能平台，帮助高等教育机构将分散的机构数据转化为可行动的智能，用于战略决策、绩效管理、认证与大学排名。\n\n它提供集中式智能层，整合大学生态系统中的数据，使领导层可通过单一平台获取可靠洞察。",
+          },
+          problem: {
+            q: "TemplumIS 解决什么挑战？",
+            a: "大学日益需要为机构规划、质量保障、政府报告、国际化、研究绩效以及全球排名框架提供准确、及时的数据。\n\n实际上，大量信息仍分散在各办公室、院系与独立系统中。采集与报告既耗时又耗资源。TemplumIS 整合这一局面，使机构能够基于统一、连贯的真实数据源开展工作。",
+          },
+          connectedIntelligence: {
+            q: "“Connected Intelligence for Universities” 是什么意思？",
+            a: "这意味着 TemplumIS 不会一夜之间替换所有业务系统。相反，它将学术、研究、国际化、财务、质量保障与学生信息来源连接至统一环境-把运营记录转化为可供领导层使用的智能。",
+          },
+        },
+      },
+      capabilities: {
+        title: "平台能力",
+        intro: "TemplumIS 如何支持日常运营与战略监管。",
+        items: {
+          consolidate: {
+            q: "TemplumIS 可以汇聚哪些机构数据？",
+            a: "TemplumIS 整合大学生态系统中的数据-包括学术记录、研究活动、国际化、财务、质量保障与学生信息系统-形成统一的分析与报告环境。",
+          },
+          reporting: {
+            q: "TemplumIS 如何减轻机构报告负担？",
+            a: "通过集中指标并在可能时自动化采集，TemplumIS 减少为规划、监管提交、质量保障与排名工作汇编报告的行政投入。团队减少追逐电子表格的时间，把更多精力用于验证洞察并据此行动。",
+          },
+          leadership: {
+            q: "大学领导在平台中能看到什么？",
+            a: "领导可访问实时仪表盘与绩效指标，支持基于证据的决策。平台以更清晰的绩效趋势可见性强化机构规划；在配置启用时，还可提供预测分析以预判风险与机遇。",
+          },
+          studentResearch: {
+            q: "TemplumIS 如何支持学生成功与研究绩效？",
+            a: "在学生方面，机构可跟踪入学、留存、升学、毕业、就业信号与学业表现。\n\n在研究方面，TemplumIS 帮助监测产出、资助、合作、引用、专利与创新活动-将研究投入与可见的机构成果相连接。",
+          },
+          accreditation: {
+            q: "TemplumIS 是否支持认证与质量保障？",
+            a: "是的。平台旨在支持认证、质量保障与监管报告，使底层证据保持有序、最新，并在评审周期到来时更易于检索。",
+          },
+        },
+      },
+      rankings: {
+        title: "大学排名",
+        intro: "排名准备与持续绩效监测。",
+        items: {
+          readiness: {
+            q: "TemplumIS 如何支持大学排名准备？",
+            a: "TemplumIS 的核心优势之一是排名准备与绩效监测。机构可系统性地收集、整理、验证并管理主要排名框架所需数据-而不是每年在多个办公室从零拼凑提交材料。",
+          },
+          frameworks: {
+            q: "机构可为哪些排名框架做准备？",
+            a: "TemplumIS 支持主要全球与区域框架的结构化指标管理，包括：\n\n• QS World University Rankings\n• Times Higher Education (THE) Rankings\n• Webometrics Rankings\n• Academic Ranking of World Universities (ARWU / Shanghai)\n• 区域与国家级排名框架\n\n这有助于机构提升年度排名周期的一致性与准备度。",
+          },
+          repository: {
+            q: "使用 TemplumIS 后，排名数据管理有何不同？",
+            a: "TemplumIS 不再依赖多个办公室手动汇编排名提交材料，而是提供结构化的机构知识库，持续捕获、更新并核验与排名相关的指标。\n\n该方法在降低报告工作量的同时提升数据质量、一致性与机构准备度-随时间增强全球可见度、竞争力与声誉。",
+          },
+        },
+      },
+      gettingStarted: {
+        title: "开始使用",
+        intro: "访问权限、角色、演示与支持。",
+        items: {
+          whoUses: {
+            q: "谁使用 TemplumIS？",
+            a: "TemplumIS 通过基于角色的门户服务整个机构社区：学生、注册与学生服务、奖学金与资助办公室、研究办公室、评审人员、顾问与资助方，以及机构或全局管理员。",
+          },
+          accounts: {
+            q: "用户如何获得访问权限？",
+            a: "学生与教职员工通常在机构于平台开通后自行注册或受邀加入。机构与全局管理员使用专用登录页。访问权限始终限定于用户角色以及该机构已启用的模块。",
+          },
+          demo: {
+            q: "我们可以申请演示吗？",
+            a: "可以。希望了解 TemplumIS 如何支持战略重点与排名目标的机构，可申请简短会议或演示。请通过下方联系方式安排与 TemplumIS 团队的交流。",
+          },
+          help: {
+            q: "在哪里可以找到文档或联系支持？",
+            aBefore: "产品指南与技术参考资料可在 ",
+            aAfter: " 中获取。机构咨询请联系 Training Centre in Communication (TCC Africa)，Gecaga Institute Building, Nairobi, Kenya。",
+          },
+        },
+      },
+    },
+  },
+
 };
 
 export default zh;

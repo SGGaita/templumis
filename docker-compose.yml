@@ -33,8 +33,9 @@ services:
       SMTP_USER: ${SMTP_USER}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       FROM_EMAIL: ${FROM_EMAIL:-TemplumIS <no-reply@templumis.org>}
+      AHREFS_API_TOKEN: ${AHREFS_API_TOKEN:-}
     ports:
-      # Host 8001: dacoris_backend already binds 8000 on this machine
+      # Host 8001: avoid colliding with another local service on 8000
       - "8001:8000"
     volumes:
       - ./backend:/app

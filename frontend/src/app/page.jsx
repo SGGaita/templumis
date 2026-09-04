@@ -18,6 +18,7 @@ import SchoolIcon from "@mui/icons-material/School";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import ScienceIcon from "@mui/icons-material/Science";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import LoginIcon from "@mui/icons-material/Login";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import SiteFooter from "@/components/SiteFooter";
@@ -46,6 +47,11 @@ export default function HomePage() {
       title: t.home.modules.grants.title,
       description: t.home.modules.grants.description,
       icon: <ScienceIcon sx={{ fontSize: 48, color: "secondary.main" }} />,
+    },
+    {
+      title: t.home.modules.rankings.title,
+      description: t.home.modules.rankings.description,
+      icon: <EmojiEventsIcon sx={{ fontSize: 48, color: "primary.main" }} />,
     },
   ];
 
@@ -134,7 +140,7 @@ export default function HomePage() {
 
         <Grid container spacing={3}>
           {modules.map((mod) => (
-            <Grid item xs={12} sm={6} md={3} key={mod.title}>
+            <Grid item xs={12} sm={6} md={4} key={mod.title}>
               <Card
                 sx={{
                   height: "100%",
