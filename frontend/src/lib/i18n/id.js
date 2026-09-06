@@ -77,6 +77,8 @@ const id = {
     nav: {
       loginBtn: "Masuk",
       signupBtn: "Daftar",
+      openMenu: "Buka menu",
+      closeMenu: "Tutup menu",
     },
     hero: {
       tagline: "Memberdayakan pendidikan tinggi yang lebih cerdas",

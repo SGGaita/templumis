@@ -77,6 +77,8 @@ const ar = {
     nav: {
       loginBtn: "تسجيل الدخول",
       signupBtn: "إنشاء حساب",
+      openMenu: "فتح القائمة",
+      closeMenu: "إغلاق القائمة",
     },
     hero: {
       tagline: "تمكين التعليم العالي الذكي",

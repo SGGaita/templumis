@@ -77,6 +77,8 @@ const sw = {
     nav: {
       loginBtn: "Ingia",
       signupBtn: "Jisajili",
+      openMenu: "Fungua menyu",
+      closeMenu: "Funga menyu",
     },
     hero: {
       tagline: "Kuimarisha elimu ya juu kwa akili",

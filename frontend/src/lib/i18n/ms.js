@@ -77,6 +77,8 @@ const ms = {
     nav: {
       loginBtn: "Log Masuk",
       signupBtn: "Daftar",
+      openMenu: "Buka menu",
+      closeMenu: "Tutup menu",
     },
     hero: {
       tagline: "Memperkasa pendidikan tinggi yang lebih pintar",

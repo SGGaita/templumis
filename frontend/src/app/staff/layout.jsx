@@ -115,6 +115,10 @@ function StaffLayoutInner({ children }) {
     }
   }, [user, pathname, router]);
 
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   const { t } = useLanguage();
   const navGroups = user ? getStaffNavGroups(user) : [];
   const currentPage = findStaffNavPage(pathname, searchParams, user);
@@ -239,8 +243,8 @@ function StaffLayoutInner({ children }) {
           borderBottom: `1px solid ${ST.colors.border}`,
         }}
       >
-        <Toolbar>
-          <IconButton edge="start" onClick={() => setMobileOpen(!mobileOpen)} sx={{ mr: 2, display: { sm: "none" } }}>
+        <Toolbar sx={{ minHeight: { xs: 56, sm: 64 }, px: { xs: 1, sm: 2 }, gap: { xs: 0.5, sm: 1 } }}>
+          <IconButton edge="start" onClick={() => setMobileOpen(!mobileOpen)} sx={{ mr: { xs: 0.5, sm: 1 }, display: { sm: "none" } }} aria-label={t.home.nav.openMenu}>
             <MenuIcon />
           </IconButton>
           <InstitutionNavbarBrand
@@ -249,10 +253,10 @@ function StaffLayoutInner({ children }) {
             subtitle={currentPage?.text || t.staff.topbar.dashboard}
             fallbackName={t.staff.portal}
           />
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.25, sm: 1 }, flexShrink: 0 }}>
             <LanguageToggle iconOnly />
             <Tooltip title={t.staff.topbar.notifications}>
-              <IconButton>
+              <IconButton size="small">
                 <Badge badgeContent={4} color="error">
                   <NotificationsIcon sx={{ color: ST.colors.textSecondary }} />
                 </Badge>
@@ -309,9 +313,9 @@ function StaffLayoutInner({ children }) {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          p: { xs: 2, sm: 3 },
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          mt: 8,
+          mt: { xs: 7, sm: 8 },
           bgcolor: ST.colors.bg,
           minHeight: "100vh",
         }}

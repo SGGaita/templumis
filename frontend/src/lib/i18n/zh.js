@@ -77,6 +77,8 @@ const zh = {
     nav: {
       loginBtn: "登录",
       signupBtn: "注册",
+      openMenu: "打开菜单",
+      closeMenu: "关闭菜单",
     },
     hero: {
       tagline: "赋能更智慧的高等教育",

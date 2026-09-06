@@ -129,6 +129,10 @@ export default function StudentLayout({ children }) {
     }
   }, [user, pathname, router]);
 
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   const student = profile?.student ?? {};
   const cohortLevel = inferStudentLevel(student);
   const studentModules = normalizeEnabledModules(user?.enabled_modules).student;
@@ -238,8 +242,8 @@ export default function StudentLayout({ children }) {
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: ST.colors.bg }}>
       <AppBar position="fixed" elevation={0} sx={{ width: { sm: `calc(100% - ${drawerWidth}px)` }, ml: { sm: `${drawerWidth}px` }, bgcolor: "white", color: ST.colors.textPrimary, borderBottom: `1px solid ${ST.colors.border}` }}>
-        <Toolbar>
-          <IconButton edge="start" onClick={() => setMobileOpen(!mobileOpen)} sx={{ mr: 2, display: { sm: "none" } }}>
+        <Toolbar sx={{ minHeight: { xs: 56, sm: 64 }, px: { xs: 1, sm: 2 }, gap: { xs: 0.5, sm: 1 } }}>
+          <IconButton edge="start" onClick={() => setMobileOpen(!mobileOpen)} sx={{ mr: { xs: 0.5, sm: 1 }, display: { sm: "none" } }} aria-label={t.home.nav.openMenu}>
             <MenuIcon />
           </IconButton>
           <InstitutionNavbarBrand
@@ -248,10 +252,10 @@ export default function StudentLayout({ children }) {
             subtitle={currentPage?.text || t.student.portal}
             fallbackName={t.student.portal}
           />
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.25, sm: 1 }, flexShrink: 0 }}>
             <LanguageToggle iconOnly />
             <Tooltip title={t.student.topbar.notifications}>
-              <IconButton>
+              <IconButton size="small">
                 <Badge badgeContent={2} color="error">
                   <NotificationsIcon sx={{ color: ST.colors.textSecondary }} />
                 </Badge>
@@ -295,7 +299,7 @@ export default function StudentLayout({ children }) {
         </Drawer>
       </Box>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` }, mt: 8, bgcolor: ST.colors.bg, minHeight: "100vh" }}>
+      <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, sm: 3 }, width: { sm: `calc(100% - ${drawerWidth}px)` }, mt: { xs: 7, sm: 8 }, bgcolor: ST.colors.bg, minHeight: "100vh" }}>
         {children}
       </Box>
     </Box>

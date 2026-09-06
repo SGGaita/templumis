@@ -77,6 +77,8 @@ const en = {
     nav: {
       loginBtn: "Login",
       signupBtn: "Sign up",
+      openMenu: "Open menu",
+      closeMenu: "Close menu",
     },
     hero: {
       tagline: "Powering smarter higher education",

@@ -77,6 +77,8 @@ const vi = {
     nav: {
       loginBtn: "Đăng nhập",
       signupBtn: "Đăng ký",
+      openMenu: "Mở menu",
+      closeMenu: "Đóng menu",
     },
     hero: {
       tagline: "Trao quyền cho giáo dục đại học thông minh hơn",

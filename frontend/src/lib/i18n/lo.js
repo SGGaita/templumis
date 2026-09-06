@@ -77,6 +77,8 @@ const lo = {
     nav: {
       loginBtn: "ເຂົ້າສູ່ລະບົບ",
       signupBtn: "ລົງທະບຽນ",
+      openMenu: "ເປີດເມນູ",
+      closeMenu: "ປິດເມນູ",
     },
     hero: {
       tagline: "ສ້າງພະລັງການສຶກສາລະດັບສູງທີ່ສະຫລາດຂຶ້ນ",

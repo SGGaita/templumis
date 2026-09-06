@@ -1,20 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
-import Button from "@mui/material/Button";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import MuiLink from "@mui/material/Link";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import BrandLogo from "@/components/BrandLogo";
-import LanguageToggle from "@/components/LanguageToggle";
+import PublicNavbar from "@/components/PublicNavbar";
 import SiteFooter from "@/components/SiteFooter";
 import { BRAND } from "@/lib/brand";
 import { useLanguage } from "@/lib/language-context";
@@ -68,34 +63,12 @@ function FaqAnswer({ item, documentationLabel }) {
 }
 
 export default function FaqsPage() {
-  const router = useRouter();
   const { t } = useLanguage();
   const L = t.faqs;
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", display: "flex", flexDirection: "column" }}>
-      <AppBar position="static" color="default" elevation={1}>
-        <Toolbar
-          sx={{
-            minHeight: 88,
-            py: 1.5,
-            px: { xs: 2, sm: 3 },
-            justifyContent: "space-between",
-            gap: 2,
-          }}
-        >
-          <BrandLogo height={64} format="png" onClick={() => router.push("/")} />
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, ml: "auto", flexShrink: 0 }}>
-            <LanguageToggle />
-            <Button variant="text" onClick={() => router.push("/documentation")} sx={{ fontWeight: 600 }}>
-              {t.common.documentation}
-            </Button>
-            <Button variant="outlined" onClick={() => router.push("/login")}>
-              {t.home.nav.loginBtn}
-            </Button>
-          </Box>
-        </Toolbar>
-      </AppBar>
+      <PublicNavbar />
 
       <Box sx={{ bgcolor: BRAND.navy, color: "white", py: 5, textAlign: "center" }}>
         <Container maxWidth="md">

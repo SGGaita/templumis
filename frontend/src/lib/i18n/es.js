@@ -77,6 +77,8 @@ const es = {
     nav: {
       loginBtn: "Iniciar sesión",
       signupBtn: "Registrarse",
+      openMenu: "Abrir menú",
+      closeMenu: "Cerrar menú",
     },
     hero: {
       tagline: "Potenciando la educación superior inteligente",

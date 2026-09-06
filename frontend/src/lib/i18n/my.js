@@ -77,6 +77,8 @@ const my = {
     nav: {
       loginBtn: "ဝင်မည်",
       signupBtn: "စာရင်းသွင်းမည်",
+      openMenu: "မီနူးဖွင့်ရန်",
+      closeMenu: "မီနူးပိတ်ရန်",
     },
     hero: {
       tagline: "ပညာရေးကို ပို၍ကောင်းမွန်စေသော စွမ်းအား",

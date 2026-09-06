@@ -77,6 +77,8 @@ const hi = {
     nav: {
       loginBtn: "लॉगिन",
       signupBtn: "साइन अप करें",
+      openMenu: "मेनू खोलें",
+      closeMenu: "मेनू बंद करें",
     },
     hero: {
       tagline: "स्मार्ट उच्च शिक्षा को सशक्त बनाना",

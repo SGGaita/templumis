@@ -77,6 +77,8 @@ const th = {
     nav: {
       loginBtn: "เข้าสู่ระบบ",
       signupBtn: "ลงทะเบียน",
+      openMenu: "เปิดเมนู",
+      closeMenu: "ปิดเมนู",
     },
     hero: {
       tagline: "เสริมพลังอุดมศึกษาที่ฉลาดขึ้น",

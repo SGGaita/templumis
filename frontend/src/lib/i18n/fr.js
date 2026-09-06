@@ -77,6 +77,8 @@ const fr = {
     nav: {
       loginBtn: "Connexion",
       signupBtn: "S'inscrire",
+      openMenu: "Ouvrir le menu",
+      closeMenu: "Fermer le menu",
     },
     hero: {
       tagline: "Alimenter l'enseignement supérieur intelligent",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
@@ -51,6 +51,10 @@ export default function GlobalAdminLayout({ children }) {
   ];
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -122,26 +126,29 @@ export default function GlobalAdminLayout({ children }) {
           boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
         }}
       >
-        <Toolbar>
+        <Toolbar sx={{ minHeight: { xs: 56, sm: 64 }, px: { xs: 1, sm: 2 }, gap: 0.5 }}>
           <IconButton
             color="inherit"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: "none" } }}
+            sx={{ mr: { xs: 0.5, sm: 1 }, display: { sm: "none" } }}
+            aria-label={t.home.nav.openMenu}
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 600 }}>
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 600, minWidth: 0 }}>
             {GA.portal}
           </Typography>
-          <LanguageToggle iconOnly />
-          <Tooltip title={t.common.account}>
-            <IconButton onClick={handleMenuOpen} sx={{ p: 0 }}>
-              <Avatar sx={{ bgcolor: "primary.main" }}>
-                {user?.full_name?.charAt(0) || "A"}
-              </Avatar>
-            </IconButton>
-          </Tooltip>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexShrink: 0 }}>
+            <LanguageToggle iconOnly />
+            <Tooltip title={t.common.account}>
+              <IconButton onClick={handleMenuOpen} sx={{ p: 0 }}>
+                <Avatar sx={{ bgcolor: "primary.main", width: 34, height: 34 }}>
+                  {user?.full_name?.charAt(0) || "A"}
+                </Avatar>
+              </IconButton>
+            </Tooltip>
+          </Box>
           <Menu
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}

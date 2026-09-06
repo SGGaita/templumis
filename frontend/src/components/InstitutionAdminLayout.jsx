@@ -80,6 +80,10 @@ export default function InstitutionAdminLayout({ children }) {
     }
   }, [user, pathname, router]);
 
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   const handleLogout = () => {
     logout();
     router.push("/institution/login");
@@ -172,8 +176,8 @@ export default function InstitutionAdminLayout({ children }) {
 
       <AppBar position="fixed" elevation={0}
         sx={{ width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` }, ml: { sm: `${DRAWER_WIDTH}px` }, bgcolor: "white", borderBottom: `1px solid ${ST.colors.border}` }}>
-        <Toolbar sx={{ minHeight: { xs: "56px !important", sm: "64px !important" } }}>
-          <IconButton onClick={() => setMobileOpen(true)} sx={{ mr: 2, display: { sm: "none" }, color: ST.colors.textPrimary }}>
+        <Toolbar sx={{ minHeight: { xs: "56px !important", sm: "64px !important" }, px: { xs: 1, sm: 2 }, gap: { xs: 0.5, sm: 1 } }}>
+          <IconButton onClick={() => setMobileOpen(true)} sx={{ mr: { xs: 0.5, sm: 1 }, display: { sm: "none" }, color: ST.colors.textPrimary }} aria-label={t.home.nav.openMenu}>
             <MenuIcon />
           </IconButton>
           <InstitutionNavbarBrand
@@ -181,16 +185,18 @@ export default function InstitutionAdminLayout({ children }) {
             logoUrl={user?.institution_logo_url}
             fallbackName={IA.profile.fallbackName}
           />
-          <LanguageToggle iconOnly />
-          <Tooltip title={t.common.notifications}>
-            <IconButton sx={{ color: ST.colors.textSecondary }}>
-              <NotificationsNoneIcon sx={{ fontSize: 22 }} />
-            </IconButton>
-          </Tooltip>
-          <Avatar sx={{ width: 32, height: 32, fontSize: 13, bgcolor: ST.colors.primary, ml: 1.5, cursor: "pointer" }}
-            onClick={(e) => setProfileMenuAnchor(e.currentTarget)}>
-            {user?.full_name?.charAt(0) || "A"}
-          </Avatar>
+          <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.25, sm: 0.5 }, flexShrink: 0 }}>
+            <LanguageToggle iconOnly />
+            <Tooltip title={t.common.notifications}>
+              <IconButton size="small" sx={{ color: ST.colors.textSecondary }}>
+                <NotificationsNoneIcon sx={{ fontSize: 22 }} />
+              </IconButton>
+            </Tooltip>
+            <Avatar sx={{ width: 32, height: 32, fontSize: 13, bgcolor: ST.colors.primary, ml: { xs: 0.5, sm: 1.5 }, cursor: "pointer" }}
+              onClick={(e) => setProfileMenuAnchor(e.currentTarget)}>
+              {user?.full_name?.charAt(0) || "A"}
+            </Avatar>
+          </Box>
         </Toolbar>
       </AppBar>
 

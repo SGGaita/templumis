@@ -77,6 +77,8 @@ const pt = {
     nav: {
       loginBtn: "Entrar",
       signupBtn: "Cadastrar",
+      openMenu: "Abrir menu",
+      closeMenu: "Fechar menu",
     },
     hero: {
       tagline: "Potencializando o ensino superior inteligente",

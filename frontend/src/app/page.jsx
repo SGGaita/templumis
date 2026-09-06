@@ -1,17 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import Button from "@mui/material/Button";
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
 import BrandLogo from "@/components/BrandLogo";
-import LanguageToggle from "@/components/LanguageToggle";
+import PublicNavbar from "@/components/PublicNavbar";
 import { BRAND } from "@/lib/brand";
 import { useLanguage } from "@/lib/language-context";
 import SchoolIcon from "@mui/icons-material/School";
@@ -19,12 +15,9 @@ import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import ScienceIcon from "@mui/icons-material/Science";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import LoginIcon from "@mui/icons-material/Login";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import SiteFooter from "@/components/SiteFooter";
 
 export default function HomePage() {
-  const router = useRouter();
   const { t } = useLanguage();
 
   const modules = [
@@ -57,41 +50,7 @@ export default function HomePage() {
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", display: "flex", flexDirection: "column" }}>
-      {/* Navbar */}
-      <AppBar position="static" color="default" elevation={1}>
-        <Toolbar
-          sx={{
-            minHeight: 88,
-            py: 1.5,
-            px: { xs: 2, sm: 3 },
-            justifyContent: "space-between",
-            gap: 2,
-          }}
-        >
-          <BrandLogo height={64} format="png" onClick={() => router.push("/")} />
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, ml: "auto", flexShrink: 0 }}>
-            <LanguageToggle />
-            <Button variant="text" onClick={() => router.push("/documentation")} sx={{ fontWeight: 600 }}>
-              {t.common.documentation}
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<LoginIcon />}
-              onClick={() => router.push("/login")}
-            >
-              {t.home.nav.loginBtn}
-            </Button>
-            <Button
-              variant="contained"
-              color="secondary"
-              startIcon={<PersonAddIcon />}
-              onClick={() => router.push("/signup")}
-            >
-              {t.home.nav.signupBtn}
-            </Button>
-          </Box>
-        </Toolbar>
-      </AppBar>
+      <PublicNavbar showSignup />
 
       <Box
         sx={{

@@ -96,29 +96,51 @@ export default function DocsShell({ title, subtitle, children }) {
       <AppBar position="sticky" color="default" elevation={1}>
         <Toolbar
           sx={{
-            minHeight: 72,
+            minHeight: { xs: 64, sm: 72 },
             py: 1,
-            px: { xs: 2, sm: 3 },
+            px: { xs: 1.5, sm: 3 },
             justifyContent: "space-between",
-            gap: 2,
+            gap: 1,
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
             <IconButton
               edge="start"
               onClick={() => setMobileOpen(true)}
               sx={{ display: { md: "none" }, mr: 0.5 }}
-              aria-label="Open documentation menu"
+              aria-label={t.home.nav.openMenu}
             >
               <MenuIcon />
             </IconButton>
-            <BrandLogo height={48} format="png" onClick={() => router.push("/")} />
+            <Box sx={{ display: { xs: "none", sm: "block" } }}>
+              <BrandLogo height={48} format="png" onClick={() => router.push("/")} />
+            </Box>
+            <Box sx={{ display: { xs: "block", sm: "none" } }}>
+              <BrandLogo height={36} format="png" onClick={() => router.push("/")} />
+            </Box>
           </Box>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            <LanguageToggle />
-            <Button variant="outlined" startIcon={<LoginIcon />} onClick={() => router.push("/login")}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1.5 }, flexShrink: 0 }}>
+            <Box sx={{ display: { xs: "none", sm: "flex" } }}>
+              <LanguageToggle />
+            </Box>
+            <Box sx={{ display: { xs: "flex", sm: "none" } }}>
+              <LanguageToggle iconOnly />
+            </Box>
+            <Button
+              variant="outlined"
+              startIcon={<LoginIcon />}
+              onClick={() => router.push("/login")}
+              sx={{ display: { xs: "none", sm: "inline-flex" } }}
+            >
               {t.home.nav.loginBtn}
             </Button>
+            <IconButton
+              onClick={() => router.push("/login")}
+              sx={{ display: { xs: "inline-flex", sm: "none" } }}
+              aria-label={t.home.nav.loginBtn}
+            >
+              <LoginIcon />
+            </IconButton>
           </Box>
         </Toolbar>
       </AppBar>

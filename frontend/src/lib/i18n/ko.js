@@ -77,6 +77,8 @@ const ko = {
     nav: {
       loginBtn: "로그인",
       signupBtn: "회원가입",
+      openMenu: "메뉴 열기",
+      closeMenu: "메뉴 닫기",
     },
     hero: {
       tagline: "더 스마트한 고등교육 지원",

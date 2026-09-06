@@ -30,7 +30,7 @@ export default function InstitutionNavbarBrand({
         gap: 1.5,
         minWidth: 0,
         flex: 1,
-        mr: 2,
+        mr: { xs: 1, sm: 2 },
       }}
     >
       {showLogo ? (
@@ -40,8 +40,8 @@ export default function InstitutionNavbarBrand({
           alt={label}
           onError={() => setImgFailed(true)}
           sx={{
-            height: { xs: 36, sm: 44 },
-            maxWidth: { xs: 140, sm: 240 },
+            height: { xs: 32, sm: 44 },
+            maxWidth: { xs: 110, sm: 240 },
             width: "auto",
             objectFit: "contain",
             objectPosition: "left center",
@@ -54,13 +54,14 @@ export default function InstitutionNavbarBrand({
           component="p"
           sx={{
             fontWeight: 800,
-            fontSize: { xs: 18, sm: 22 },
+            fontSize: { xs: 15, sm: 22 },
             letterSpacing: -0.4,
             lineHeight: 1.15,
             color: ST.colors.textPrimary,
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
+            minWidth: 0,
           }}
         >
           {label}

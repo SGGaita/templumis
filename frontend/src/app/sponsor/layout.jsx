@@ -72,6 +72,10 @@ function SponsorLayoutInner({ children }) {
     return () => { cancelled = true; };
   }, [user]);
 
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   const currentPage = NAV_ITEMS.find((item) =>
     pathname === item.href || pathname.startsWith(`${item.href}/`)
   ) || (pathname.startsWith("/sponsor/requests/") ? NAV_ITEMS[0] : null);
