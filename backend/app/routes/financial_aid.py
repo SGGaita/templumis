@@ -11,6 +11,7 @@ from app.database import get_db
 from app import scholarship_catalog as catalog
 from app import grant_db
 from app import grant_documents as grant_docs
+from app.excel_institution_scope import resolve_institution_excel_scope
 from app.models import ScholarshipProgram, StudentGrantApplication, StudentScholarshipApplication, User
 from app.permissions import assert_financial_aid_officer, assert_grant_application_view, assert_staff_portal
 from app.routes.scholarship_programs import _load_students_index
@@ -60,14 +61,56 @@ def financial_aid_dashboard(
 ):
     assert_staff_portal(current_user)
 
-    schol_apps = db.query(StudentScholarshipApplication).all()
-    grant_apps = db.query(StudentGrantApplication).all()
-    schol_programs = (
-        db.query(ScholarshipProgram).filter(ScholarshipProgram.program_kind == "scholarship").all()
-    )
-    grant_programs = (
-        db.query(ScholarshipProgram).filter(ScholarshipProgram.program_kind == "grant").all()
-    )
+    from sqlalchemy import or_
+
+    institution_id = getattr(current_user, "institution_id", None)
+    schol_q = db.query(StudentScholarshipApplication)
+    grant_q = db.query(StudentGrantApplication)
+    schol_prog_q = db.query(ScholarshipProgram).filter(ScholarshipProgram.program_kind == "scholarship")
+    grant_prog_q = db.query(ScholarshipProgram).filter(ScholarshipProgram.program_kind == "grant")
+    if institution_id is not None:
+        schol_q = schol_q.filter(
+            or_(
+                StudentScholarshipApplication.institution_id == institution_id,
+                StudentScholarshipApplication.institution_id.is_(None),
+            )
+        )
+        grant_q = grant_q.filter(
+            or_(
+                StudentGrantApplication.institution_id == institution_id,
+                StudentGrantApplication.institution_id.is_(None),
+            )
+        )
+        schol_prog_q = schol_prog_q.filter(
+            or_(
+                ScholarshipProgram.institution_id == institution_id,
+                ScholarshipProgram.institution_id.is_(None),
+            )
+        )
+        grant_prog_q = grant_prog_q.filter(
+            or_(
+                ScholarshipProgram.institution_id == institution_id,
+                ScholarshipProgram.institution_id.is_(None),
+            )
+        )
+
+    schol_apps = schol_q.all()
+    grant_apps = grant_q.all()
+    schol_programs = schol_prog_q.all()
+    grant_programs = grant_prog_q.all()
+
+    # Drop legacy null-institution apps that belong to other domains
+    scope = resolve_institution_excel_scope(db, current_user)
+    if scope and scope.is_active:
+        students = _load_students_index(scope)
+        schol_apps = [
+            r for r in schol_apps
+            if r.institution_id == scope.institution_id or str(r.student_number) in students
+        ]
+        grant_apps = [
+            r for r in grant_apps
+            if r.institution_id == scope.institution_id or str(r.student_number) in students
+        ]
 
     def _pending(rows):
         return sum(
@@ -132,14 +175,25 @@ async def list_grant_applications_staff(
     db: Session = Depends(get_db),
 ):
     assert_grant_application_view(current_user)
-    rows = grant_db.list_grant_applications(db)
+    scope = resolve_institution_excel_scope(db, current_user)
+    rows = grant_db.list_grant_applications(
+        db, institution_id=getattr(current_user, "institution_id", None)
+    )
     programs = catalog.programs_lookup(db, program_kind="grant", include_admin=True)
-    students = _load_students_index()
+    students = _load_students_index(scope)
 
     applications = []
     for row in rows:
+        sid = str(row.student_number)
+        if scope and scope.is_active:
+            belongs = (
+                row.institution_id == scope.institution_id
+                or sid in students
+            )
+            if not belongs:
+                continue
         grant = programs.get(str(row.grant_external_id)) or {}
-        student = students.get(str(row.student_number)) or {}
+        student = students.get(sid) or {}
         name = (
             student.get("full_name")
             or f"{student.get('first_name', '')} {student.get('last_name', '')}".strip()

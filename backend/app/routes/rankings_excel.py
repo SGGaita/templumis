@@ -1,9 +1,35 @@
+"""Rankings dashboard data from Excel, scoped to the logged-in institution."""
+
+from __future__ import annotations
+
 from fastapi import APIRouter, Depends, HTTPException
-from app.auth import get_current_user
-from app.models import User
+from sqlalchemy.orm import Session
 import openpyxl
 
+from app.auth import get_current_user
+from app.database import get_db
+from app.excel_paths import resolve_excel_path
+from app.excel_institution_scope import (
+    InstitutionExcelScope,
+    filter_rows_for_institution,
+    resolve_institution_excel_scope,
+)
+from app.models import User
+from app.routes.sis_lms import sheet_to_dict_list
+
 router = APIRouter(prefix="/api/rankings-excel", tags=["Rankings Excel"])
+
+# Comparison table columns on Rankings Dashboard (1-based Excel columns).
+_COMPARISON_COLUMNS = {
+    "templumis university": 2,
+    "kitaptech university": 3,
+    "rongo university": 4,
+}
+_COMPARISON_DOMAINS = {
+    "templumis.ac": 2,
+    "kitaptech.com": 3,
+    "rongovarsity.ac.ke": 4,
+}
 
 
 def check_staff_access(current_user: User):
@@ -16,346 +42,315 @@ def parse_percentage(value):
     """Parse percentage string like '~62%' or '35.1%' to float"""
     if not value:
         return 0.0
-    value_str = str(value).replace('~', '').replace('%', '').strip()
+    value_str = str(value).replace("~", "").replace("%", "").strip()
     try:
         return float(value_str)
-    except:
+    except Exception:
         return 0.0
 
 
-@router.get("/dashboard-data")
-async def get_rankings_dashboard_data(current_user: User = Depends(get_current_user)):
-    """Get all rankings data from the Excel Rankings Dashboard sheet"""
-    check_staff_access(current_user)
-    
+def _comparison_col(scope: InstitutionExcelScope | None) -> int:
+    """Excel column (1-based) for this institution in the comparison table."""
+    if scope is None or not scope.is_active:
+        return 2
+    for domain in scope.domains:
+        if domain in _COMPARISON_DOMAINS:
+            return _COMPARISON_DOMAINS[domain]
+    for name in scope.excel_names:
+        if name in _COMPARISON_COLUMNS:
+            return _COMPARISON_COLUMNS[name]
+    return 2
+
+
+def _int_or(value, default=0) -> int:
     try:
-        # Load Excel file
-        wb = openpyxl.load_workbook('/app/data/templumis_university.xlsx', data_only=True)
-        ws = wb['Rankings Dashboard']
-        
-        # Parse institutional summary (rows 5-8)
-        institutional_data = {
-            "total_students": int(ws['B5'].value) if ws['B5'].value else 37,
-            "ug_students": int(ws['B6'].value) if ws['B6'].value else 25,
-            "pg_students": int(ws['B7'].value) if ws['B7'].value else 12,
-            "faculty": int(ws['B8'].value) if ws['B8'].value else 15,
-            "avg_gpa": str(ws['D5'].value) if ws['D5'].value else "3.32 / 4.0",
-            "active_students": int(ws['D6'].value) if ws['D6'].value else 25,
-            "graduates": int(ws['D7'].value) if ws['D7'].value else 5,
-            "active_courses": int(ws['D8'].value) if ws['D8'].value else 19,
-            "international_students": str(ws['F5'].value) if ws['F5'].value else "35.1%",
-            "research_students": int(ws['F6'].value) if ws['F6'].value else 6,
-            "student_faculty_ratio": str(ws['F7'].value) if ws['F7'].value else "2.5 : 1",
-            "avg_attendance": str(ws['F8'].value) if ws['F8'].value else "83%",
-            "female_ratio": str(ws['H5'].value) if ws['H5'].value else "48.6%",
-            "nationalities": int(ws['H6'].value) if ws['H6'].value else 10,
-            "schools_faculties": int(ws['H7'].value) if ws['H7'].value else 9,
-            "avg_grade": str(ws['H8'].value) if ws['H8'].value else "77.6%",
-        }
-        
-        # Parse Webometrics (rows 13-17)
-        webometrics = {
-            "name": "Webometrics Ranking of World Universities",
-            "focus": "Web presence, openness & academic output",
-            "overall_readiness": parse_percentage(ws['C17'].value),
-            "indicators": [
-                {
-                    "name": str(ws['A13'].value),
-                    "weight": str(ws['B13'].value),
-                    "score": parse_percentage(ws['C13'].value),
-                    "notes": str(ws['D13'].value),
-                    "status": str(ws['E13'].value) if ws['E13'].value else ""
-                },
-                {
-                    "name": str(ws['A14'].value),
-                    "weight": str(ws['B14'].value),
-                    "score": parse_percentage(ws['C14'].value),
-                    "notes": str(ws['D14'].value),
-                    "status": str(ws['E14'].value) if ws['E14'].value else ""
-                },
-                {
-                    "name": str(ws['A15'].value),
-                    "weight": str(ws['B15'].value),
-                    "score": parse_percentage(ws['C15'].value),
-                    "notes": str(ws['D15'].value),
-                    "status": str(ws['E15'].value) if ws['E15'].value else ""
-                },
-                {
-                    "name": str(ws['A16'].value),
-                    "weight": str(ws['B16'].value),
-                    "score": parse_percentage(ws['C16'].value),
-                    "notes": str(ws['D16'].value),
-                    "status": str(ws['E16'].value) if ws['E16'].value else ""
-                }
-            ]
-        }
-        
-        # Parse THE (rows 22-27)
-        the = {
-            "name": "THE World University Rankings",
-            "focus": "Teaching, research, citations & international outlook",
-            "overall_readiness": parse_percentage(ws['C27'].value),
-            "indicators": [
-                {
-                    "name": str(ws['A22'].value),
-                    "weight": str(ws['B22'].value),
-                    "score": parse_percentage(ws['C22'].value),
-                    "notes": str(ws['D22'].value),
-                    "status": str(ws['E22'].value) if ws['E22'].value else ""
-                },
-                {
-                    "name": str(ws['A23'].value),
-                    "weight": str(ws['B23'].value),
-                    "score": parse_percentage(ws['C23'].value),
-                    "notes": str(ws['D23'].value),
-                    "status": str(ws['E23'].value) if ws['E23'].value else ""
-                },
-                {
-                    "name": str(ws['A24'].value),
-                    "weight": str(ws['B24'].value),
-                    "score": parse_percentage(ws['C24'].value),
-                    "notes": str(ws['D24'].value),
-                    "status": str(ws['E24'].value) if ws['E24'].value else ""
-                },
-                {
-                    "name": str(ws['A25'].value),
-                    "weight": str(ws['B25'].value),
-                    "score": parse_percentage(ws['C25'].value),
-                    "notes": str(ws['D25'].value),
-                    "status": str(ws['E25'].value) if ws['E25'].value else ""
-                },
-                {
-                    "name": str(ws['A26'].value),
-                    "weight": str(ws['B26'].value),
-                    "score": parse_percentage(ws['C26'].value),
-                    "notes": str(ws['D26'].value),
-                    "status": str(ws['E26'].value) if ws['E26'].value else ""
-                }
-            ]
-        }
-        
-        # Parse THE SSA (rows 32-37)
-        the_ssa = {
-            "name": "THE Sub-Saharan Africa Rankings (SSA)",
-            "focus": "Regionally adapted THE criteria for African universities",
-            "overall_readiness": parse_percentage(ws['C37'].value),
-            "indicators": [
-                {
-                    "name": str(ws['A32'].value),
-                    "weight": str(ws['B32'].value),
-                    "score": parse_percentage(ws['C32'].value),
-                    "notes": str(ws['D32'].value),
-                    "status": str(ws['E32'].value) if ws['E32'].value else ""
-                },
-                {
-                    "name": str(ws['A33'].value),
-                    "weight": str(ws['B33'].value),
-                    "score": parse_percentage(ws['C33'].value),
-                    "notes": str(ws['D33'].value),
-                    "status": str(ws['E33'].value) if ws['E33'].value else ""
-                },
-                {
-                    "name": str(ws['A34'].value),
-                    "weight": str(ws['B34'].value),
-                    "score": parse_percentage(ws['C34'].value),
-                    "notes": str(ws['D34'].value),
-                    "status": str(ws['E34'].value) if ws['E34'].value else ""
-                },
-                {
-                    "name": str(ws['A35'].value),
-                    "weight": str(ws['B35'].value),
-                    "score": parse_percentage(ws['C35'].value),
-                    "notes": str(ws['D35'].value),
-                    "status": str(ws['E35'].value) if ws['E35'].value else ""
-                },
-                {
-                    "name": str(ws['A36'].value),
-                    "weight": str(ws['B36'].value),
-                    "score": parse_percentage(ws['C36'].value),
-                    "notes": str(ws['D36'].value),
-                    "status": str(ws['E36'].value) if ws['E36'].value else ""
-                }
-            ]
-        }
-        
-        # Parse Shanghai ARWU (rows 42-48)
-        shanghai = {
-            "name": "Shanghai ARWU (Academic Ranking of World Universities)",
-            "focus": "Research output, Nobel laureates & high-impact publications",
-            "overall_readiness": parse_percentage(ws['C48'].value),
-            "indicators": [
-                {
-                    "name": str(ws['A42'].value),
-                    "weight": str(ws['B42'].value),
-                    "score": parse_percentage(ws['C42'].value),
-                    "notes": str(ws['D42'].value),
-                    "status": str(ws['E42'].value) if ws['E42'].value else ""
-                },
-                {
-                    "name": str(ws['A43'].value),
-                    "weight": str(ws['B43'].value),
-                    "score": parse_percentage(ws['C43'].value),
-                    "notes": str(ws['D43'].value),
-                    "status": str(ws['E43'].value) if ws['E43'].value else ""
-                },
-                {
-                    "name": str(ws['A44'].value),
-                    "weight": str(ws['B44'].value),
-                    "score": parse_percentage(ws['C44'].value),
-                    "notes": str(ws['D44'].value),
-                    "status": str(ws['E44'].value) if ws['E44'].value else ""
-                },
-                {
-                    "name": str(ws['A45'].value),
-                    "weight": str(ws['B45'].value),
-                    "score": parse_percentage(ws['C45'].value),
-                    "notes": str(ws['D45'].value),
-                    "status": str(ws['E45'].value) if ws['E45'].value else ""
-                },
-                {
-                    "name": str(ws['A46'].value),
-                    "weight": str(ws['B46'].value),
-                    "score": parse_percentage(ws['C46'].value),
-                    "notes": str(ws['D46'].value),
-                    "status": str(ws['E46'].value) if ws['E46'].value else ""
-                },
-                {
-                    "name": str(ws['A47'].value),
-                    "weight": str(ws['B47'].value),
-                    "score": parse_percentage(ws['C47'].value),
-                    "notes": str(ws['D47'].value),
-                    "status": str(ws['E47'].value) if ws['E47'].value else ""
-                }
-            ]
-        }
-        
-        # Parse QS (rows 53-61)
-        qs = {
-            "name": "QS World University Rankings",
-            "focus": "Reputation, faculty ratio, citations & international diversity",
-            "overall_readiness": parse_percentage(ws['C61'].value),
-            "indicators": [
-                {
-                    "name": str(ws['A53'].value),
-                    "weight": str(ws['B53'].value),
-                    "score": parse_percentage(ws['C53'].value),
-                    "notes": str(ws['D53'].value),
-                    "status": str(ws['E53'].value) if ws['E53'].value else ""
-                },
-                {
-                    "name": str(ws['A54'].value),
-                    "weight": str(ws['B54'].value),
-                    "score": parse_percentage(ws['C54'].value),
-                    "notes": str(ws['D54'].value),
-                    "status": str(ws['E54'].value) if ws['E54'].value else ""
-                },
-                {
-                    "name": str(ws['A55'].value),
-                    "weight": str(ws['B55'].value),
-                    "score": parse_percentage(ws['C55'].value),
-                    "notes": str(ws['D55'].value),
-                    "status": str(ws['E55'].value) if ws['E55'].value else ""
-                },
-                {
-                    "name": str(ws['A56'].value),
-                    "weight": str(ws['B56'].value),
-                    "score": parse_percentage(ws['C56'].value),
-                    "notes": str(ws['D56'].value),
-                    "status": str(ws['E56'].value) if ws['E56'].value else ""
-                },
-                {
-                    "name": str(ws['A57'].value),
-                    "weight": str(ws['B57'].value),
-                    "score": parse_percentage(ws['C57'].value),
-                    "notes": str(ws['D57'].value),
-                    "status": str(ws['E57'].value) if ws['E57'].value else ""
-                },
-                {
-                    "name": str(ws['A58'].value),
-                    "weight": str(ws['B58'].value),
-                    "score": parse_percentage(ws['C58'].value),
-                    "notes": str(ws['D58'].value),
-                    "status": str(ws['E58'].value) if ws['E58'].value else ""
-                },
-                {
-                    "name": str(ws['A59'].value),
-                    "weight": str(ws['B59'].value),
-                    "score": parse_percentage(ws['C59'].value),
-                    "notes": str(ws['D59'].value),
-                    "status": str(ws['E59'].value) if ws['E59'].value else ""
-                },
-                {
-                    "name": str(ws['A60'].value),
-                    "weight": str(ws['B60'].value),
-                    "score": parse_percentage(ws['C60'].value),
-                    "notes": str(ws['D60'].value),
-                    "status": str(ws['E60'].value) if ws['E60'].value else ""
-                }
-            ]
-        }
-        
-        # Parse CWTS Leiden (rows 66-72)
-        cwts = {
-            "name": "CWTS Leiden Ranking",
-            "focus": "Bibliometric research performance (Web of Science)",
-            "overall_readiness": parse_percentage(ws['C72'].value),
-            "indicators": [
-                {
-                    "name": str(ws['A66'].value),
-                    "weight": str(ws['B66'].value),
-                    "score": parse_percentage(ws['C66'].value),
-                    "notes": str(ws['D66'].value),
-                    "status": str(ws['E66'].value) if ws['E66'].value else ""
-                },
-                {
-                    "name": str(ws['A67'].value),
-                    "weight": str(ws['B67'].value),
-                    "score": parse_percentage(ws['C67'].value),
-                    "notes": str(ws['D67'].value),
-                    "status": str(ws['E67'].value) if ws['E67'].value else ""
-                },
-                {
-                    "name": str(ws['A68'].value),
-                    "weight": str(ws['B68'].value),
-                    "score": parse_percentage(ws['C68'].value),
-                    "notes": str(ws['D68'].value),
-                    "status": str(ws['E68'].value) if ws['E68'].value else ""
-                },
-                {
-                    "name": str(ws['A69'].value),
-                    "weight": str(ws['B69'].value),
-                    "score": parse_percentage(ws['C69'].value),
-                    "notes": str(ws['D69'].value),
-                    "status": str(ws['E69'].value) if ws['E69'].value else ""
-                },
-                {
-                    "name": str(ws['A70'].value),
-                    "weight": str(ws['B70'].value),
-                    "score": parse_percentage(ws['C70'].value),
-                    "notes": str(ws['D70'].value),
-                    "status": str(ws['E70'].value) if ws['E70'].value else ""
-                },
-                {
-                    "name": str(ws['A71'].value),
-                    "weight": str(ws['B71'].value),
-                    "score": parse_percentage(ws['C71'].value),
-                    "notes": str(ws['D71'].value),
-                    "status": str(ws['E71'].value) if ws['E71'].value else ""
-                }
-            ]
-        }
-        
+        return int(float(str(value).replace(",", "").strip()))
+    except Exception:
+        return default
+
+
+def _parse_ug_pg(value) -> tuple[int, int]:
+    """Parse '25 / 12 / 4' into (ug, pg_including_phd)."""
+    text = str(value or "")
+    parts = [p.strip() for p in text.replace("·", "/").split("/") if p.strip()]
+    nums = []
+    for p in parts:
+        try:
+            nums.append(int(float(p.split()[0])))
+        except Exception:
+            nums.append(0)
+    while len(nums) < 3:
+        nums.append(0)
+    ug = nums[0]
+    pg = nums[1] + nums[2]
+    return ug, pg
+
+
+def _is_postgraduate(student: dict) -> bool:
+    blob = " ".join(
+        str(student.get(k) or "")
+        for k in ("student_type", "programme_level", "program", "Student Type", "Programme Level")
+    ).lower()
+    return any(k in blob for k in ("post", "master", "msc", "mba", "ma ", "mphil", "phd", "doctor"))
+
+
+def _institutional_from_sis(students: list[dict], courses: list[dict]) -> dict:
+    total = len(students)
+    ug = sum(1 for s in students if not _is_postgraduate(s))
+    pg = total - ug
+    active = sum(
+        1 for s in students if str(s.get("status") or "").strip().lower() == "active"
+    )
+    graduates = sum(
+        1
+        for s in students
+        if str(s.get("status") or "").strip().lower() in ("graduated", "alumni", "completed")
+    )
+    research = sum(
+        1
+        for s in students
+        if "research" in " ".join(
+            str(s.get(k) or "") for k in ("student_type", "programme_level", "program", "major")
+        ).lower()
+        or "phd" in str(s.get("programme_level") or "").lower()
+    )
+    females = sum(1 for s in students if str(s.get("gender") or "").lower().startswith("f"))
+    nationalities = {
+        str(s.get("nationality")).strip()
+        for s in students
+        if s.get("nationality") and str(s.get("nationality")).strip().lower() not in ("", "unknown", "none")
+    }
+    gpas = []
+    for s in students:
+        try:
+            gpas.append(float(s.get("gpa")))
+        except (TypeError, ValueError):
+            pass
+    avg_gpa = round(sum(gpas) / len(gpas), 2) if gpas else 0.0
+    departments = {
+        str(s.get("department")).strip()
+        for s in students
+        if s.get("department") and str(s.get("department")).strip()
+    }
+    instructors = {
+        str(c.get("instructor")).strip()
+        for c in courses
+        if c.get("instructor") and str(c.get("instructor")).strip()
+    }
+    active_courses = sum(
+        1 for c in courses if str(c.get("status") or "").strip().lower() == "active"
+    ) or len(courses)
+    faculty = len(instructors) or max(1, active_courses // 2)
+    ratio = round(total / faculty, 1) if faculty else 0
+
+    domestic = {"kenyan", "kenya", "local"}
+    intl = sum(
+        1
+        for s in students
+        if str(s.get("nationality") or "").strip().lower() not in domestic
+        and str(s.get("nationality") or "").strip()
+    )
+    intl_pct = round((intl / total * 100), 1) if total else 0.0
+
+    return {
+        "total_students": total,
+        "ug_students": ug,
+        "pg_students": pg,
+        "faculty": faculty,
+        "avg_gpa": f"{avg_gpa} / 4.0" if avg_gpa else "—",
+        "active_students": active or total,
+        "graduates": graduates,
+        "active_courses": active_courses,
+        "international_students": f"{intl_pct}%",
+        "research_students": research,
+        "student_faculty_ratio": f"{ratio} : 1",
+        "avg_attendance": "—",
+        "female_ratio": f"{round(females / total * 100, 1)}%" if total else "0%",
+        "nationalities": len(nationalities),
+        "schools_faculties": len(departments) or 1,
+        "avg_grade": "—",
+    }
+
+
+def _institutional_from_comparison(ws, col: int) -> dict | None:
+    """Read per-institution summary from ALL INSTITUTIONS comparison block."""
+    header = str(ws.cell(81, col).value or "").strip()
+    if not header:
+        return None
+
+    metrics = {}
+    for row in range(82, 96):
+        label = str(ws.cell(row, 1).value or "").strip().lower()
+        value = ws.cell(row, col).value
+        if not label:
+            continue
+        metrics[label] = value
+
+    ug, pg = _parse_ug_pg(metrics.get("ug / pg (masters) / phd"))
+    total = _int_or(metrics.get("total students"), ug + pg)
+    avg_gpa_raw = metrics.get("avg gpa")
+    try:
+        avg_gpa = f"{float(avg_gpa_raw):.2f} / 4.0"
+    except Exception:
+        avg_gpa = str(avg_gpa_raw or "—")
+
+    schools_raw = str(metrics.get("schools / faculties") or "0")
+    schools = _int_or(schools_raw.split("(")[0].strip(), 0)
+
+    return {
+        "total_students": total,
+        "ug_students": ug,
+        "pg_students": pg,
+        "faculty": _int_or(metrics.get("faculty (instructors)")),
+        "avg_gpa": avg_gpa,
+        "active_students": _int_or(metrics.get("active students"), total),
+        "graduates": _int_or(metrics.get("graduates (to date)")),
+        "active_courses": _int_or(metrics.get("active courses")),
+        "international_students": "—",
+        "research_students": _int_or(metrics.get("research students (msc/ma/phd by research)")),
+        "student_faculty_ratio": str(metrics.get("student : faculty ratio") or "—"),
+        "avg_attendance": str(metrics.get("avg attendance") or "—"),
+        "female_ratio": str(metrics.get("female ratio") or "—"),
+        "nationalities": _int_or(str(metrics.get("nationalities represented") or "0").split("(")[0]),
+        "schools_faculties": schools,
+        "avg_grade": "—",
+        "institution_label": header,
+        "domain": str(metrics.get("domain") or ""),
+    }
+
+
+def _indicator_block(ws, start: int, end: int, overall_row: int, name: str, focus: str) -> dict:
+    indicators = []
+    for row in range(start, end + 1):
+        indicators.append(
+            {
+                "name": str(ws[f"A{row}"].value or ""),
+                "weight": str(ws[f"B{row}"].value or ""),
+                "score": parse_percentage(ws[f"C{row}"].value),
+                "notes": str(ws[f"D{row}"].value or ""),
+                "status": str(ws[f"E{row}"].value) if ws[f"E{row}"].value else "",
+            }
+        )
+    return {
+        "name": name,
+        "focus": focus,
+        "overall_readiness": parse_percentage(ws[f"C{overall_row}"].value),
+        "indicators": indicators,
+    }
+
+
+@router.get("/dashboard-data")
+async def get_rankings_dashboard_data(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get rankings data scoped to the current user's institution domain."""
+    check_staff_access(current_user)
+    scope = resolve_institution_excel_scope(db, current_user)
+
+    try:
+        path = resolve_excel_path()
+        wb = openpyxl.load_workbook(path, data_only=True)
+        ws = wb["Rankings Dashboard"]
+
+        # Prefer live SIS counts for this institution; fall back to comparison table.
+        students = []
+        courses = []
+        if "Students" in wb.sheetnames:
+            students = filter_rows_for_institution(sheet_to_dict_list(wb["Students"]), scope)
+        if "Courses" in wb.sheetnames:
+            courses = filter_rows_for_institution(sheet_to_dict_list(wb["Courses"]), scope)
+
+        institutional_data = None
+        if students:
+            institutional_data = _institutional_from_sis(students, courses)
+        else:
+            institutional_data = _institutional_from_comparison(ws, _comparison_col(scope))
+
+        if not institutional_data:
+            # Last resort: legacy top-of-sheet Templumis summary
+            institutional_data = {
+                "total_students": int(ws["B5"].value) if ws["B5"].value else 0,
+                "ug_students": int(ws["B6"].value) if ws["B6"].value else 0,
+                "pg_students": int(ws["B7"].value) if ws["B7"].value else 0,
+                "faculty": int(ws["B8"].value) if ws["B8"].value else 0,
+                "avg_gpa": str(ws["D5"].value) if ws["D5"].value else "—",
+                "active_students": int(ws["D6"].value) if ws["D6"].value else 0,
+                "graduates": int(ws["D7"].value) if ws["D7"].value else 0,
+                "active_courses": int(ws["D8"].value) if ws["D8"].value else 0,
+                "international_students": str(ws["F5"].value) if ws["F5"].value else "—",
+                "research_students": int(ws["F6"].value) if ws["F6"].value else 0,
+                "student_faculty_ratio": str(ws["F7"].value) if ws["F7"].value else "—",
+                "avg_attendance": str(ws["F8"].value) if ws["F8"].value else "—",
+                "female_ratio": str(ws["H5"].value) if ws["H5"].value else "—",
+                "nationalities": int(ws["H6"].value) if ws["H6"].value else 0,
+                "schools_faculties": int(ws["H7"].value) if ws["H7"].value else 0,
+                "avg_grade": str(ws["H8"].value) if ws["H8"].value else "—",
+            }
+
+        # Enrich attendance from comparison when SIS summary left it blank
+        comparison = _institutional_from_comparison(ws, _comparison_col(scope))
+        if comparison:
+            if institutional_data.get("avg_attendance") in (None, "", "—"):
+                institutional_data["avg_attendance"] = comparison.get("avg_attendance") or "—"
+            if institutional_data.get("student_faculty_ratio") in (None, "", "—"):
+                institutional_data["student_faculty_ratio"] = (
+                    comparison.get("student_faculty_ratio") or "—"
+                )
+            institutional_data.setdefault("domain", comparison.get("domain"))
+
+        webometrics = _indicator_block(
+            ws, 13, 16, 17,
+            "Webometrics Ranking of World Universities",
+            "Web presence, openness & academic output",
+        )
+        the = _indicator_block(
+            ws, 22, 26, 27,
+            "THE World University Rankings",
+            "Teaching, research, citations & international outlook",
+        )
+        the_ssa = _indicator_block(
+            ws, 32, 36, 37,
+            "THE Sub-Saharan Africa Rankings (SSA)",
+            "Regionally adapted THE criteria for African universities",
+        )
+        shanghai = _indicator_block(
+            ws, 42, 47, 48,
+            "Shanghai ARWU (Academic Ranking of World Universities)",
+            "Research output, Nobel laureates & high-impact publications",
+        )
+        qs = _indicator_block(
+            ws, 53, 60, 61,
+            "QS World University Rankings",
+            "Reputation, faculty ratio, citations & international diversity",
+        )
+        cwts = _indicator_block(
+            ws, 66, 71, 72,
+            "CWTS Leiden Ranking",
+            "Bibliometric research performance (Web of Science)",
+        )
+
+        wb.close()
+
         return {
             "institutional_data": institutional_data,
+            "institution_scope": {
+                "name": scope.name if scope else None,
+                "domains": sorted(scope.domains) if scope else [],
+            },
             "rankings": {
                 "webometrics": webometrics,
                 "the": the,
                 "the_ssa": the_ssa,
                 "shanghai": shanghai,
                 "qs": qs,
-                "cwts": cwts
-            }
+                "cwts": cwts,
+            },
         }
-        
+
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error reading Rankings Dashboard: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error reading Rankings Dashboard: {str(e)}") from e

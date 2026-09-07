@@ -8,6 +8,11 @@ from pathlib import Path
 from datetime import datetime, date as date_cls
 
 from app.excel_paths import resolve_excel_path
+from app.excel_institution_scope import (
+    InstitutionExcelScope,
+    filter_rows_for_institution,
+    resolve_institution_excel_scope,
+)
 from app.scholarship_excel import normalize_scholarship_record
 from app import scholarship_db
 from app import scholarship_catalog as catalog
@@ -430,11 +435,19 @@ def _enrich_student(student: dict, attendance_by_student: dict, financial_by_stu
     return student
 
 
-def _load_enriched_students():
+def _load_enriched_students(scope: Optional[InstitutionExcelScope] = None):
     wb = load_excel_data()
-    students = sheet_to_dict_list(wb["Students"])
+    students = filter_rows_for_institution(sheet_to_dict_list(wb["Students"]), scope)
     attendance_by_student, financial_by_student = _load_student_lookups(wb)
     wb.close()
+    allowed_ids = {s.get("student_id") for s in students if s.get("student_id")}
+    if scope is not None and scope.is_active and allowed_ids:
+        attendance_by_student = {
+            sid: rows for sid, rows in attendance_by_student.items() if sid in allowed_ids
+        }
+        financial_by_student = {
+            sid: data for sid, data in financial_by_student.items() if sid in allowed_ids
+        }
     return [_enrich_student(s, attendance_by_student, financial_by_student) for s in students]
 
 
@@ -454,7 +467,8 @@ async def get_students(
     """Get students from SIS"""
     require_role(current_user, ["staff", "global_admin"])
 
-    students = _load_enriched_students()
+    scope = resolve_institution_excel_scope(db, current_user)
+    students = _load_enriched_students(scope)
 
     if search:
         search_lower = search.lower()
@@ -503,7 +517,8 @@ async def get_at_risk_summary(
     """Counts of at-risk students by category and cohort."""
     require_role(current_user, ["staff", "global_admin"])
 
-    students = [s for s in _load_enriched_students() if s.get("is_at_risk")]
+    scope = resolve_institution_excel_scope(db, current_user)
+    students = [s for s in _load_enriched_students(scope) if s.get("is_at_risk")]
     summary = {
         "total": len(students),
         "undergraduate": len([s for s in students if s.get("cohort_level") == "undergraduate"]),
@@ -534,7 +549,8 @@ async def get_at_risk_students(
     """Students flagged at risk by finances, attendance, or academic progress."""
     require_role(current_user, ["staff", "global_admin"])
 
-    students = [s for s in _load_enriched_students() if s.get("is_at_risk")]
+    scope = resolve_institution_excel_scope(db, current_user)
+    students = [s for s in _load_enriched_students(scope) if s.get("is_at_risk")]
 
     if category:
         cat = category.lower()
@@ -725,12 +741,13 @@ async def get_student_detail(
 ):
     """Get detailed student information including enrollments, grades, attendance, and financial data"""
     require_role(current_user, ["staff", "global_admin"])
-    
+
+    scope = resolve_institution_excel_scope(db, current_user)
     wb = load_excel_data()
     
     # Get student info
     students_sheet = wb["Students"]
-    students = sheet_to_dict_list(students_sheet)
+    students = filter_rows_for_institution(sheet_to_dict_list(students_sheet), scope)
     student = next((s for s in students if s.get("student_id") == student_id), None)
     
     if not student:
@@ -877,10 +894,11 @@ async def get_courses(
 ):
     """Get courses from LMS"""
     require_role(current_user, ["staff", "global_admin"])
-    
+
+    scope = resolve_institution_excel_scope(db, current_user)
     wb = load_excel_data()
     courses_sheet = wb["Courses"]
-    courses = sheet_to_dict_list(courses_sheet)
+    courses = filter_rows_for_institution(sheet_to_dict_list(courses_sheet), scope)
     wb.close()
     
     # Apply filters
@@ -918,10 +936,11 @@ async def get_enrollments(
 ):
     """Get enrollments"""
     require_role(current_user, ["staff", "global_admin"])
-    
+
+    scope = resolve_institution_excel_scope(db, current_user)
     wb = load_excel_data()
     enrollments_sheet = wb["Enrolments"]
-    enrollments = sheet_to_dict_list(enrollments_sheet)
+    enrollments = filter_rows_for_institution(sheet_to_dict_list(enrollments_sheet), scope)
     wb.close()
     
     # Apply filters
@@ -951,17 +970,18 @@ async def get_stats(
 ):
     """Get overall statistics"""
     require_role(current_user, ["staff", "global_admin"])
-    
+
+    scope = resolve_institution_excel_scope(db, current_user)
     wb = load_excel_data()
     
     students_sheet = wb["Students"]
-    students = sheet_to_dict_list(students_sheet)
+    students = filter_rows_for_institution(sheet_to_dict_list(students_sheet), scope)
     
     courses_sheet = wb["Courses"]
-    courses = sheet_to_dict_list(courses_sheet)
+    courses = filter_rows_for_institution(sheet_to_dict_list(courses_sheet), scope)
     
     enrollments_sheet = wb["Enrolments"]
-    enrollments = sheet_to_dict_list(enrollments_sheet)
+    enrollments = filter_rows_for_institution(sheet_to_dict_list(enrollments_sheet), scope)
     
     students_by_cohort = {"undergraduate": 0, "postgraduate": 0}
     for student in students:
@@ -1045,7 +1065,7 @@ async def get_stats(
     
     # Calculate compliance statistics from attendance
     attendance_sheet = wb["Attendance"]
-    attendance_data = sheet_to_dict_list(attendance_sheet)
+    attendance_data = filter_rows_for_institution(sheet_to_dict_list(attendance_sheet), scope)
     
     # Create attendance lookup by student_id
     attendance_by_student = {}
@@ -1089,14 +1109,18 @@ async def get_stats(
     try:
         if "Fee Records" in wb.sheetnames:
             fee_records_sheet = wb["Fee Records"]
-            fee_records = sheet_to_dict_list(fee_records_sheet)
+            fee_records = filter_rows_for_institution(
+                sheet_to_dict_list(fee_records_sheet), scope
+            )
     except:
         pass
     
     try:
         if "Payments" in wb.sheetnames:
             payments_sheet = wb["Payments"]
-            payments = sheet_to_dict_list(payments_sheet)
+            payments = filter_rows_for_institution(
+                sheet_to_dict_list(payments_sheet), scope
+            )
     except:
         pass
     
@@ -1265,15 +1289,23 @@ def _compute_leadership_extras(students: list, courses: list, enrollments: list)
     }
 
 
-def _parse_rankings_snapshot(wb) -> dict:
-    """Lightweight rankings readiness from Excel dashboard sheet."""
+def _parse_rankings_snapshot(wb, scope=None) -> dict:
+    """Lightweight rankings readiness from Excel dashboard sheet (institution-aware)."""
     if "Rankings Dashboard" not in wb.sheetnames:
         return None
     try:
+        from app.routes.rankings_excel import (
+            _comparison_col,
+            _institutional_from_comparison,
+            parse_percentage,
+        )
+
         ws = wb["Rankings Dashboard"]
+        col = _comparison_col(scope)
+        comparison = _institutional_from_comparison(ws, col)
 
         def overall_at_row(row: int) -> float:
-            return _parse_pct_value(ws[f"C{row}"].value)
+            return parse_percentage(ws[f"C{row}"].value)
 
         systems = [
             {"id": "webometrics", "name": "Webometrics", "readiness_pct": overall_at_row(17)},
@@ -1283,15 +1315,27 @@ def _parse_rankings_snapshot(wb) -> dict:
         systems = [s for s in systems if s["readiness_pct"] > 0]
         avg_readiness = round(sum(s["readiness_pct"] for s in systems) / len(systems), 1) if systems else 0
 
-        return {
-            "institutional_profile": {
+        if comparison:
+            profile = {
+                "faculty_count": comparison.get("faculty") or 0,
+                "student_faculty_ratio": comparison.get("student_faculty_ratio") or "—",
+                "avg_attendance": comparison.get("avg_attendance") or "—",
+                "international_students": comparison.get("international_students") or "—",
+                "female_ratio": comparison.get("female_ratio") or "—",
+                "schools_faculties": comparison.get("schools_faculties") or 0,
+            }
+        else:
+            profile = {
                 "faculty_count": int(ws["B8"].value or 0),
                 "student_faculty_ratio": str(ws["F7"].value or "—"),
                 "avg_attendance": str(ws["F8"].value or "—"),
                 "international_students": str(ws["F5"].value or "—"),
                 "female_ratio": str(ws["H5"].value or "—"),
                 "schools_faculties": int(ws["H7"].value or 0),
-            },
+            }
+
+        return {
+            "institutional_profile": profile,
             "ranking_systems": systems,
             "avg_ranking_readiness_pct": avg_readiness,
         }
@@ -1372,16 +1416,45 @@ def _retention_summary(db: Session, institution_id: Optional[int]) -> dict:
     }
 
 
-def _aid_pipeline_summary(db: Session) -> dict:
+def _aid_pipeline_summary(db: Session, institution_id: Optional[int] = None) -> dict:
     """Scholarship / grant pipeline counts for leadership dashboards."""
-    schol_apps = db.query(StudentScholarshipApplication).all()
-    grant_apps = db.query(StudentGrantApplication).all()
-    schol_programs = (
-        db.query(ScholarshipProgram).filter(ScholarshipProgram.program_kind == "scholarship").all()
-    )
-    grant_programs = (
-        db.query(ScholarshipProgram).filter(ScholarshipProgram.program_kind == "grant").all()
-    )
+    from sqlalchemy import or_
+
+    schol_q = db.query(StudentScholarshipApplication)
+    grant_q = db.query(StudentGrantApplication)
+    schol_prog_q = db.query(ScholarshipProgram).filter(ScholarshipProgram.program_kind == "scholarship")
+    grant_prog_q = db.query(ScholarshipProgram).filter(ScholarshipProgram.program_kind == "grant")
+
+    if institution_id is not None:
+        schol_q = schol_q.filter(
+            or_(
+                StudentScholarshipApplication.institution_id == institution_id,
+                StudentScholarshipApplication.institution_id.is_(None),
+            )
+        )
+        grant_q = grant_q.filter(
+            or_(
+                StudentGrantApplication.institution_id == institution_id,
+                StudentGrantApplication.institution_id.is_(None),
+            )
+        )
+        schol_prog_q = schol_prog_q.filter(
+            or_(
+                ScholarshipProgram.institution_id == institution_id,
+                ScholarshipProgram.institution_id.is_(None),
+            )
+        )
+        grant_prog_q = grant_prog_q.filter(
+            or_(
+                ScholarshipProgram.institution_id == institution_id,
+                ScholarshipProgram.institution_id.is_(None),
+            )
+        )
+
+    schol_apps = schol_q.all()
+    grant_apps = grant_q.all()
+    schol_programs = schol_prog_q.all()
+    grant_programs = grant_prog_q.all()
 
     def pending(rows):
         return sum(
@@ -1438,18 +1511,19 @@ async def get_executive_analytics(
     """Condensed analytics payload for leadership dashboards."""
     require_role(current_user, ["staff", "global_admin"])
 
+    scope = resolve_institution_excel_scope(db, current_user)
     wb = load_excel_data()
-    students = sheet_to_dict_list(wb["Students"])
-    courses = sheet_to_dict_list(wb["Courses"])
-    enrollments = sheet_to_dict_list(wb["Enrolments"])
+    students = filter_rows_for_institution(sheet_to_dict_list(wb["Students"]), scope)
+    courses = filter_rows_for_institution(sheet_to_dict_list(wb["Courses"]), scope)
+    enrollments = filter_rows_for_institution(sheet_to_dict_list(wb["Enrolments"]), scope)
     leadership = _compute_leadership_extras(students, courses, enrollments)
-    rankings_snapshot = _parse_rankings_snapshot(wb)
+    rankings_snapshot = _parse_rankings_snapshot(wb, scope)
     wb.close()
 
     stats = await get_stats(current_user=current_user, db=db)
-    at_risk_students = [s for s in _load_enriched_students() if s.get("is_at_risk")]
+    at_risk_students = [s for s in _load_enriched_students(scope) if s.get("is_at_risk")]
     retention = _retention_summary(db, getattr(current_user, "institution_id", None))
-    aid_pipeline = _aid_pipeline_summary(db)
+    aid_pipeline = _aid_pipeline_summary(db, getattr(current_user, "institution_id", None))
     enrollment_trend = _enrollment_trend_from_cohorts(stats.get("students_by_cohort") or {})
 
     total = stats.get("total_students") or 0

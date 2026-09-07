@@ -627,8 +627,23 @@ def delete_draft_application(
     return True
 
 
-def list_grant_applications(db: Session, student_number: Optional[str] = None) -> list[StudentGrantApplication]:
+def list_grant_applications(
+    db: Session,
+    student_number: Optional[str] = None,
+    institution_id: Optional[int] = None,
+) -> list[StudentGrantApplication]:
+    from sqlalchemy import or_
+
     q = db.query(StudentGrantApplication).order_by(StudentGrantApplication.updated_at.desc())
     if student_number:
         q = q.filter(StudentGrantApplication.student_number == str(student_number))
+    if institution_id is not None:
+        # Include institution-tagged rows plus legacy rows with null institution_id
+        # (caller further filters legacy rows by student domain membership).
+        q = q.filter(
+            or_(
+                StudentGrantApplication.institution_id == institution_id,
+                StudentGrantApplication.institution_id.is_(None),
+            )
+        )
     return q.all()

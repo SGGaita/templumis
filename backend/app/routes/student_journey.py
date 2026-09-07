@@ -18,6 +18,10 @@ from app.schemas import (
 router = APIRouter(prefix="/api/student-journey", tags=["Student Journey"])
 
 from app.excel_paths import resolve_excel_path
+from app.excel_institution_scope import (
+    resolve_institution_excel_scope,
+    row_matches_institution_scope,
+)
 from app.pg_excel import (
     load_library_resources,
     load_phd_research,
@@ -613,6 +617,8 @@ async def get_all_student_journeys(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only staff can view all student journeys"
         )
+
+    scope = resolve_institution_excel_scope(db, current_user)
     
     try:
         wb = openpyxl.load_workbook(_journey_excel_path(), data_only=True)
@@ -620,9 +626,13 @@ async def get_all_student_journeys(
         
         journeys = []
         
-        # Skip header rows (rows 1-2)
+        # Skip header rows (rows 1-2); Institution is column index 25
         for row in ws.iter_rows(min_row=3, values_only=True):
             if not row[0]:  # Skip empty rows
+                continue
+
+            institution_name = row[25] if len(row) > 25 else None
+            if not row_matches_institution_scope({"institution": institution_name}, scope):
                 continue
             
             # Calculate risk score based on academic standing and fees
@@ -682,6 +692,7 @@ async def get_all_student_journeys(
                 "department": str(row[4]) if row[4] else "Unknown",
                 "enrolment_date": str(row[5]) if row[5] else None,
                 "current_year_sem": str(row[6]) if row[6] else "Unknown",
+                "institution": str(institution_name) if institution_name else None,
                 "academic_progression": {
                     "sem_1_status": str(row[7]) if row[7] else "Pending",
                     "sem_2_status": str(row[8]) if row[8] else "Pending",

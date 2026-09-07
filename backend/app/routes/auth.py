@@ -12,6 +12,11 @@ from app.schemas import Token, LoginRequest, UserOut, InstitutionUserCreate, Ema
 from app.models import User, UserRole, Institution, InstitutionDomain, AuditLog
 from app.email import send_verification_email
 from app.routes.sis_lms import load_excel_data, sheet_to_dict_list
+from app.excel_institution_scope import (
+    filter_rows_for_institution,
+    row_matches_institution_scope,
+    scope_from_domains,
+)
 from app.account_category import sync_account_category
 from app.institution_modules import (
     effective_enabled_modules_for_user,
@@ -147,12 +152,19 @@ async def signup(data: InstitutionUserCreate, db: Session = Depends(get_db)):
                 detail="Student registration number is required for student accounts"
             )
         
-        # Verify student exists in Excel and email matches
+        # Verify student exists in Excel and email matches (same institution only)
         try:
             wb = load_excel_data()
             students_sheet = wb["Students"]
             students = sheet_to_dict_list(students_sheet)
             wb.close()
+
+            scope = scope_from_domains(
+                [email_domain],
+                institution_id=institution.id,
+                name=institution.name,
+            )
+            students = filter_rows_for_institution(students, scope)
             
             # Find student by ID
             student_record = next((s for s in students if s.get("student_id") == data.student_registration_number), None)
@@ -168,6 +180,11 @@ async def signup(data: InstitutionUserCreate, db: Session = Depends(get_db)):
                 raise HTTPException(
                     status_code=400,
                     detail="Email does not match the student ID in our records. Please use your institutional email."
+                )
+            if not row_matches_institution_scope(student_record, scope):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Student record does not belong to this institution domain."
                 )
         except HTTPException:
             raise
@@ -409,6 +426,13 @@ async def validate_email(email: str, db: Session = Depends(get_db)):
         students_sheet = wb["Students"]
         students = sheet_to_dict_list(students_sheet)
         wb.close()
+
+        scope = scope_from_domains(
+            [email_domain],
+            institution_id=institution.id,
+            name=institution.name,
+        )
+        students = filter_rows_for_institution(students, scope)
         
         # Find student by email in Excel
         student_record = next((s for s in students if s.get("email", "").lower() == email.lower()), None)

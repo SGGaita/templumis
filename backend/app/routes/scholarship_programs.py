@@ -15,19 +15,24 @@ from app.permissions import (
 )
 from app import scholarship_catalog as catalog
 from app import scholarship_db
+from app.excel_institution_scope import (
+    InstitutionExcelScope,
+    filter_rows_for_institution,
+    resolve_institution_excel_scope,
+)
 from app.models import ScholarshipProgram, StudentScholarshipApplication, User
 from app.routes.sis_lms import load_excel_data, sheet_to_dict_list
 
 router = APIRouter(prefix="/api/sis-lms/scholarships", tags=["Scholarships"])
 
 
-def _load_students_index() -> dict[str, dict]:
+def _load_students_index(scope: InstitutionExcelScope | None = None) -> dict[str, dict]:
     try:
         wb = load_excel_data()
         if "Students" not in wb.sheetnames:
             wb.close()
             return {}
-        students = sheet_to_dict_list(wb["Students"])
+        students = filter_rows_for_institution(sheet_to_dict_list(wb["Students"]), scope)
         wb.close()
         return {str(s.get("student_id")): s for s in students if s.get("student_id")}
     except Exception:
@@ -46,22 +51,40 @@ async def list_staff_applications(
     """All student scholarship applications from PostgreSQL (live data only)."""
     assert_staff_portal(current_user)
 
+    scope = resolve_institution_excel_scope(db, current_user)
     q = db.query(StudentScholarshipApplication).order_by(
         StudentScholarshipApplication.updated_at.desc()
     )
     if status and status.lower() != "all":
         q = q.filter(StudentScholarshipApplication.status.ilike(f"%{status}%"))
+    if current_user.institution_id is not None:
+        from sqlalchemy import or_
+
+        q = q.filter(
+            or_(
+                StudentScholarshipApplication.institution_id == current_user.institution_id,
+                StudentScholarshipApplication.institution_id.is_(None),
+            )
+        )
 
     rows = q.all()
     schol_by_id = catalog.programs_lookup(db, include_admin=True)
-    students = _load_students_index()
+    students = _load_students_index(scope)
 
     applications = []
     for row in rows:
+        sid = str(row.student_number)
+        if scope and scope.is_active:
+            belongs = (
+                row.institution_id == scope.institution_id
+                or sid in students
+            )
+            if not belongs:
+                continue
         if str(row.status).lower() == "draft" and status and status.lower() not in ("all", "draft"):
             continue
         schol = schol_by_id.get(str(row.scholarship_external_id)) or {}
-        student = students.get(str(row.student_number)) or {}
+        student = students.get(sid) or {}
         app_dict = scholarship_db.app_to_dict(row, schol)
         name = (
             student.get("full_name")

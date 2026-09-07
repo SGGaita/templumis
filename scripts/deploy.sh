@@ -83,6 +83,10 @@ compose_up_services() {
   if docker compose up --help 2>/dev/null | grep -q -- '--no-build'; then
     extra+=(--no-build)
   fi
+  # Always recreate so a freshly built image is not left unused by a running container.
+  if docker compose up --help 2>/dev/null | grep -q -- '--force-recreate'; then
+    extra+=(--force-recreate)
+  fi
   if docker compose up --help 2>/dev/null | grep -q -- '--wait' && [[ "${1:-}" == "--wait" ]]; then
     shift
     extra+=(--wait --wait-timeout 180)
