@@ -120,7 +120,7 @@ const vi = {
   // ─── Auth ──────────────────────────────────────────────────────────────────
   auth: {
     login: {
-      title: "Chào mừng trở lại",
+      title: "Chào mừng",
       subtitle: "Đăng nhập vào tài khoản của bạn để tiếp tục",
       emailLabel: "Địa chỉ email",
       passwordLabel: "Mật khẩu",

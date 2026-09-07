@@ -120,7 +120,7 @@ const fr = {
   // ─── Auth ──────────────────────────────────────────────────────────────────
   auth: {
     login: {
-      title: "Bon retour",
+      title: "Bienvenue",
       subtitle: "Connectez-vous à votre compte pour continuer",
       emailLabel: "Adresse e-mail",
       passwordLabel: "Mot de passe",

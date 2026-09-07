@@ -120,7 +120,7 @@ const en = {
   // ─── Auth ──────────────────────────────────────────────────────────────────
   auth: {
     login: {
-      title: "Welcome Back",
+      title: "Welcome",
       subtitle: "Sign in to your account to continue",
       emailLabel: "Email Address",
       passwordLabel: "Password",

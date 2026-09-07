@@ -120,7 +120,7 @@ const ms = {
   // ─── Auth ──────────────────────────────────────────────────────────────────
   auth: {
     login: {
-      title: "Selamat Kembali",
+      title: "Selamat Datang",
       subtitle: "Log masuk ke akaun anda untuk meneruskan",
       emailLabel: "Alamat Emel",
       passwordLabel: "Kata Laluan",

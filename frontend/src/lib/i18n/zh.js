@@ -120,7 +120,7 @@ const zh = {
   // ─── Auth ──────────────────────────────────────────────────────────────────
   auth: {
     login: {
-      title: "欢迎回来",
+      title: "欢迎",
       subtitle: "登录您的账户以继续",
       emailLabel: "邮箱地址",
       passwordLabel: "密码",

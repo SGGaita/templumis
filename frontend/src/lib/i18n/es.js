@@ -120,7 +120,7 @@ const es = {
   // ─── Auth ──────────────────────────────────────────────────────────────────
   auth: {
     login: {
-      title: "Bienvenido de nuevo",
+      title: "Bienvenido",
       subtitle: "Inicie sesión en su cuenta para continuar",
       emailLabel: "Dirección de correo electrónico",
       passwordLabel: "Contraseña",

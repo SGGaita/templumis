@@ -120,7 +120,7 @@ const pt = {
   // ─── Auth ──────────────────────────────────────────────────────────────────
   auth: {
     login: {
-      title: "Bem-vindo de volta",
+      title: "Bem-vindo",
       subtitle: "Entre na sua conta para continuar",
       emailLabel: "Endereço de e-mail",
       passwordLabel: "Senha",

@@ -120,7 +120,7 @@ const id = {
   // ─── Auth ──────────────────────────────────────────────────────────────────
   auth: {
     login: {
-      title: "Selamat Datang Kembali",
+      title: "Selamat Datang",
       subtitle: "Masuk ke akun Anda untuk melanjutkan",
       emailLabel: "Alamat Email",
       passwordLabel: "Kata Sandi",

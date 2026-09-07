@@ -120,7 +120,7 @@ const sw = {
   // ─── Auth ──────────────────────────────────────────────────────────────────
   auth: {
     login: {
-      title: "Karibu Tena",
+      title: "Karibu",
       subtitle: "Ingia kwenye akaunti yako ili kuendelea",
       emailLabel: "Anwani ya Barua Pepe",
       passwordLabel: "Nenosiri",
