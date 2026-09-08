@@ -4,7 +4,10 @@ docker-compose.yml
 .env
 .env.local
 .env.*.local
-data/
+# Keep SIS Excel workbooks in sync; only skip local junk / uploads under data/
+data/~$*
+data/*.tmp
+data/uploads/
 backend/data/uploads/
 node_modules/
 frontend/node_modules/

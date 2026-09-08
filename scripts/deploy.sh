@@ -159,6 +159,14 @@ fi
 wait_for_health
 trap - ERR
 
+echo "Checking SIS Excel workbook inside backend..."
+if ! docker compose exec -T backend python -c \
+  "from app.excel_paths import resolve_excel_path; p=resolve_excel_path(); print(p)"; then
+  echo "ERROR: templumis_university_v2.xlsx (or v1 fallback) not found in backend /data mount."
+  echo "Ensure data/templumis_university_v2.xlsx is present under ${APP_DIR}/data and compose mounts ./data:/data."
+  exit 1
+fi
+
 if nginx_running; then
   if docker compose exec -T nginx nginx -s reload >/dev/null 2>&1; then
     echo "Reloaded nginx"
