@@ -64,15 +64,6 @@ export default function SiteFooter() {
             </MuiLink>
             <MuiLink
               component={Link}
-              href="/documentation"
-              underline="hover"
-              variant="body2"
-              sx={linkSx}
-            >
-              {t.common.documentation}
-            </MuiLink>
-            <MuiLink
-              component={Link}
               href="/faqs"
               underline="hover"
               variant="body2"

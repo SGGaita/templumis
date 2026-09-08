@@ -17,7 +17,6 @@ import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import LoginIcon from "@mui/icons-material/Login";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import MenuBookIcon from "@mui/icons-material/MenuBook";
 import BrandLogo from "@/components/BrandLogo";
 import LanguageToggle from "@/components/LanguageToggle";
 import { useLanguage } from "@/lib/language-context";
@@ -37,9 +36,6 @@ export default function PublicNavbar({ showSignup = false }) {
 
   const desktopLinks = (
     <>
-      <Button variant="text" onClick={() => go("/documentation")} sx={{ fontWeight: 600 }}>
-        {t.common.documentation}
-      </Button>
       <Button
         variant="outlined"
         startIcon={<LoginIcon />}
@@ -146,12 +142,6 @@ export default function PublicNavbar({ showSignup = false }) {
         </Box>
         <Divider />
         <List sx={{ px: 1, py: 1.5 }}>
-          <ListItemButton onClick={() => go("/documentation")} sx={{ borderRadius: 1.5 }}>
-            <ListItemIcon sx={{ minWidth: 40 }}>
-              <MenuBookIcon />
-            </ListItemIcon>
-            <ListItemText primary={t.common.documentation} />
-          </ListItemButton>
           <ListItemButton onClick={() => go("/login")} sx={{ borderRadius: 1.5 }}>
             <ListItemIcon sx={{ minWidth: 40 }}>
               <LoginIcon />
