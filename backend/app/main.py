@@ -131,6 +131,8 @@ def ensure_scholarship_tables():
             ("verification_code_expires", "TIMESTAMP"),
             ("invite_token", "VARCHAR(64)"),
             ("invite_token_expires", "TIMESTAMP"),
+            ("password_reset_token", "VARCHAR(64)"),
+            ("password_reset_expires", "TIMESTAMP"),
         ]
         for col, typ in user_columns:
             conn.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {typ}"))

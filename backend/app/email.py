@@ -207,6 +207,26 @@ def send_review_task_email(
     return send_email(to_email, subject, html_body, text_body)
 
 
+def send_password_reset_email(*, to_email: str, full_name: str, reset_url: str) -> bool:
+    subject = "Reset your TemplumIS password"
+    html_body = _email_shell(
+        "Password reset",
+        f"""
+        <h2>Hello {full_name},</h2>
+        <p>We received a request to reset the password for your TemplumIS account.</p>
+        <p><a class="button" href="{reset_url}">Choose a new password</a></p>
+        <p>This link expires in 1 hour. If you did not request a reset, you can ignore this email.</p>
+        """,
+    )
+    text_body = (
+        f"Hello {full_name},\n\n"
+        "We received a request to reset your TemplumIS password.\n"
+        f"Choose a new password: {reset_url}\n\n"
+        "This link expires in 1 hour. If you did not request a reset, ignore this email.\n"
+    )
+    return send_email(to_email, subject, html_body, text_body)
+
+
 def send_email(to_email: str, subject: str, html_body: str, text_body: str):
     """Send email using SMTP"""
     

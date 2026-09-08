@@ -130,6 +130,10 @@ class UserUpdate(BaseModel):
     role: str | None = None
 
 
+class UserPasswordUpdate(BaseModel):
+    password: str
+
+
 class PlatformSettingsOut(BaseModel):
     platform_name: str
     support_email: str
@@ -149,6 +153,17 @@ class PlatformSettingsUpdate(BaseModel):
 class EmailVerification(BaseModel):
     email: EmailStr
     verification_code: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+    origin: str | None = None
+
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    token: str
+    password: str
 
 
 # Student Journey Schemas

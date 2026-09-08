@@ -10,6 +10,9 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
+import Link from "@mui/material/Link";
+import AppBar from "@mui/material/AppBar";
+import Toolbar from "@mui/material/Toolbar";
 import { useAuth } from "@/lib/auth-context";
 import BrandLogo from "@/components/BrandLogo";
 import LanguageToggle from "@/components/LanguageToggle";
@@ -41,16 +44,21 @@ export default function GlobalAdminLoginPage() {
     }
   };
 
+  const goHome = () => router.push("/");
+
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", bgcolor: "background.default" }}>
-      <Box sx={{ position: "absolute", top: 16, right: 16 }}>
-        <LanguageToggle />
-      </Box>
+      <AppBar position="static" color="default" elevation={1}>
+        <Toolbar sx={{ minHeight: 88, py: 1.5, px: { xs: 2, sm: 3 }, justifyContent: "space-between" }}>
+          <BrandLogo height={64} format="png" onClick={goHome} />
+          <LanguageToggle />
+        </Toolbar>
+      </AppBar>
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", p: 2 }}>
       <Card sx={{ width: 400, p: 2 }}>
         <CardContent>
           <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
-            <BrandLogo height={112} format="png" />
+            <BrandLogo height={112} format="png" onClick={goHome} />
           </Box>
           <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ mb: 3 }}>{L.subtitle}</Typography>
 
@@ -62,6 +70,11 @@ export default function GlobalAdminLoginPage() {
             <Button fullWidth type="submit" variant="contained" size="large" disabled={loading}>
               {loading ? <CircularProgress size={24} /> : L.signInBtn}
             </Button>
+          </Box>
+          <Box sx={{ textAlign: "center", mt: 2 }}>
+            <Link component="button" type="button" variant="body2" onClick={goHome} sx={{ cursor: "pointer" }}>
+              {L.backToHome}
+            </Link>
           </Box>
         </CardContent>
       </Card>

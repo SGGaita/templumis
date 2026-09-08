@@ -9,7 +9,7 @@ from app import institution_logos
 from app.schemas import (
     DomainCreate, DomainUpdate, DomainOut,
     InstitutionOut, InstitutionUpdate,
-    InstitutionUserCreate, UserUpdate, UserOut,
+    InstitutionUserCreate, UserUpdate, UserPasswordUpdate, UserOut,
 )
 from app.institution_modules import (
     normalize_enabled_modules,
@@ -368,6 +368,36 @@ async def activate_user(
         action="activate_user",
         entity_type="user",
         entity_id=user_id,
+    ))
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.patch("/users/{user_id}/password", response_model=UserOut)
+async def change_user_password(
+    user_id: int,
+    data: UserPasswordUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.INSTITUTION_ADMIN)),
+):
+    inst = _get_admin_institution(current_user, db)
+    user = db.query(User).filter(User.id == user_id, User.institution_id == inst.id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found in this institution")
+    if user.role == UserRole.GLOBAL_ADMIN:
+        raise HTTPException(status_code=403, detail="Cannot change this user's password")
+    if not data.password or len(data.password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+
+    user.hashed_password = hash_password(data.password)
+    db.add(AuditLog(
+        institution_id=inst.id,
+        user_id=current_user.id,
+        action="change_user_password",
+        entity_type="user",
+        entity_id=user_id,
+        details={"email": user.email},
     ))
     db.commit()
     db.refresh(user)

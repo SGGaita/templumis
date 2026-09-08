@@ -2,15 +2,20 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
+from urllib.parse import quote, urlparse
+import hashlib
+import ipaddress
 import logging
 import random
+import secrets
 import string
 
 from app.database import get_db
 from app.auth import authenticate_user, create_access_token, get_current_user, hash_password, validate_email_domain
-from app.schemas import Token, LoginRequest, UserOut, InstitutionUserCreate, EmailVerification
+from app.config import settings
+from app.schemas import Token, LoginRequest, UserOut, InstitutionUserCreate, EmailVerification, ForgotPasswordRequest, ResetPasswordRequest
 from app.models import User, UserRole, Institution, InstitutionDomain, AuditLog
-from app.email import send_verification_email
+from app.email import send_verification_email, send_password_reset_email
 from app.routes.sis_lms import load_excel_data, sheet_to_dict_list
 from app.excel_institution_scope import (
     filter_rows_for_institution,
@@ -31,6 +36,43 @@ router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 def _role_value(user: User) -> str:
     role = user.role
     return role.value if hasattr(role, "value") else str(role)
+
+
+def _hash_reset_token(raw: str) -> str:
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def _is_safe_app_origin(origin: str) -> bool:
+    parsed = urlparse(origin)
+    if parsed.scheme not in ("http", "https"):
+        return False
+    if parsed.path not in ("", "/"):
+        return False
+    if parsed.query or parsed.fragment or parsed.username:
+        return False
+    host = parsed.hostname
+    if not host:
+        return False
+    allowed_hosts = set()
+    for allowed in [*settings.cors_origins, settings.app_base_url or ""]:
+        a = urlparse(allowed if "://" in allowed else f"http://{allowed}")
+        if a.hostname:
+            allowed_hosts.add(a.hostname.lower())
+    if host.lower() in allowed_hosts or host.lower() in ("localhost", "127.0.0.1"):
+        return True
+    try:
+        ip = ipaddress.ip_address(host)
+        return bool(ip.is_private or ip.is_loopback)
+    except ValueError:
+        return False
+
+
+def _public_app_url(requested: str | None) -> str:
+    if requested:
+        origin = requested.strip().rstrip("/")
+        if _is_safe_app_origin(origin):
+            return origin
+    return (settings.app_base_url or settings.cors_origins[0]).rstrip("/")
 
 
 @router.post("/login", response_model=Token)
@@ -367,6 +409,69 @@ async def resend_verification(email: str, db: Session = Depends(get_db)):
         return {"message": "Verification code sent successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+
+
+@router.post("/forgot-password")
+async def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """Send a password reset link. Always returns the same response."""
+    generic = {"message": "If an account exists for that email, a reset link has been sent."}
+    email = (data.email or "").strip().lower()
+    user = db.query(User).filter(User.email == email).first()
+    if not user or not user.is_active:
+        return generic
+
+    raw_token = secrets.token_urlsafe(32)
+    user.password_reset_token = _hash_reset_token(raw_token)
+    user.password_reset_expires = datetime.utcnow() + timedelta(hours=1)
+    db.commit()
+
+    base = _public_app_url(data.origin)
+    reset_url = f"{base}/reset-password?token={quote(raw_token)}&email={quote(user.email)}"
+    try:
+        send_password_reset_email(
+            to_email=user.email,
+            full_name=user.full_name,
+            reset_url=reset_url,
+        )
+    except Exception as exc:
+        logger.exception("Failed to send password reset email to %s", user.email)
+        print(f"Failed to send password reset email: {exc}")
+    return generic
+
+
+@router.post("/reset-password")
+async def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
+    if not data.password or len(data.password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    token = (data.token or "").strip()
+    email = (data.email or "").strip().lower()
+    if not token or not email:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset link")
+
+    user = db.query(User).filter(User.email == email).first()
+    if (
+        not user
+        or not user.is_active
+        or not user.password_reset_token
+        or user.password_reset_token != _hash_reset_token(token)
+    ):
+        raise HTTPException(status_code=400, detail="Invalid or expired reset link")
+    if user.password_reset_expires and datetime.utcnow() > user.password_reset_expires:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset link")
+
+    user.hashed_password = hash_password(data.password)
+    user.password_reset_token = None
+    user.password_reset_expires = None
+    db.add(AuditLog(
+        institution_id=user.institution_id,
+        user_id=user.id,
+        action="reset_password",
+        entity_type="user",
+        entity_id=user.id,
+        details={"email": user.email},
+    ))
+    db.commit()
+    return {"message": "Password updated"}
 
 
 @router.get("/validate-email/{email}")
