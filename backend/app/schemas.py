@@ -457,6 +457,52 @@ class InstitutionRankingBase(BaseModel):
     ranking_url: Optional[str] = None
 
 
+class DemoRequestCreate(BaseModel):
+    full_name: str
+    email: EmailStr
+    institution: str
+    job_title: str
+    phone: str | None = None
+    message: str | None = None
+    website: str | None = None
+
+    @field_validator("full_name", "institution", "job_title")
+    @classmethod
+    def required_short_text(cls, value: str) -> str:
+        cleaned = (value or "").strip()
+        if not cleaned:
+            raise ValueError("This field is required")
+        if len(cleaned) > 200:
+            raise ValueError("This field is too long")
+        return cleaned
+
+    @field_validator("phone")
+    @classmethod
+    def optional_phone(cls, value: str | None) -> str | None:
+        cleaned = (value or "").strip()
+        if not cleaned:
+            return None
+        if len(cleaned) > 50:
+            raise ValueError("This field is too long")
+        return cleaned
+
+    @field_validator("message")
+    @classmethod
+    def optional_message(cls, value: str | None) -> str | None:
+        cleaned = (value or "").strip()
+        if not cleaned:
+            return None
+        if len(cleaned) > 4000:
+            raise ValueError("This field is too long")
+        return cleaned
+
+    @field_validator("website")
+    @classmethod
+    def honeypot(cls, value: str | None) -> str | None:
+        cleaned = (value or "").strip()
+        return cleaned or None
+
+
 class InstitutionRankingCreate(InstitutionRankingBase):
     pass
 

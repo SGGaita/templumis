@@ -5,6 +5,7 @@ Email service for sending verification and notification emails
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from html import escape
 from app.config import settings
 
 
@@ -227,15 +228,70 @@ def send_password_reset_email(*, to_email: str, full_name: str, reset_url: str) 
     return send_email(to_email, subject, html_body, text_body)
 
 
-def send_email(to_email: str, subject: str, html_body: str, text_body: str):
+def _clean_header(value: str) -> str:
+    return (value or "").replace("\r", "").replace("\n", "").strip()
+
+
+def send_demo_request_email(
+    *,
+    full_name: str,
+    email: str,
+    institution: str,
+    job_title: str,
+    phone: str | None,
+    message: str | None,
+) -> bool:
+    """Notify the TemplumIS team of a public demo booking request."""
+    safe_name = escape(full_name)
+    safe_email = escape(email)
+    safe_institution = escape(institution)
+    safe_title = escape(job_title)
+    safe_phone = escape(phone) if phone else "—"
+    safe_message = escape(message).replace("\n", "<br>") if message else "—"
+    subject = f"Demo request — {institution}"
+    html_body = _email_shell(
+        "New demo request",
+        f"""
+        <p>A visitor requested a TemplumIS demonstration.</p>
+        <p>
+        <strong>Name:</strong> {safe_name}<br>
+        <strong>Email:</strong> {safe_email}<br>
+        <strong>Institution:</strong> {safe_institution}<br>
+        <strong>Role / job title:</strong> {safe_title}<br>
+        <strong>Phone:</strong> {safe_phone}
+        </p>
+        <p><strong>Message:</strong><br>{safe_message}</p>
+        """,
+    )
+    text_body = (
+        "A visitor requested a TemplumIS demonstration.\n\n"
+        f"Name: {full_name}\n"
+        f"Email: {email}\n"
+        f"Institution: {institution}\n"
+        f"Role / job title: {job_title}\n"
+        f"Phone: {phone or '—'}\n\n"
+        f"Message:\n{message or '—'}\n"
+    )
+    return send_email(
+        settings.DEMO_REQUEST_EMAIL,
+        subject,
+        html_body,
+        text_body,
+        reply_to=email,
+    )
+
+
+def send_email(to_email: str, subject: str, html_body: str, text_body: str, reply_to: str | None = None):
     """Send email using SMTP"""
     
     try:
         # Create message
         message = MIMEMultipart("alternative")
-        message["Subject"] = subject
+        message["Subject"] = _clean_header(subject)
         message["From"] = settings.FROM_EMAIL
         message["To"] = to_email
+        if reply_to:
+            message["Reply-To"] = _clean_header(reply_to)
         
         # Attach both plain text and HTML versions
         part1 = MIMEText(text_body, "plain")

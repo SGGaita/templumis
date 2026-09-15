@@ -186,8 +186,11 @@ const PRINT_BODY_CLASSES = ["print-analytics-summary", "print-analytics-tab", "p
 export default function ExecutiveAnalyticsPage() {
   const router = useRouter();
   const { t } = useLanguage();
+  const A = t.staff.analytics;
+  const N = t.staff.nsfas.executive;
   const R = t.staff.analytics.retention;
   const [data, setData] = useState(null);
+  const [nsfasData, setNsfasData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [tab, setTab] = useState(0);
@@ -206,8 +209,14 @@ export default function ExecutiveAnalyticsPage() {
   const [printMenuAnchor, setPrintMenuAnchor] = useState(null);
 
   useEffect(() => {
-    apiFetch("/sis-lms/analytics/executive")
-      .then(setData)
+    Promise.all([
+      apiFetch("/sis-lms/analytics/executive"),
+      apiFetch("/sis-lms/nsfas/tracking").catch(() => null),
+    ])
+      .then(([exec, nsfas]) => {
+        setData(exec);
+        setNsfasData(nsfas?.kpis?.total_beneficiaries > 0 ? nsfas : null);
+      })
       .catch((err) => setError(err.message || "Failed to load analytics"))
       .finally(() => setLoading(false));
   }, []);
@@ -402,15 +411,15 @@ export default function ExecutiveAnalyticsPage() {
         <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-start", gap: 2 }}>
           <Box>
             <Chip
-              label="Executive briefing"
+              label={A.executiveBadge}
               size="small"
               sx={{ bgcolor: "rgba(255,255,255,0.15)", color: "white", fontWeight: 600, mb: 1 }}
             />
             <Typography variant="h5" fontWeight={800}>
-              Institutional Analytics
+              {A.executiveTitle}
             </Typography>
             <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5, maxWidth: 520 }}>
-              Decision-ready snapshot for leadership — interactive views, no exhaustive lists
+              {A.executiveSubtitle}
             </Typography>
           </Box>
           <Box sx={{ textAlign: { xs: "left", sm: "right" } }} className="analytics-no-print">
@@ -1258,6 +1267,71 @@ export default function ExecutiveAnalyticsPage() {
                   <Typography variant="body2" color="text.secondary">No scholarship applications on record</Typography>
                 )}
               </Box>
+            </Panel>
+          </Grid>
+
+          <Grid item xs={12}>
+            <Panel
+              title={N.title}
+              subtitle={N.subtitle}
+              action={
+                nsfasData ? (
+                  <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                    <Button size="small" variant="outlined" sx={{ textTransform: "none" }} onClick={() => router.push("/staff/nsfas/reports/analytics")}>
+                      {N.viewAnalytics}
+                    </Button>
+                    <Button size="small" variant="text" sx={{ textTransform: "none" }} onClick={() => router.push("/staff/nsfas/reports")}>
+                      {N.viewReports}
+                    </Button>
+                  </Box>
+                ) : null
+              }
+            >
+              {nsfasData ? (
+                <Grid container spacing={2}>
+                  <Grid item xs={6} sm={3}>
+                    <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.5, textAlign: "center" }}>
+                      <Typography variant="h5" fontWeight={800}>{nsfasData.kpis.total_beneficiaries}</Typography>
+                      <Typography variant="caption" color="text.secondary">{N.beneficiaries}</Typography>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.5, textAlign: "center" }}>
+                      <Typography variant="h5" fontWeight={800} sx={{ color: ST.colors.success }}>
+                        {formatKes(nsfasData.kpis["total_disbursed_(kes)"])}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">{N.disbursed}</Typography>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.5, textAlign: "center" }}>
+                      <Typography variant="h5" fontWeight={800}>{nsfasData.kpis.average_gpa ?? "—"}</Typography>
+                      <Typography variant="caption" color="text.secondary">Avg GPA</Typography>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Paper
+                      variant="outlined"
+                      sx={{
+                        p: 2,
+                        borderRadius: 1.5,
+                        textAlign: "center",
+                        cursor: "pointer",
+                        borderColor: nsfasData.kpis.high_risk_or_critical > 0 ? ST.colors.error : ST.colors.border,
+                        "&:hover": { boxShadow: 2 },
+                      }}
+                      onClick={() => router.push("/staff/nsfas/reports?risk=High%20Risk")}
+                    >
+                      <Typography variant="h5" fontWeight={800} sx={{ color: nsfasData.kpis.high_risk_or_critical > 0 ? ST.colors.error : ST.colors.success }}>
+                        {nsfasData.kpis.high_risk_or_critical}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">{N.atRisk}</Typography>
+                    </Paper>
+                  </Grid>
+                </Grid>
+              ) : (
+                <Typography variant="body2" color="text.secondary">{N.unavailable}</Typography>
+              )}
             </Panel>
           </Grid>
         </Grid>

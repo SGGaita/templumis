@@ -4,11 +4,12 @@ export const INSTITUTION_MODULES = [
   { id: "support", student: true, staff: true },
   { id: "grants", student: true, staff: true },
   { id: "rankings", student: false, staff: true },
+  { id: "nsfas", student: false, staff: true },
 ];
 
 export const DEFAULT_ENABLED_MODULES = {
   student: ["enrollment", "scholarships", "support", "grants"],
-  staff: ["enrollment", "scholarships", "support", "grants", "rankings"],
+  staff: ["enrollment", "scholarships", "support", "grants", "rankings", "nsfas"],
 };
 
 export const STAFF_ACCESS_ROLES = [
@@ -48,6 +49,11 @@ export const STAFF_MODULE_NAV_ITEMS = {
     { id: "configure", path: "/staff/grants/configure", labelKey: "configureGrants" },
   ],
   rankings: [{ id: "rankings", path: "/staff/rankings", labelKey: "rankings" }],
+  nsfas: [
+    { id: "nsfas_students", path: "/staff/nsfas", labelKey: "nsfasStudents" },
+    { id: "nsfas_reports", path: "/staff/nsfas/reports", labelKey: "nsfasReports" },
+    { id: "nsfas_reports_analytics", path: "/staff/nsfas/reports/analytics", labelKey: "nsfasVisualAnalytics" },
+  ],
 };
 
 export const FULL_MODULE = "*";
@@ -78,6 +84,7 @@ const STAFF_PATH_MODULES = [
   { prefixes: ["/staff/support"], modules: ["support"] },
   { prefixes: ["/staff/grants"], modules: ["grants"] },
   { prefixes: ["/staff/rankings"], modules: ["rankings"] },
+  { prefixes: ["/staff/nsfas"], modules: ["nsfas"] },
 ];
 
 const INSTITUTION_ADMIN_PATH_MODULES = [

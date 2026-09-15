@@ -14,6 +14,8 @@ import FactCheckIcon from "@mui/icons-material/FactCheck";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import HistoryIcon from "@mui/icons-material/History";
 import EmojiEventsOutlinedIcon from "@mui/icons-material/EmojiEventsOutlined";
+import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
+import AssessmentIcon from "@mui/icons-material/Assessment";
 import { isFinancialAidOfficerOnly } from "@/lib/staffPermissions";
 import { isSponsorUser } from "@/lib/sponsorPermissions";
 import { filterNavGroupsByModules, normalizeEnabledModules } from "@/lib/institutionModules";
@@ -81,6 +83,30 @@ export const staffNavGroups = [
         path: "/staff/scholarships/configure",
         roles: ["scholarship_office", "global_admin"],
         module: "scholarships",
+      },
+    ],
+  },
+  {
+    label: "NSFAS",
+    items: [
+      {
+        text: "NSFAS Students",
+        icon: <VolunteerActivismIcon fontSize="small" />,
+        path: "/staff/nsfas",
+        module: "nsfas",
+      },
+      {
+        text: "NSFAS Tracking Reports",
+        icon: <AssessmentIcon fontSize="small" />,
+        path: "/staff/nsfas/reports",
+        module: "nsfas",
+      },
+      {
+        text: "NSFAS Visual Analytics",
+        icon: <BarChartIcon fontSize="small" />,
+        path: "/staff/nsfas/reports/analytics",
+        module: "nsfas",
+        textKey: "nsfasVisualAnalytics",
       },
     ],
   },

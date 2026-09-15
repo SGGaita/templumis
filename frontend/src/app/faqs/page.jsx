@@ -14,6 +14,12 @@ import SiteFooter from "@/components/SiteFooter";
 import { BRAND } from "@/lib/brand";
 import { useLanguage } from "@/lib/language-context";
 
+const BRAND_NAME = "TemplumIS";
+
+const FAQ_ITEM_HREFS = {
+  demo: "/book-demo",
+};
+
 const FAQ_CATEGORIES = [
   {
     key: "about",
@@ -33,19 +39,56 @@ const FAQ_CATEGORIES = [
   },
 ];
 
-function FaqAnswer({ item, documentationLabel }) {
+function CategoryTitle({ title }) {
+  const parts = title.split(BRAND_NAME);
+
+  return (
+    <Typography
+      variant="overline"
+      sx={{
+        display: "block",
+        color: BRAND.teal,
+        fontWeight: 700,
+        letterSpacing: 1.2,
+        mb: 0.5,
+      }}
+    >
+      {parts.length === 1
+        ? title
+        : parts.map((part, index) => (
+            <Box component="span" key={index}>
+              {part}
+              {index < parts.length - 1 ? (
+                <Box component="span" sx={{ textTransform: "none" }}>
+                  {BRAND_NAME}
+                </Box>
+              ) : null}
+            </Box>
+          ))}
+    </Typography>
+  );
+}
+
+function FaqAnswer({ item, documentationLabel, linkHref }) {
   if (item.aBefore != null) {
-    return (
-      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.75 }}>
-        {item.aBefore}
+    const middle =
+      linkHref && item.linkLabel ? (
         <MuiLink
           component={Link}
-          href="/documentation"
+          href={linkHref}
           underline="hover"
           sx={{ fontWeight: 600, color: BRAND.teal }}
         >
-          {documentationLabel}
+          {item.linkLabel}
         </MuiLink>
+      ) : (
+        documentationLabel
+      );
+
+    return (
+      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.75 }}>
+        {item.aBefore}
+        {middle}
         {item.aAfter}
       </Typography>
     );
@@ -86,18 +129,7 @@ export default function FaqsPage() {
           const cat = L.categories[category.key];
           return (
             <Box key={category.key} sx={{ mb: catIndex < FAQ_CATEGORIES.length - 1 ? 5 : 0 }}>
-              <Typography
-                variant="overline"
-                sx={{
-                  display: "block",
-                  color: BRAND.teal,
-                  fontWeight: 700,
-                  letterSpacing: 1.2,
-                  mb: 0.5,
-                }}
-              >
-                {cat.title}
-              </Typography>
+              <CategoryTitle title={cat.title} />
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2, maxWidth: 560 }}>
                 {cat.intro}
               </Typography>
@@ -126,7 +158,11 @@ export default function FaqsPage() {
                       <Typography fontWeight={600}>{item.q}</Typography>
                     </AccordionSummary>
                     <AccordionDetails sx={{ px: 2, pb: 2.5, pt: 0 }}>
-                      <FaqAnswer item={item} documentationLabel={t.common.documentation} />
+                      <FaqAnswer
+                        item={item}
+                        documentationLabel={t.common.documentation}
+                        linkHref={FAQ_ITEM_HREFS[itemKey]}
+                      />
                     </AccordionDetails>
                   </Accordion>
                 );

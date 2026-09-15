@@ -67,9 +67,18 @@ export default function SiteFooter() {
               href="/faqs"
               underline="hover"
               variant="body2"
-              sx={{ ...linkSx, mb: 0 }}
+              sx={linkSx}
             >
               {F.faqs}
+            </MuiLink>
+            <MuiLink
+              component={Link}
+              href="/book-demo"
+              underline="hover"
+              variant="body2"
+              sx={{ ...linkSx, mb: 0 }}
+            >
+              {F.bookDemo}
             </MuiLink>
           </Grid>
 

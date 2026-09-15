@@ -14,7 +14,7 @@ from app.routes import (
     auth, global_admin, institution_admin, students, sis_lms,
     student_journey, student_support, rankings, rankings_excel, rankings_websocket,
     scholarship_programs, financial_aid, triage, evaluation, awards,
-    webometrics_visibility,
+    webometrics_visibility, nsfas, demo,
 )
 from sqlalchemy import text
 from app import scholarship_catalog
@@ -51,6 +51,8 @@ app.include_router(financial_aid.grants_router)
 app.include_router(triage.router)
 app.include_router(evaluation.router)
 app.include_router(awards.router)
+app.include_router(nsfas.router)
+app.include_router(demo.router)
 
 
 @app.on_event("startup")
@@ -173,5 +175,6 @@ async def root():
             "scholarships",
             "student-support",
             "grants",
+            "nsfas",
         ],
     }

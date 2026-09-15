@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     smtp_user: str = ""
     smtp_password: str = ""
     from_email: str = "TemplumIS <no-reply@templumis.org>"
+    demo_request_email: str = "info@templumis.org"
 
     # Optional Ahrefs API v3 token for live Webometrics Visibility (referring domains)
     ahrefs_api_token: str = ""
@@ -43,6 +44,10 @@ class Settings(BaseSettings):
     @property
     def FROM_EMAIL(self) -> str:
         return self.from_email
+
+    @property
+    def DEMO_REQUEST_EMAIL(self) -> str:
+        return self.demo_request_email
 
     @property
     def cors_origins(self) -> list[str]:

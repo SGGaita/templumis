@@ -10,6 +10,7 @@ ALL_MODULE_IDS = (
     "support",
     "grants",
     "rankings",
+    "nsfas",
 )
 
 STUDENT_MODULE_IDS = (
@@ -60,6 +61,11 @@ STAFF_MODULE_NAV_ITEMS: dict[str, list[dict[str, Any]]] = {
     ],
     "rankings": [
         {"id": "rankings", "path": "/staff/rankings"},
+    ],
+    "nsfas": [
+        {"id": "nsfas_students", "path": "/staff/nsfas"},
+        {"id": "nsfas_reports", "path": "/staff/nsfas/reports"},
+        {"id": "nsfas_reports_analytics", "path": "/staff/nsfas/reports/analytics"},
     ],
 }
 

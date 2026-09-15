@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
+import Button from "@mui/material/Button";
 import BrandLogo from "@/components/BrandLogo";
 import PublicNavbar from "@/components/PublicNavbar";
 import { BRAND } from "@/lib/brand";
@@ -81,6 +83,16 @@ export default function HomePage() {
           >
             {t.home.hero.description}
           </Typography>
+          <Button
+            component={Link}
+            href="/book-demo"
+            variant="contained"
+            color="secondary"
+            size="large"
+            sx={{ mt: 4, fontWeight: 700, px: 3.5, py: 1.25 }}
+          >
+            {t.home.hero.bookDemoBtn}
+          </Button>
         </Container>
       </Box>
 
