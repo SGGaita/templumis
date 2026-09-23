@@ -19,6 +19,23 @@ export function getApiUrl() {
   return "/api";
 }
 
+/** WebSocket base URL — same host as the page, ws/wss scheme. */
+export function getWebSocketUrl(path = "") {
+  if (typeof window === "undefined") {
+    const base = (process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000").replace(/\/$/, "");
+    return `${base}${path.startsWith("/") ? path : `/${path}`}`;
+  }
+  const { protocol, hostname, port } = window.location;
+  const wsProto = protocol === "https:" ? "wss:" : "ws:";
+  // Dev: Next on :3000, backend on :8000
+  if ((hostname === "localhost" || hostname === "127.0.0.1") && port === "3000") {
+    return `${wsProto}//${hostname}:8000${path.startsWith("/") ? path : `/${path}`}`;
+  }
+  // nginx / LAN: same host, no port (or explicit port)
+  const host = port ? `${hostname}:${port}` : hostname;
+  return `${wsProto}//${host}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
 export async function apiFetch(path, options = {}) {
   const { method = "GET", body, token } = options;
 

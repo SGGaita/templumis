@@ -30,6 +30,8 @@ import { apiFetch, uploadInstitutionLogo, deleteInstitutionLogo } from "@/lib/ap
 import InstitutionAdminLayout from "@/components/InstitutionAdminLayout";
 import { ST } from "@/lib/staffTheme";
 import { useLanguage } from "@/lib/language-context";
+import RankingFrameworksSettings from "@/components/RankingFrameworksSettings";
+import { isModuleEnabled } from "@/lib/institutionModules";
 
 const LOGO_MAX_BYTES = 2 * 1024 * 1024;
 const LOGO_TYPES = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp"]);
@@ -284,6 +286,17 @@ export default function ProfilePage() {
           )}
         </Box>
       </Paper>
+
+      {profile && isModuleEnabled(profile.enabled_modules, "staff", "rankings") && (
+        <RankingFrameworksSettings
+          profile={profile}
+          token={token}
+          onSaved={(updated) => {
+            setProfile(updated);
+            refreshUser?.().catch(() => {});
+          }}
+        />
+      )}
 
       <Dialog open={editDialogOpen} onClose={closeEdit}
         maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>

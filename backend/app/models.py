@@ -31,6 +31,8 @@ class Institution(Base):
     address = Column(Text)
     enabled_modules = Column(JSON, nullable=True)
     staff_role_modules = Column(JSON, nullable=True)
+    # Ranking frameworks the institution reports against; NULL = all.
+    ranking_frameworks = Column(JSON, nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())

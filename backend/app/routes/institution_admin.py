@@ -13,6 +13,7 @@ from app.schemas import (
 )
 from app.institution_modules import (
     normalize_enabled_modules,
+    normalize_ranking_frameworks,
     normalize_staff_role_modules,
 )
 
@@ -64,6 +65,9 @@ async def update_institution_profile(
     updates.pop("enabled_modules", None)
     if "is_active" in updates:
         updates.pop("is_active")
+    if "ranking_frameworks" in updates:
+        # Empty list / None = all frameworks available
+        updates["ranking_frameworks"] = normalize_ranking_frameworks(updates["ranking_frameworks"])
     if "staff_role_modules" in updates:
         ceiling = normalize_enabled_modules(inst.enabled_modules)["staff"]
         updates["staff_role_modules"] = normalize_staff_role_modules(

@@ -61,6 +61,7 @@ STAFF_MODULE_NAV_ITEMS: dict[str, list[dict[str, Any]]] = {
     ],
     "rankings": [
         {"id": "rankings", "path": "/staff/rankings"},
+        {"id": "rankings_executive", "path": "/staff/rankings/executive"},
     ],
     "nsfas": [
         {"id": "nsfas_students", "path": "/staff/nsfas"},
@@ -70,6 +71,34 @@ STAFF_MODULE_NAV_ITEMS: dict[str, list[dict[str, Any]]] = {
 }
 
 FULL_MODULE = "*"
+
+# Ranking / accreditation frameworks an institution can report against.
+# Must match frontend/src/lib/rankings/catalog.js.
+RANKING_FRAMEWORK_IDS = (
+    "the",
+    "qs",
+    "arwu",
+    "cwts",
+    "web",
+    "ssa",
+    "aur",
+    "the-arab",
+    "naac",
+    "nirf",
+)
+
+
+def normalize_ranking_frameworks(raw: Any) -> list[str] | None:
+    """Return the enabled framework ids in canonical order.
+
+    None (or an empty/invalid list) means "all frameworks", which keeps
+    institutions that never chose a subset working as before.
+    """
+    if not isinstance(raw, list):
+        return None
+    wanted = {item for item in raw if isinstance(item, str)}
+    cleaned = [fid for fid in RANKING_FRAMEWORK_IDS if fid in wanted]
+    return cleaned or None
 
 DEFAULT_ENABLED_MODULES = {
     "student": list(STUDENT_MODULE_IDS),

@@ -25,6 +25,7 @@ class UserOut(BaseModel):
     institution_primary_domain: str | None = None
     enabled_modules: Dict[str, List[str]] | None = None
     staff_role_access: Dict[str, Any] | None = None
+    ranking_frameworks: List[str] | None = None
     account_category: str | None
     student_registration_number: str | None
     email_verified: bool
@@ -51,6 +52,7 @@ class InstitutionOut(BaseModel):
     address: str | None
     enabled_modules: Dict[str, List[str]] | None = None
     staff_role_modules: Dict[str, Any] | None = None
+    ranking_frameworks: List[str] | None = None
     is_active: bool
     created_at: datetime
     domains: list["DomainOut"] = []
@@ -63,6 +65,12 @@ class InstitutionOut(BaseModel):
     def _normalize_modules(cls, value):
         from app.institution_modules import normalize_enabled_modules
         return normalize_enabled_modules(value)
+
+    @field_validator("ranking_frameworks", mode="before")
+    @classmethod
+    def _normalize_ranking_frameworks(cls, value):
+        from app.institution_modules import normalize_ranking_frameworks
+        return normalize_ranking_frameworks(value)
 
     @field_validator("staff_role_modules", mode="before")
     @classmethod
@@ -88,6 +96,7 @@ class InstitutionUpdate(BaseModel):
     is_active: bool | None = None
     enabled_modules: Dict[str, List[str]] | None = None
     staff_role_modules: Dict[str, Any] | None = None
+    ranking_frameworks: List[str] | None = None
 
 
 class DomainCreate(BaseModel):

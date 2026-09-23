@@ -42,11 +42,14 @@ import MenuBookIcon from "@mui/icons-material/MenuBook";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import {
   BarChart, Bar, PieChart, Pie, Cell, RadialBarChart, RadialBar,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 import { ST } from "@/lib/staffTheme";
 import { apiFetch } from "@/lib/api";
 import { useLanguage } from "@/lib/language-context";
+import { useDashboardLayout } from "@/lib/dashboardLayout";
+import DashboardScreenOptions from "@/components/staff/DashboardScreenOptions";
+import NsfasVisualAnalytics from "@/components/staff/NsfasVisualAnalytics";
 
 const CHART_COLORS = [ST.chart.blue, ST.chart.teal, ST.chart.purple, ST.chart.orange, ST.chart.indigo, ST.chart.green];
 
@@ -188,6 +191,7 @@ export default function ExecutiveAnalyticsPage() {
   const { t } = useLanguage();
   const A = t.staff.analytics;
   const N = t.staff.nsfas.executive;
+  const D = t.staff.nsfas.analytics;
   const R = t.staff.analytics.retention;
   const [data, setData] = useState(null);
   const [nsfasData, setNsfasData] = useState(null);
@@ -207,6 +211,44 @@ export default function ExecutiveAnalyticsPage() {
   const [activeBenchmarkIdx, setActiveBenchmarkIdx] = useState(0);
   const [showAllInsights, setShowAllInsights] = useState(false);
   const [printMenuAnchor, setPrintMenuAnchor] = useState(null);
+  const [screenOpen, setScreenOpen] = useState(false);
+
+  const overviewWidgetDefaults = useMemo(() => [
+    { id: "majors", label: "Students by major" },
+    { id: "nationality", label: "International mix" },
+    { id: "gender", label: "Gender balance" },
+    { id: "disability", label: D.disabilityChart },
+    { id: "region", label: D.regionChart },
+    { id: "cohorts", label: "Enrollment cohorts" },
+    { id: "schools", label: "Schools & faculties" },
+    { id: "gpa", label: "GPA distribution" },
+  ], [D.disabilityChart, D.regionChart]);
+
+  const {
+    layout: overviewLayout,
+    visibleWidgets: overviewVisible,
+    toggleVisible: toggleOverviewWidget,
+    moveWidget: moveOverviewWidget,
+    reorderWidget: reorderOverviewWidget,
+    resetLayout: resetOverviewLayout,
+  } = useDashboardLayout("executive-analytics-overview-v1", overviewWidgetDefaults);
+
+  const screenLabels = useMemo(() => ({
+    screenOptions: A.screenOptions,
+    screenOptionsSub: A.screenOptionsSub,
+    resetLayout: A.resetLayout,
+    dragToReorder: A.dragToReorder,
+    moveUp: A.moveUp,
+    moveDown: A.moveDown,
+    alwaysVisible: A.alwaysVisible,
+  }), [A]);
+
+  const overviewWidgetMeta = useMemo(
+    () => Object.fromEntries(overviewLayout.map((w, i) => [w.id, { order: i, visible: w.visible }])),
+    [overviewLayout]
+  );
+  const ow = (id) => overviewWidgetMeta[id] || { order: 99, visible: true };
+  const overviewSx = (id) => ({ order: ow(id).order, display: ow(id).visible ? undefined : "none" });
 
   useEffect(() => {
     Promise.all([
@@ -348,6 +390,21 @@ export default function ExecutiveAnalyticsPage() {
   }, [data]);
 
   const deptChart = useMemo(() => data?.leadership?.departments_top || [], [data]);
+
+  const disabilityInstChart = useMemo(() => {
+    const d = data?.students_by_disability || {};
+    return [
+      { name: D.withDisability, value: d.Yes || 0, color: ST.chart.orange },
+      { name: D.withoutDisability, value: d.No || 0, color: ST.chart.green },
+    ].filter((x) => x.value > 0);
+  }, [data, D]);
+
+  const regionInstChart = useMemo(() => (
+    Object.entries(data?.students_by_home_province || {})
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8)
+  ), [data]);
 
   const feesStatusChart = useMemo(() => {
     const f = data?.leadership?.fees_status || {};
@@ -550,6 +607,19 @@ export default function ExecutiveAnalyticsPage() {
         )}
       </Box>
 
+      {tab === 0 && (
+        <DashboardScreenOptions
+          open={screenOpen}
+          onToggle={() => setScreenOpen((v) => !v)}
+          layout={overviewLayout}
+          onToggleVisible={toggleOverviewWidget}
+          onMoveWidget={moveOverviewWidget}
+          onReorderWidget={reorderOverviewWidget}
+          onReset={resetOverviewLayout}
+          labels={screenLabels}
+        />
+      )}
+
       <Tabs
         value={tab}
         onChange={(_, v) => setTab(v)}
@@ -571,8 +641,8 @@ export default function ExecutiveAnalyticsPage() {
         <Typography variant="h6" fontWeight={700} sx={{ mb: 2, display: "none", "@media print": { display: "block" } }}>
           {TAB_LABELS[0]}
         </Typography>
-        <Grid container spacing={2.5}>
-          <Grid item xs={12} lg={8}>
+        <Grid container spacing={2.5} sx={{ display: "flex", flexWrap: "wrap" }}>
+          <Grid item xs={12} lg={8} sx={overviewSx("majors")}>
             <Panel
               title="Students by major"
               subtitle="Toggle top, bottom, or leading programmes — click a bar for detail"
@@ -634,7 +704,7 @@ export default function ExecutiveAnalyticsPage() {
             </Panel>
           </Grid>
 
-          <Grid item xs={12} lg={4}>
+          <Grid item xs={12} lg={4} sx={overviewSx("nationality")}>
             <Panel
               title="International mix"
               subtitle="Click bars or legend — filter domestic vs international"
@@ -728,7 +798,7 @@ export default function ExecutiveAnalyticsPage() {
             </Panel>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} sx={overviewSx("gender")}>
             <Panel
               title="Gender balance"
               subtitle="Click chart, legend, or bars — compare to parity"
@@ -844,7 +914,49 @@ export default function ExecutiveAnalyticsPage() {
             </Panel>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} sx={overviewSx("disability")}>
+            <Panel title={D.disabilityChart} subtitle={D.disabilityChartSub}>
+              <Box sx={{ height: 200, display: "flex", alignItems: "center" }}>
+                {disabilityInstChart.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary" sx={{ width: "100%", textAlign: "center" }}>{t.staff.nsfas.reports.noBreakdown}</Typography>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={disabilityInstChart} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="value">
+                        {disabilityInstChart.map((e, i) => <Cell key={i} fill={e.color} />)}
+                      </Pie>
+                      <Tooltip />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </Box>
+            </Panel>
+          </Grid>
+
+          <Grid item xs={12} md={6} sx={overviewSx("region")}>
+            <Panel title={D.regionChart} subtitle={D.demographicsSub}>
+              <Box sx={{ height: 200 }}>
+                {regionInstChart.length === 0 ? (
+                  <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Typography variant="body2" color="text.secondary">{D.noRegionData}</Typography>
+                  </Box>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={regionInstChart} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={ST.chart.grid} vertical={false} />
+                      <XAxis dataKey="name" tick={{ fontSize: 9, fill: ST.chart.text }} interval={0} angle={-20} textAnchor="end" height={48} />
+                      <YAxis tick={{ fontSize: 11, fill: ST.chart.text }} allowDecimals={false} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="count" fill={ST.chart.teal} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </Box>
+            </Panel>
+          </Grid>
+
+          <Grid item xs={12} md={6} sx={overviewSx("cohorts")}>
             <Panel title="Enrollment cohorts" subtitle="Last 6 entry years">
               <Box sx={{ height: 200 }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -860,7 +972,7 @@ export default function ExecutiveAnalyticsPage() {
             </Panel>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} sx={overviewSx("schools")}>
             <Panel title="Schools & faculties" subtitle="Click a department">
               <Box sx={{ height: 200 }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -884,7 +996,7 @@ export default function ExecutiveAnalyticsPage() {
             </Panel>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} sx={overviewSx("gpa")}>
             <Panel title="GPA distribution" subtitle="Academic performance bands">
               <Box sx={{ height: 200 }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -1275,60 +1387,18 @@ export default function ExecutiveAnalyticsPage() {
               title={N.title}
               subtitle={N.subtitle}
               action={
-                nsfasData ? (
-                  <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                    <Button size="small" variant="outlined" sx={{ textTransform: "none" }} onClick={() => router.push("/staff/nsfas/reports/analytics")}>
-                      {N.viewAnalytics}
-                    </Button>
-                    <Button size="small" variant="text" sx={{ textTransform: "none" }} onClick={() => router.push("/staff/nsfas/reports")}>
-                      {N.viewReports}
-                    </Button>
-                  </Box>
-                ) : null
+                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                  <Button size="small" variant="outlined" sx={{ textTransform: "none" }} onClick={() => router.push("/staff/nsfas/reports/analytics")}>
+                    {N.viewAnalytics}
+                  </Button>
+                  <Button size="small" variant="text" sx={{ textTransform: "none" }} onClick={() => router.push("/staff/nsfas/reports")}>
+                    {N.viewReports}
+                  </Button>
+                </Box>
               }
             >
               {nsfasData ? (
-                <Grid container spacing={2}>
-                  <Grid item xs={6} sm={3}>
-                    <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.5, textAlign: "center" }}>
-                      <Typography variant="h5" fontWeight={800}>{nsfasData.kpis.total_beneficiaries}</Typography>
-                      <Typography variant="caption" color="text.secondary">{N.beneficiaries}</Typography>
-                    </Paper>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.5, textAlign: "center" }}>
-                      <Typography variant="h5" fontWeight={800} sx={{ color: ST.colors.success }}>
-                        {formatKes(nsfasData.kpis["total_disbursed_(kes)"])}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">{N.disbursed}</Typography>
-                    </Paper>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.5, textAlign: "center" }}>
-                      <Typography variant="h5" fontWeight={800}>{nsfasData.kpis.average_gpa ?? "—"}</Typography>
-                      <Typography variant="caption" color="text.secondary">Avg GPA</Typography>
-                    </Paper>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Paper
-                      variant="outlined"
-                      sx={{
-                        p: 2,
-                        borderRadius: 1.5,
-                        textAlign: "center",
-                        cursor: "pointer",
-                        borderColor: nsfasData.kpis.high_risk_or_critical > 0 ? ST.colors.error : ST.colors.border,
-                        "&:hover": { boxShadow: 2 },
-                      }}
-                      onClick={() => router.push("/staff/nsfas/reports?risk=High%20Risk")}
-                    >
-                      <Typography variant="h5" fontWeight={800} sx={{ color: nsfasData.kpis.high_risk_or_critical > 0 ? ST.colors.error : ST.colors.success }}>
-                        {nsfasData.kpis.high_risk_or_critical}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">{N.atRisk}</Typography>
-                    </Paper>
-                  </Grid>
-                </Grid>
+                <NsfasVisualAnalytics embedded layoutStorageKey="executive-nsfas-layout-v1" />
               ) : (
                 <Typography variant="body2" color="text.secondary">{N.unavailable}</Typography>
               )}

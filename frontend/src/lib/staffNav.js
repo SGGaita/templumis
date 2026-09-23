@@ -16,6 +16,7 @@ import HistoryIcon from "@mui/icons-material/History";
 import EmojiEventsOutlinedIcon from "@mui/icons-material/EmojiEventsOutlined";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import AssessmentIcon from "@mui/icons-material/Assessment";
+import InsightsIcon from "@mui/icons-material/Insights";
 import { isFinancialAidOfficerOnly } from "@/lib/staffPermissions";
 import { isSponsorUser } from "@/lib/sponsorPermissions";
 import { filterNavGroupsByModules, normalizeEnabledModules } from "@/lib/institutionModules";
@@ -25,7 +26,7 @@ export const staffNavGroups = [
   {
     label: "Overview",
     items: [
-      { text: "Dashboard", icon: <DashboardIcon fontSize="small" />, path: "/staff" },
+      { text: "Dashboard", icon: <DashboardIcon fontSize="small" />, path: "/staff", exact: true },
     ],
   },
   {
@@ -119,7 +120,22 @@ export const staffNavGroups = [
   {
     label: "Institutional insight",
     items: [
-      { text: "University Rankings", icon: <EmojiEventsIcon fontSize="small" />, path: "/staff/rankings", module: "rankings" },
+      {
+        text: "University Rankings Summary",
+        icon: <InsightsIcon fontSize="small" />,
+        path: "/staff/rankings/executive",
+        module: "rankings",
+        // Menu entry for the Vice-Chancellor only. Other staff can still open the
+        // page from the "Rankings summary" button on University Rankings.
+        roles: ["vice_chancellor"],
+      },
+      {
+        text: "University Rankings",
+        icon: <EmojiEventsIcon fontSize="small" />,
+        path: "/staff/rankings",
+        module: "rankings",
+        excludePrefixes: ["/staff/rankings/executive"],
+      },
       { text: "Analytics", icon: <BarChartIcon fontSize="small" />, path: "/staff/analytics", textKey: "analytics" },
     ],
   },
@@ -139,6 +155,10 @@ export function buildStaffNavHref(item) {
 }
 
 export function isStaffNavItemActive(item, pathname, searchParams) {
+  if (item.exact && pathname !== item.path) return false;
+  if ((item.excludePrefixes || []).some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    return false;
+  }
   const prefixes = item.activePrefixes || [];
   const matchesPath =
     pathname === item.path ||
@@ -232,12 +252,17 @@ export function getStaffNavGroups(user) {
 
 export function findStaffNavPage(pathname, searchParams, user) {
   const groups = user ? getStaffNavGroups(user) : staffNavGroups;
+  // Most specific match wins, so "/staff" never shadows a deeper page.
+  let best = null;
   for (const group of groups) {
     for (const item of group.items) {
       if (isStaffNavItemActive(item, pathname, searchParams)) {
-        return item;
+        if (!best || item.path.length > best.path.length) best = item;
       }
     }
   }
-  return null;
+  if (best || !user) return best;
+  // Page reachable by link but hidden from this role's menu (e.g. the Rankings
+  // Summary for a Registrar): still give the top bar the right title.
+  return findStaffNavPage(pathname, searchParams, null);
 }

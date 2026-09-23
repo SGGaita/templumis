@@ -83,16 +83,45 @@ export default function HomePage() {
           >
             {t.home.hero.description}
           </Typography>
-          <Button
-            component={Link}
-            href="/book-demo"
-            variant="contained"
-            color="secondary"
-            size="large"
-            sx={{ mt: 4, fontWeight: 700, px: 3.5, py: 1.25 }}
+          <Box
+            sx={{
+              mt: 4,
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: 1.5,
+            }}
           >
-            {t.home.hero.bookDemoBtn}
-          </Button>
+            <Button
+              component={Link}
+              href="/login"
+              variant="contained"
+              color="secondary"
+              size="large"
+              sx={{ fontWeight: 700, px: 3.5, py: 1.25 }}
+            >
+              {t.home.hero.getStartedBtn}
+            </Button>
+            <Button
+              component={Link}
+              href="/book-demo"
+              variant="outlined"
+              size="large"
+              sx={{
+                fontWeight: 700,
+                px: 3.5,
+                py: 1.25,
+                color: "white",
+                borderColor: "rgba(255,255,255,0.7)",
+                "&:hover": {
+                  borderColor: "white",
+                  bgcolor: "rgba(255,255,255,0.08)",
+                },
+              }}
+            >
+              {t.home.hero.bookDemoBtn}
+            </Button>
+          </Box>
         </Container>
       </Box>
 

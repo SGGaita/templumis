@@ -25,6 +25,7 @@ from app.excel_institution_scope import (
 from app.account_category import sync_account_category
 from app.institution_modules import (
     effective_enabled_modules_for_user,
+    normalize_ranking_frameworks,
     effective_staff_role_access_for_user,
 )
 
@@ -114,6 +115,7 @@ async def get_me(current_user: User = Depends(get_current_user), db: Session = D
         "institution_primary_domain": None,
         "enabled_modules": None,
         "staff_role_access": None,
+        "ranking_frameworks": None,
         "account_category": category,
         "student_registration_number": current_user.student_registration_number,
         "email_verified": current_user.email_verified,
@@ -140,6 +142,9 @@ async def get_me(current_user: User = Depends(get_current_user), db: Session = D
                 institution.enabled_modules,
                 getattr(institution, "staff_role_modules", None),
                 current_user.role,
+            )
+            user_dict["ranking_frameworks"] = normalize_ranking_frameworks(
+                getattr(institution, "ranking_frameworks", None)
             )
             domains = (
                 db.query(InstitutionDomain)

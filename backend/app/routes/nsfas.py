@@ -57,6 +57,16 @@ def _num(value) -> float:
         return 0.0
 
 
+def _programme_label(student: dict, tracking: Optional[dict] = None) -> str:
+    """Full programme name, e.g. BSc. Computer Science (not degree level alone)."""
+    tracking = tracking or {}
+    program = str(student.get("program") or tracking.get("programme") or "").strip()
+    major = str(student.get("major") or "").strip()
+    if program and major and major.lower() != program.lower():
+        return f"{program}. {major}"
+    return program or major or str(tracking.get("programme") or "").strip()
+
+
 @router.get("/students")
 async def list_nsfas_students(
     search: Optional[str] = None,
@@ -92,6 +102,10 @@ async def list_nsfas_students(
         if t.get("has_disability") is not None:
             e["has_disability"] = t.get("has_disability")
             e["disability_type"] = t.get("disability_type")
+        province = t.get("home_province_(south_africa)")
+        if province:
+            e["home_province"] = province
+        e["programme_label"] = _programme_label(s, t)
         enriched.append(e)
 
     if search:
@@ -133,6 +147,7 @@ async def get_nsfas_tracking(
     allowed_ids = {
         s.get("student_id") for s in students if s.get("student_id") and _is_nsfas_beneficiary(s)
     }
+    students_by_id = {s.get("student_id"): s for s in students if s.get("student_id")}
     all_rows = _load_tracking_rows(wb)
     wb.close()
 
@@ -156,6 +171,13 @@ async def get_nsfas_tracking(
     academic_standing_breakdown = _breakdown("academic_standing")
     continuation_risk_breakdown = _breakdown("continuation_risk")
     department_breakdown = _breakdown("department")
+    home_province_breakdown = _breakdown("home_province_(south_africa)")
+
+    gender_breakdown: dict[str, int] = {}
+    for r in rows:
+        sid = r.get("student_id")
+        gender = str((students_by_id.get(sid) or {}).get("gender") or "Unspecified")
+        gender_breakdown[gender] = gender_breakdown.get(gender, 0) + 1
 
     with_disability = [r for r in rows if str(r.get("has_disability") or "").lower() == "yes"]
     without_disability = [r for r in rows if str(r.get("has_disability") or "").lower() != "yes"]
@@ -178,12 +200,16 @@ async def get_nsfas_tracking(
         if str(r.get("continuation_risk") or "").lower() in ("high risk", "critical — funding discontinued")
     )
 
-    report_rows = [
-        {
-            "student_id": r.get("student_id"),
+    report_rows = []
+    for r in rows:
+        sid = r.get("student_id")
+        student_row = students_by_id.get(sid) or {}
+        report_rows.append({
+            "student_id": sid,
             "full_name": r.get("full_name"),
-            "programme": r.get("programme"),
+            "programme": _programme_label(student_row, r) or r.get("programme"),
             "year_of_study": r.get("year_of_study"),
+            "department": r.get("department"),
             "award_status": r.get("award_status"),
             "total_support_(kes)": _num(r.get("total_annual_nsfas_support_(kes)")),
             "disbursed_(kes)": _num(r.get("amount_disbursed_to_date_(kes)")),
@@ -193,10 +219,17 @@ async def get_nsfas_tracking(
             "academic_standing": r.get("academic_standing"),
             "continuation_risk": r.get("continuation_risk"),
             "has_disability": r.get("has_disability"),
+            "disability_type": r.get("disability_type"),
+            "home_province": r.get("home_province_(south_africa)"),
+            "gender": student_row.get("gender"),
             "case_notes": r.get("case_notes_/_appeal_status"),
-        }
-        for r in rows
-    ]
+            "tuition_allowance_(kes)": _num(r.get("tuition_allowance_(kes)")),
+            "accommodation_allowance_(kes)": _num(r.get("accommodation_allowance_(kes)")),
+            "transport_allowance_(kes)": _num(r.get("transport_allowance_(kes)")),
+            "living_/_meals_allowance_(kes)": _num(r.get("living_/_meals_allowance_(kes)")),
+            "learning_materials_allowance_(kes)": _num(r.get("learning_materials_allowance_(kes)")),
+            "disability_support_top-up_(kes)": _num(r.get("disability_support_top-up_(kes)")),
+        })
 
     return {
         "generated_from": TRACKING_SHEET,
@@ -215,6 +248,8 @@ async def get_nsfas_tracking(
             "by_academic_standing": academic_standing_breakdown,
             "by_continuation_risk": continuation_risk_breakdown,
             "by_department": department_breakdown,
+            "by_home_province": home_province_breakdown,
+            "by_gender": gender_breakdown,
             "disability": {
                 "with_disability": {
                     "count": len(with_disability),

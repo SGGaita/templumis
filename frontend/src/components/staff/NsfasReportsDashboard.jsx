@@ -31,6 +31,15 @@ import CloseIcon from "@mui/icons-material/Close";
 import { ST } from "@/lib/staffTheme";
 import { apiFetch } from "@/lib/api";
 import { useLanguage } from "@/lib/language-context";
+import {
+  EMPTY_FILTERS,
+  parseFiltersFromParams,
+  filtersToSearchParams,
+  matchStudent,
+  countActiveFilters,
+  toggleFilter,
+  flattenFilterChips,
+} from "@/lib/nsfasAnalytics";
 
 const fmtKes = (n) => `KES ${Number(n || 0).toLocaleString()}`;
 
@@ -157,9 +166,7 @@ function NsfasReportsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterAward, setFilterAward] = useState(searchParams.get("award") || "");
-  const [filterRisk, setFilterRisk] = useState(searchParams.get("risk") || "");
-  const [filterStanding, setFilterStanding] = useState(searchParams.get("standing") || "");
+  const [filters, setFilters] = useState(() => parseFiltersFromParams(searchParams));
   const [atRiskOnly, setAtRiskOnly] = useState(false);
   const [sortField, setSortField] = useState("name");
   const [sortDir, setSortDir] = useState("asc");
@@ -183,9 +190,7 @@ function NsfasReportsContent() {
   }, [L.loadError]);
 
   useEffect(() => {
-    setFilterAward(searchParams.get("award") || "");
-    setFilterRisk(searchParams.get("risk") || "");
-    setFilterStanding(searchParams.get("standing") || "");
+    setFilters(parseFiltersFromParams(searchParams));
     setPage(0);
   }, [searchParams]);
 
@@ -201,15 +206,7 @@ function NsfasReportsContent() {
           String(s.programme || "").toLowerCase().includes(q)
       );
     }
-    if (filterAward) {
-      list = list.filter((s) => String(s.award_status || "").toLowerCase() === filterAward.toLowerCase());
-    }
-    if (filterRisk) {
-      list = list.filter((s) => String(s.continuation_risk || "").toLowerCase() === filterRisk.toLowerCase());
-    }
-    if (filterStanding) {
-      list = list.filter((s) => String(s.academic_standing || "").toLowerCase() === filterStanding.toLowerCase());
-    }
+    list = list.filter((s) => matchStudent(s, filters));
     if (atRiskOnly) {
       list = list.filter((s) => {
         const r = String(s.continuation_risk || "").toLowerCase();
@@ -225,23 +222,28 @@ function NsfasReportsContent() {
       return 0;
     });
     return list;
-  }, [data, searchQuery, filterAward, filterRisk, filterStanding, atRiskOnly, sortField, sortDir]);
+  }, [data, searchQuery, filters, atRiskOnly, sortField, sortDir]);
 
   const paginatedStudents = useMemo(() => {
     const start = page * rowsPerPage;
     return filteredStudents.slice(start, start + rowsPerPage);
   }, [filteredStudents, page, rowsPerPage]);
 
-  const activeFilters = [filterAward, filterRisk, filterStanding].filter(Boolean).length + (atRiskOnly ? 1 : 0);
+  const activeFilters = countActiveFilters(filters) + (atRiskOnly ? 1 : 0);
 
   const clearFilters = () => {
-    setFilterAward("");
-    setFilterRisk("");
-    setFilterStanding("");
+    setFilters({ ...EMPTY_FILTERS });
     setAtRiskOnly(false);
     setSearchQuery("");
     setPage(0);
     router.replace("/staff/nsfas/reports");
+  };
+
+  const syncFilters = (next) => {
+    setFilters(next);
+    setPage(0);
+    const params = filtersToSearchParams(next);
+    router.replace(params.toString() ? `/staff/nsfas/reports?${params}` : "/staff/nsfas/reports", { scroll: false });
   };
 
   const handleSort = (field) => {
@@ -254,21 +256,21 @@ function NsfasReportsContent() {
   };
 
   const applyBreakdownFilter = (type, value) => {
-    setPage(0);
-    if (type === "award") {
-      setFilterAward((prev) => (prev === value ? "" : value));
-      setFilterRisk("");
-      setFilterStanding("");
-    } else if (type === "risk") {
-      setFilterRisk((prev) => (prev === value ? "" : value));
-      setFilterAward("");
-      setFilterStanding("");
-    } else if (type === "standing") {
-      setFilterStanding((prev) => (prev === value ? "" : value));
-      setFilterAward("");
-      setFilterRisk("");
-    }
+    const key = type === "award" ? "award" : type === "risk" ? "risk" : "standing";
+    syncFilters(toggleFilter(filters, key, value));
   };
+
+  const filterChips = useMemo(() => flattenFilterChips(filters, {
+    region: L.filterRegion,
+    gender: L.filterGender,
+    disability: L.filterDisability,
+    department: L.filterDepartment,
+    award: L.awardStatus,
+    risk: L.continuationRisk,
+    standing: L.academicStanding,
+    withDisability: L.filterWithDisability,
+    withoutDisability: L.filterWithoutDisability,
+  }), [filters, L]);
 
   const headCell = (label, sortKey) => (
     <TableCell
@@ -397,7 +399,7 @@ function NsfasReportsContent() {
                 <BreakdownList
                   counts={data.breakdowns.by_award_status}
                   onSelect={(v) => applyBreakdownFilter("award", v)}
-                  selectedKey={filterAward}
+                  selectedKey={filters.award?.length === 1 ? filters.award[0] : ""}
                   filterLabel={L.noBreakdown}
                 />
               </SectionCard>
@@ -407,7 +409,7 @@ function NsfasReportsContent() {
                 <BreakdownList
                   counts={data.breakdowns.by_academic_standing}
                   onSelect={(v) => applyBreakdownFilter("standing", v)}
-                  selectedKey={filterStanding}
+                  selectedKey={filters.standing?.length === 1 ? filters.standing[0] : ""}
                   filterLabel={L.noBreakdown}
                 />
               </SectionCard>
@@ -417,7 +419,7 @@ function NsfasReportsContent() {
                 <BreakdownList
                   counts={data.breakdowns.by_continuation_risk}
                   onSelect={(v) => applyBreakdownFilter("risk", v)}
-                  selectedKey={filterRisk}
+                  selectedKey={filters.risk?.length === 1 ? filters.risk[0] : ""}
                   filterLabel={L.noBreakdown}
                 />
               </SectionCard>
@@ -509,9 +511,20 @@ function NsfasReportsContent() {
               {activeFilters > 0 && (
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center", mb: 1 }}>
                   <Typography variant="caption" sx={{ color: ST.colors.textSecondary }}>{L.activeFilters}</Typography>
-                  {filterAward && <Chip size="small" label={`${L.awardStatus}: ${filterAward}`} onDelete={() => setFilterAward("")} />}
-                  {filterRisk && <Chip size="small" label={`${L.continuationRisk}: ${filterRisk}`} onDelete={() => setFilterRisk("")} />}
-                  {filterStanding && <Chip size="small" label={`${L.academicStanding}: ${filterStanding}`} onDelete={() => setFilterStanding("")} />}
+                  {filterChips.map((chip) => (
+                    <Chip
+                      key={`${chip.key}-${chip.value}`}
+                      size="small"
+                      label={chip.label}
+                      onDelete={() => {
+                        if (chip.key === "disability") {
+                          syncFilters({ ...filters, disability: filters.disability.filter((d) => d !== chip.value) });
+                        } else {
+                          syncFilters({ ...filters, [chip.key]: filters[chip.key].filter((v) => v !== chip.value) });
+                        }
+                      }}
+                    />
+                  ))}
                   {atRiskOnly && <Chip size="small" label={L.filterAtRisk} onDelete={() => setAtRiskOnly(false)} />}
                   <IconButton size="small" onClick={clearFilters} aria-label={L.clearFilters}>
                     <CloseIcon fontSize="small" />

@@ -23,6 +23,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import { ST } from "@/lib/staffTheme";
 import { apiFetch } from "@/lib/api";
+import { useLanguage } from "@/lib/language-context";
 
 const AWARD_STATUS_STYLE = {
   "fully funded": { bg: ST.colors.successLight, color: ST.colors.success },
@@ -58,9 +59,22 @@ const RiskChip = ({ risk }) => {
   );
 };
 
+const programmeDisplay = (student) => {
+  if (student.programme_label) return student.programme_label;
+  const program = student.program || student.programme;
+  const major = student.major;
+  if (program && major && String(major).toLowerCase() !== String(program).toLowerCase()) {
+    return `${program}. ${major}`;
+  }
+  return program || major || "N/A";
+};
+
 function NsfasStudentsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
+  const L = t.staff.nsfas.registry;
+
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -83,27 +97,30 @@ function NsfasStudentsPage() {
         setStudents(data.students || []);
         setError("");
       } catch (err) {
-        setError(err.message || "Failed to load NSFAS students");
+        setError(err.message || L.loadError);
       } finally {
         setLoading(false);
       }
     };
     fetchStudents();
-  }, []);
+  }, [L.loadError]);
 
   const filtered = students.filter((s) => {
     const q = searchQuery.toLowerCase();
     return (
       String(s.full_name || "").toLowerCase().includes(q) ||
       String(s.email || "").toLowerCase().includes(q) ||
-      String(s.student_id || "").toLowerCase().includes(q)
+      String(s.student_id || "").toLowerCase().includes(q) ||
+      String(s.home_province || "").toLowerCase().includes(q) ||
+      String(programmeDisplay(s)).toLowerCase().includes(q)
     );
   });
 
   const paginated = filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const colCount = 11;
 
   const headCell = (label) => (
-    <TableCell sx={{ fontWeight: 600, fontSize: 12, color: ST.colors.textSecondary, bgcolor: ST.colors.bg, borderBottom: `1px solid ${ST.colors.border}`, py: 1.5 }}>
+    <TableCell sx={{ fontWeight: 600, fontSize: 12, color: ST.colors.textSecondary, bgcolor: ST.colors.bg, borderBottom: `1px solid ${ST.colors.border}`, py: 1.5, whiteSpace: "nowrap" }}>
       {label}
     </TableCell>
   );
@@ -113,10 +130,10 @@ function NsfasStudentsPage() {
       <Box sx={{ mb: 3, display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
         <Box>
           <Typography variant="h5" fontWeight={700} sx={{ color: ST.colors.textPrimary }}>
-            NSFAS Students
+            {L.title}
           </Typography>
           <Typography variant="body2" sx={{ color: ST.colors.textSecondary, mt: 0.5 }}>
-            Students receiving NSFAS financial aid · {students.length} beneficiaries
+            {L.subtitle.replace("{count}", String(students.length))}
           </Typography>
         </Box>
         <Button
@@ -125,7 +142,7 @@ function NsfasStudentsPage() {
           onClick={() => router.push("/staff/nsfas/reports")}
           sx={{ textTransform: "none", borderRadius: 1.5, borderColor: ST.colors.border, color: ST.colors.textPrimary }}
         >
-          View tracking reports
+          {L.viewReports}
         </Button>
       </Box>
 
@@ -138,49 +155,53 @@ function NsfasStudentsPage() {
       <Paper elevation={0} sx={{ p: 2, mb: 2, border: `1px solid ${ST.colors.border}`, borderRadius: 2 }}>
         <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
           <TextField
-            placeholder="Search by name, email or student ID..."
+            placeholder={L.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setPage(0); }}
             size="small"
             sx={{ flexGrow: 1, "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
             InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: ST.colors.textSecondary, fontSize: 20 }} /></InputAdornment> }}
           />
-          <Chip label={`${filtered.length} results`} size="small" sx={{ bgcolor: ST.colors.primaryLight, color: ST.colors.primary, fontWeight: 600 }} />
+          <Chip label={L.results.replace("{count}", String(filtered.length))} size="small" sx={{ bgcolor: ST.colors.primaryLight, color: ST.colors.primary, fontWeight: 600 }} />
         </Box>
       </Paper>
 
       <Paper elevation={0} sx={{ border: `1px solid ${ST.colors.border}`, borderRadius: 2, overflow: "hidden" }}>
-        <TableContainer>
-          <Table>
+        <TableContainer sx={{ overflowX: "auto" }}>
+          <Table size="small">
             <TableHead>
               <TableRow>
-                {headCell("Student")}
-                {headCell("Programme")}
-                {headCell("Award Status")}
-                {headCell("GPA")}
-                {headCell("NSFAS Support (KES)")}
-                {headCell("Disbursed (KES)")}
-                {headCell("Fee Balance (KES)")}
-                {headCell("Disability")}
-                {headCell("Risk")}
+                {headCell(L.colStudent)}
+                {headCell(L.colProgramme)}
+                {headCell(L.colGender)}
+                {headCell(L.colRegion)}
+                {headCell(L.colAwardStatus)}
+                {headCell(L.colGpa)}
+                {headCell(L.colSupport)}
+                {headCell(L.colDisbursed)}
+                {headCell(L.colFeeBalance)}
+                {headCell(L.colDisability)}
+                {headCell(L.colRisk)}
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={9} align="center" sx={{ py: 8 }}>
+                  <TableCell colSpan={colCount} align="center" sx={{ py: 8 }}>
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
               ) : paginated.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} align="center" sx={{ py: 6, color: ST.colors.textSecondary }}>
-                    No NSFAS beneficiaries found
+                  <TableCell colSpan={colCount} align="center" sx={{ py: 6, color: ST.colors.textSecondary }}>
+                    {L.noResults}
                   </TableCell>
                 </TableRow>
               ) : (
                 paginated.map((student, i) => (
-                  <TableRow key={student.student_id} hover
+                  <TableRow
+                    key={student.student_id}
+                    hover
                     sx={{ cursor: "pointer", "&:hover": { bgcolor: "#F8FAFF" }, "&:last-child td": { border: 0 } }}
                     onClick={() => router.push(`/staff/enrollment/${student.student_id}`)}
                   >
@@ -195,9 +216,14 @@ function NsfasStudentsPage() {
                         </Box>
                       </Box>
                     </TableCell>
-                    <TableCell sx={{ fontSize: 13, color: ST.colors.textPrimary }}>
-                      {student.program || "N/A"}{student.year_of_study ? ` · ${student.year_of_study}` : ""}
+                    <TableCell sx={{ fontSize: 13, color: ST.colors.textPrimary, minWidth: 160 }}>
+                      <Typography variant="body2" fontWeight={500} sx={{ fontSize: 13 }}>{programmeDisplay(student)}</Typography>
+                      {student.year_of_study && (
+                        <Typography variant="caption" sx={{ color: ST.colors.textSecondary }}>{student.year_of_study}</Typography>
+                      )}
                     </TableCell>
+                    <TableCell sx={{ fontSize: 13, color: ST.colors.textPrimary }}>{student.gender || L.notRecorded}</TableCell>
+                    <TableCell sx={{ fontSize: 13, color: ST.colors.textPrimary }}>{student.home_province || L.notRecorded}</TableCell>
                     <TableCell><AwardStatusChip status={student.nsfas_award_status} /></TableCell>
                     <TableCell>
                       <Typography variant="body2" fontWeight={700} sx={{ color: (student.gpa || 0) >= 3.5 ? ST.colors.success : (student.gpa || 0) >= 3.0 ? ST.colors.warning : ST.colors.error }}>
@@ -212,7 +238,7 @@ function NsfasStudentsPage() {
                       </Typography>
                     </TableCell>
                     <TableCell sx={{ fontSize: 13, color: ST.colors.textPrimary }}>
-                      {String(student.has_disability || "No").toLowerCase() === "yes" ? (student.disability_type || "Yes") : "—"}
+                      {String(student.has_disability || "No").toLowerCase() === "yes" ? (student.disability_type || "Yes") : L.notRecorded}
                     </TableCell>
                     <TableCell><RiskChip risk={student.nsfas_continuation_risk} /></TableCell>
                   </TableRow>

@@ -180,6 +180,197 @@ def _credits_from_passing_grades(grades: list, courses_dict: dict) -> int:
     return sum(by_course.values())
 
 
+def _load_nsfas_tracking_lookup(wb) -> dict:
+    """NSFAS tracking rows keyed by student_id (includes home province)."""
+    sheet_name = "NSFAS Student Tracking"
+    if sheet_name not in wb.sheetnames:
+        return {}
+    prefixes = ("TU-", "KT-", "RU-")
+    rows = sheet_to_dict_list(wb[sheet_name])
+    return {
+        r.get("student_id"): r
+        for r in rows
+        if str(r.get("student_id") or "").strip().upper().startswith(prefixes)
+    }
+
+
+def _merge_student_demographics(student: dict, tracking_row: Optional[dict]) -> dict:
+    """Attach home province from NSFAS tracking when available."""
+    out = dict(student)
+    if tracking_row:
+        province = tracking_row.get("home_province_(south_africa)")
+        if province:
+            out["home_province"] = province
+            out["home_province_(south_africa)"] = province
+        if tracking_row.get("has_disability") is not None:
+            out["nsfas_has_disability"] = tracking_row.get("has_disability")
+        if tracking_row.get("disability_type"):
+            out["nsfas_disability_type"] = tracking_row.get("disability_type")
+    return out
+
+
+def _programme_label(student: dict) -> str:
+    program = str(student.get("program") or "").strip()
+    major = str(student.get("major") or "").strip()
+    if program and major and major.lower() != program.lower():
+        return f"{program}. {major}"
+    return program or major or ""
+
+
+def _parse_enrol_period(enrol_date) -> tuple[str, str]:
+    """Derive academic year and semester label from enrolment date."""
+    if not enrol_date:
+        return "Unknown", "Unknown"
+    try:
+        if isinstance(enrol_date, str):
+            dt = datetime.fromisoformat(str(enrol_date).replace("Z", "")[:10])
+        elif isinstance(enrol_date, datetime):
+            dt = enrol_date
+        elif isinstance(enrol_date, date_cls):
+            dt = datetime.combine(enrol_date, datetime.min.time())
+        else:
+            return "Unknown", "Unknown"
+        month, year = dt.month, dt.year
+        if month >= 8:
+            academic_year = f"{year}/{year + 1}"
+            semester = "Sem 1"
+        elif month <= 6:
+            academic_year = f"{year - 1}/{year}"
+            semester = "Sem 2"
+        else:
+            academic_year = f"{year}/{year + 1}"
+            semester = "Mid-year"
+        return academic_year, semester
+    except (TypeError, ValueError):
+        return "Unknown", "Unknown"
+
+
+def _course_outcome(enrollment: dict, grade_row: dict | None) -> str:
+    """Classify enrollment as passed, failed, or enrolled."""
+    status = str(enrollment.get("status") or "").strip().lower()
+    letter = str((grade_row or {}).get("letter_grade") or "").strip().upper()
+    if status == "dropped" or letter in _FAILING_GRADES or letter.startswith("F"):
+        return "failed"
+    if status == "completed":
+        return "passed"
+    if letter and letter not in _FAILING_GRADES and not letter.startswith("F"):
+        if any(letter.startswith(p) for p in _PASSING_GRADE_PREFIXES):
+            return "passed"
+    return "enrolled"
+
+
+def _build_course_performance(
+    enrollments: list,
+    grades: list,
+    courses_dict: dict,
+) -> dict:
+    """Per-course performance summary for student dashboards."""
+    grades_by_course = {}
+    for g in grades:
+        cc = g.get("course_code")
+        if cc:
+            grades_by_course[str(cc)] = g
+
+    courses = []
+    summary = {"passed": 0, "failed": 0, "enrolled": 0, "total": 0}
+
+    for enrollment in enrollments:
+        cc = str(enrollment.get("course_code") or "")
+        grade_row = grades_by_course.get(cc, {})
+        details = enrollment.get("course_details") or courses_dict.get(cc, {})
+        outcome = _course_outcome(enrollment, grade_row)
+        summary[outcome] += 1
+        summary["total"] += 1
+
+        letter = grade_row.get("letter_grade") or enrollment.get("current_grade")
+        academic_year, semester = _parse_enrol_period(enrollment.get("enrol_date"))
+        courses.append({
+            "course_code": cc,
+            "course_title": enrollment.get("course_title") or details.get("title"),
+            "status": enrollment.get("status"),
+            "outcome": outcome,
+            "enrol_date": enrollment.get("enrol_date"),
+            "academic_year": academic_year,
+            "semester": semester,
+            "midterm_score": enrollment.get("midterm_score"),
+            "current_grade": enrollment.get("current_grade"),
+            "letter_grade": grade_row.get("letter_grade"),
+            "assignment_1": grade_row.get("assignment_1"),
+            "assignment_2": grade_row.get("assignment_2"),
+            "midterm_grade": grade_row.get("midterm"),
+            "final_score": grade_row.get("final") or grade_row.get("total"),
+            "credits": details.get("credits"),
+            "department": details.get("department"),
+            "instructor": details.get("instructor"),
+        })
+
+    academic_years = sorted({c["academic_year"] for c in courses if c["academic_year"] != "Unknown"}, reverse=True)
+    semesters = sorted({c["semester"] for c in courses if c["semester"] != "Unknown"})
+
+    return {
+        "courses": courses,
+        "summary": summary,
+        "periods": {"academic_years": academic_years, "semesters": semesters},
+    }
+
+
+def _build_financial_support(
+    student: dict,
+    nsfas_tracking: Optional[dict],
+    scholarship_apps: list,
+) -> dict:
+    """NSFAS and scholarship support snapshot for student profile."""
+    is_nsfas = str(student.get("nsfas_beneficiary") or "").lower() == "yes"
+    nsfas = None
+    if is_nsfas and nsfas_tracking:
+        nsfas = {
+            "active": True,
+            "award_status": nsfas_tracking.get("award_status"),
+            "total_support_(kes)": _float_field(
+                nsfas_tracking, "total_annual_nsfas_support_(kes)"
+            ),
+            "disbursed_(kes)": _float_field(
+                nsfas_tracking, "amount_disbursed_to_date_(kes)"
+            ),
+            "outstanding_balance_(kes)": _float_field(
+                nsfas_tracking, "outstanding_fees_balance_(kes)"
+            ),
+            "continuation_risk": nsfas_tracking.get("continuation_risk"),
+            "academic_standing": nsfas_tracking.get("academic_standing"),
+        }
+    elif is_nsfas:
+        nsfas = {"active": True, "award_status": "Beneficiary"}
+
+    scholarships = []
+    for app in scholarship_apps:
+        status = str(app.get("status") or "").lower()
+        if status in ("approved", "awarded", "under review", "submitted"):
+            scholarships.append({
+                "name": (
+                    (app.get("scholarship_details") or {}).get("scholarship_name")
+                    or app.get("scholarship_name")
+                    or "Scholarship"
+                ),
+                "status": app.get("status"),
+                "amount_(kes)": _float_field(app, "award_amount_(kes)", "award_amount"),
+                "applied_date": app.get("applied_date"),
+            })
+
+    active_scholarships = [
+        s for s in scholarships
+        if str(s.get("status") or "").lower() in ("approved", "awarded")
+    ]
+
+    return {
+        "nsfas": nsfas,
+        "scholarships": scholarships,
+        "active_scholarships": active_scholarships,
+        "has_nsfas": bool(nsfas),
+        "has_scholarship": len(active_scholarships) > 0,
+        "has_any_support": bool(nsfas) or len(active_scholarships) > 0,
+    }
+
+
 def _compute_credit_statistics(
     student: dict,
     enrollments: list,
@@ -791,6 +982,9 @@ async def get_student_detail(
     courses_sheet = wb["Courses"]
     all_courses = sheet_to_dict_list(courses_sheet)
     courses_dict = {c["course_code"]: c for c in all_courses}
+
+    nsfas_tracking = _load_nsfas_tracking_lookup(wb).get(student_id)
+    student = _merge_student_demographics(student, nsfas_tracking)
     
     # Enrich enrollments with course details
     for enrollment in enrollments:
@@ -813,8 +1007,14 @@ async def get_student_detail(
     wb.close()
     
     credit_stats = _compute_credit_statistics(student, enrollments, grades, courses_dict)
+    course_performance = _build_course_performance(enrollments, grades, courses_dict)
+    financial_support = _build_financial_support(student, nsfas_tracking, scholarship_apps)
     completed_courses = [e for e in enrollments if str(e.get("status") or "").lower() == "completed"]
-    student = {**student, "credits_completed": credit_stats["total_credits_completed"]}
+    student = {
+        **student,
+        "credits_completed": credit_stats["total_credits_completed"],
+        "programme_label": _programme_label(student),
+    }
     
     # Use pre-calculated GPA from Students sheet; fall back to letter-grade computation
     excel_gpa = student.get("gpa")
@@ -863,13 +1063,25 @@ async def get_student_detail(
         "fee_records": fee_records,
         "payments": payments,
         "scholarship_apps": scholarship_apps,
+        "course_performance": course_performance,
+        "financial_support": financial_support,
+        "demographics": {
+            "gender": student.get("gender"),
+            "has_disability": student.get("has_disability"),
+            "disability_type": student.get("disability_type"),
+            "disability_accommodation_needed": student.get("disability_accommodation_needed"),
+            "home_province": student.get("home_province"),
+            "nationality": student.get("nationality"),
+        },
         "statistics": {
             "gpa": gpa,
             "total_credits_enrolled": credit_stats["total_credits_enrolled"],
             "total_credits_completed": credit_stats["total_credits_completed"],
             "total_credits_graded_earned": credit_stats["total_credits_graded_earned"],
-            "total_courses_enrolled": len([e for e in enrollments if str(e.get("status") or "").lower() == "enrolled"]),
-            "total_courses_completed": len(completed_courses),
+            "total_courses_enrolled": course_performance["summary"]["enrolled"],
+            "total_courses_completed": course_performance["summary"]["passed"],
+            "total_courses_failed": course_performance["summary"]["failed"],
+            "total_courses": course_performance["summary"]["total"],
             "attendance_rate": attendance_rate,
             "total_fees": total_fees,
             "total_paid": total_paid,
@@ -1026,6 +1238,25 @@ async def get_stats(
     for student in students:
         major = student.get("major", "Unknown")
         majors[major] = majors.get(major, 0) + 1
+
+    disabilities = {"Yes": 0, "No": 0, "Unspecified": 0}
+    for student in students:
+        flag = str(student.get("has_disability") or "").strip().lower()
+        if flag == "yes":
+            disabilities["Yes"] += 1
+        elif flag == "no":
+            disabilities["No"] += 1
+        else:
+            disabilities["Unspecified"] += 1
+
+    nsfas_lookup = _load_nsfas_tracking_lookup(wb)
+    home_provinces = {}
+    for student in students:
+        sid = student.get("student_id")
+        province = (nsfas_lookup.get(sid) or {}).get("home_province_(south_africa)")
+        if province:
+            key = str(province).strip()
+            home_provinces[key] = home_provinces.get(key, 0) + 1
     
     # Gender breakdown by major
     gender_by_major = {}
@@ -1155,6 +1386,8 @@ async def get_stats(
         "students_by_program": programs,
         "students_by_year": years,
         "students_by_gender": genders,
+        "students_by_disability": disabilities,
+        "students_by_home_province": home_provinces,
         "students_by_nationality": nationalities,
         "students_by_major": majors,
         "gender_by_major": gender_by_major,
@@ -1753,6 +1986,8 @@ async def get_executive_analytics(
         },
         "students_by_cohort": stats.get("students_by_cohort", {}),
         "students_by_gender": stats.get("students_by_gender", {}),
+        "students_by_disability": stats.get("students_by_disability", {}),
+        "students_by_home_province": stats.get("students_by_home_province", {}),
         "students_by_year": stats.get("students_by_year", {}),
         "insights": insights[:8],
         "retention": retention,

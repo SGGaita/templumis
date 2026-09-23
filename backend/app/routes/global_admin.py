@@ -4,7 +4,11 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.auth import hash_password, require_role
 from app.models import User, UserRole, Institution, InstitutionDomain, AuditLog, PlatformSetting
-from app.institution_modules import default_enabled_modules, normalize_enabled_modules
+from app.institution_modules import (
+    default_enabled_modules,
+    normalize_enabled_modules,
+    normalize_ranking_frameworks,
+)
 from app.schemas import (
     InstitutionCreate, InstitutionOut, InstitutionUpdate,
     DomainCreate, DomainOut,
@@ -79,6 +83,8 @@ async def update_institution(
     updates = data.model_dump(exclude_unset=True)
     if "enabled_modules" in updates:
         updates["enabled_modules"] = normalize_enabled_modules(updates["enabled_modules"])
+    if "ranking_frameworks" in updates:
+        updates["ranking_frameworks"] = normalize_ranking_frameworks(updates["ranking_frameworks"])
 
     for field, value in updates.items():
         setattr(inst, field, value)

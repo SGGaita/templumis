@@ -48,7 +48,10 @@ export const STAFF_MODULE_NAV_ITEMS = {
     { id: "opportunities", path: "/staff/grants/opportunities", labelKey: "grantOpportunities" },
     { id: "configure", path: "/staff/grants/configure", labelKey: "configureGrants" },
   ],
-  rankings: [{ id: "rankings", path: "/staff/rankings", labelKey: "rankings" }],
+  rankings: [
+    { id: "rankings", path: "/staff/rankings", labelKey: "rankings" },
+    { id: "rankings_executive", path: "/staff/rankings/executive", labelKey: "rankingsExecutive" },
+  ],
   nsfas: [
     { id: "nsfas_students", path: "/staff/nsfas", labelKey: "nsfasStudents" },
     { id: "nsfas_reports", path: "/staff/nsfas/reports", labelKey: "nsfasReports" },
